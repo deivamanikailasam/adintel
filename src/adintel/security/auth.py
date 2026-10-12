@@ -36,6 +36,8 @@ class Principal:
     email: str
     roles: frozenset[Role]
     brand_ids: tuple[str, ...]
+    elevated: bool = False  # an active break-glass grant applies (security/break_glass.py)
+    grant_id: str | None = None
 
     @property
     def senior(self) -> bool:

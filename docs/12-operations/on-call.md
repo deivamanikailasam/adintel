@@ -15,6 +15,9 @@ human approval*, so an unanswered page at night delays reports or data, it does 
 | P3 | One platform degraded, failed run, cost > 2×, cache hit drop | Next business day | Same → Slack channel |
 | P4 | Single validation failure or fallback | — | Dashboard only |
 
+If you lack the access you need, request break-glass (`docs/04-security/break-glass.md`) — use the emergency
+path only when no admin answers.
+
 First move for any P1 that might involve money or data: **engage the narrowest kill switch** (brand →
 tenant → global) — it is safe, reversible and audited — then follow the runbook.
 

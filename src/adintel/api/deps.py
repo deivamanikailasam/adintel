@@ -36,7 +36,10 @@ def principal(request: Request) -> Principal:
         raise HTTPException(401, str(exc)) from exc
     if not api_limiter().allow(p.tenant_id):
         raise HTTPException(429, "tenant rate limit exceeded")
-    return p
+    from adintel.security.break_glass import elevate
+    from adintel.storage import get_database
+
+    return elevate(get_database(), p)
 
 
 def require(*roles: Role) -> Callable[[Principal], Principal]:

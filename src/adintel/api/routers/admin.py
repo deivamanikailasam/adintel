@@ -6,7 +6,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from adintel.api.deps import SENIORS, db, require
+from adintel.api.deps import ANY_STAFF, SENIORS, db, require
 from adintel.audit import AuditLog
 from adintel.core.clock import utcnow
 from adintel.domain.enums import Role
@@ -74,6 +74,8 @@ def set_flag(
 ) -> dict[str, Any]:
     if body.flag not in DEFAULTS:
         raise HTTPException(422, f"unknown flag; one of {sorted(DEFAULTS)}")
+    if p.elevated:
+        raise HTTPException(403, "feature flags cannot be changed under break-glass access")
     return FeatureFlags(database, p.tenant_id).set(
         body.flag, body.enabled, actor_id=p.user_id, reason=body.reason, brand_id=body.brand_id
     )
@@ -113,6 +115,8 @@ def privacy_erase(
 ) -> dict[str, int]:
     if user_id == p.user_id:
         raise HTTPException(409, "ask another admin to erase your own account")
+    if p.elevated:
+        raise HTTPException(403, "user erasure is not allowed under break-glass access")
     try:
         return erase_user(database, p.tenant_id, user_id, actor_id=p.user_id, reason=body.reason)
     except LookupError as exc:
@@ -175,6 +179,70 @@ def notifications(
     p: Principal = Depends(require(Role.ADMIN, *SENIORS, Role.ACCOUNT_MANAGER)), database: Database = Depends(db)
 ) -> list[dict[str, Any]]:
     return TenantScopedRepo(database, "notifications", p.tenant_id).find({}, sort=[("created_at", -1)], limit=100)
+
+
+class BreakGlassRequest(BaseModel):
+    scopes: list[str]
+    reason: str
+    ticket: str
+    minutes: int = 60
+    emergency: bool = False
+
+
+@router.post("/break-glass/requests")
+def break_glass_request(
+    body: BreakGlassRequest,
+    p: Principal = Depends(require(*ANY_STAFF)),
+    database: Database = Depends(db),
+) -> dict[str, Any]:
+    from adintel.security import break_glass
+
+    try:
+        return break_glass.request(
+            database,
+            p,
+            scopes=body.scopes,
+            reason=body.reason,
+            ticket=body.ticket,
+            minutes=body.minutes,
+            emergency=body.emergency,
+        )
+    except break_glass.BreakGlassError as exc:
+        raise HTTPException(422, str(exc)) from exc
+
+
+@router.get("/break-glass")
+def break_glass_list(
+    p: Principal = Depends(require(Role.ADMIN)), database: Database = Depends(db)
+) -> list[dict[str, Any]]:
+    return TenantScopedRepo(database, "access_grants", p.tenant_id).find({}, sort=[("requested_at", -1)], limit=100)
+
+
+@router.post("/break-glass/{grant_id}/approve")
+def break_glass_approve(
+    grant_id: str, p: Principal = Depends(require(Role.ADMIN)), database: Database = Depends(db)
+) -> dict[str, Any]:
+    from adintel.security import break_glass
+
+    try:
+        return break_glass.approve(database, p, grant_id)
+    except break_glass.BreakGlassError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
+@router.post("/break-glass/{grant_id}/revoke")
+def break_glass_revoke(
+    grant_id: str,
+    p: Principal = Depends(require(*ANY_STAFF)),
+    database: Database = Depends(db),
+) -> dict[str, str]:
+    from adintel.security import break_glass
+
+    try:
+        break_glass.revoke(database, p, grant_id)
+    except break_glass.BreakGlassError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return {"status": "revoked"}
 
 
 @router.get("/shadow")

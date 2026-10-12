@@ -13,6 +13,7 @@
 | Outcome tracking | daily 05:00 UTC | Actual vs predicted impact, 14 days after execution |
 | Weekly triage | Mon 09:00 UTC | What humans should look at next week |
 | Audit archive | daily 03:45 UTC | Write-once copy of the chain; P1 if database and archive disagree |
+| Break-glass expiry | every 5 min | Record grants that ended (access already stopped at expiry) |
 | Retention purge | daily 02:30 UTC | Delete what the catalogue says we no longer need (legal hold respected) |
 """
 
@@ -32,6 +33,7 @@ from adintel.feedback.triage import triage_job
 from adintel.observability.logging import configure_logging
 from adintel.privacy.retention import retention_job
 from adintel.scheduler import jobs
+from adintel.security.break_glass import expire_job as break_glass_expiry
 from adintel.storage import get_database
 
 log = logging.getLogger("adintel.scheduler")
@@ -69,6 +71,7 @@ def build(scheduler: BlockingScheduler) -> None:
     scheduler.add_job(jobs.dlq_check_job, CronTrigger(minute="*/5"), id="dlq")
     scheduler.add_job(jobs.cost_anomaly_job, CronTrigger(hour=23, minute=30, timezone="UTC"), args=[db], id="cost")
     scheduler.add_job(archive_job, CronTrigger(hour=3, minute=45, timezone="UTC"), args=[db], id="audit-archive")
+    scheduler.add_job(break_glass_expiry, CronTrigger(minute="*/5"), args=[db], id="break-glass-expiry")
     scheduler.add_job(retention_job, CronTrigger(hour=2, minute=30, timezone="UTC"), args=[db], id="retention")
     scheduler.add_job(outcomes_job, CronTrigger(hour=5, minute=0, timezone="UTC"), args=[db], id="outcomes")
     scheduler.add_job(

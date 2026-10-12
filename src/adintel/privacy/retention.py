@@ -36,6 +36,7 @@ TIME_FIELDS: dict[str, str] = {
     "executions": "executed_at",
     "outcomes": "measured_at",
     "secret_access_log": "at",
+    "access_grants": "requested_at",
 }
 _UNIT_DAYS = {"day": 1, "days": 1, "month": 31, "months": 31, "year": 366, "years": 366}
 

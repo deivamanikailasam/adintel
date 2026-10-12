@@ -50,6 +50,11 @@ abuse is structurally impossible rather than prompt-prevented. Tests:
 | Web | Strict CSP, no `innerHTML` for model output (Angular interpolation only), security headers, CORS allow-list, WAF + rate limits in prod | `api/app.py`, `frontend/src/index.html` |
 | Abuse / cost | Per-tenant rate limits and daily cost caps, per-run budget, kill switches | `harness/admission.py`, `harness/budget.py` |
 
+## Emergency access
+
+No standing admin rights: time-boxed, two-person (or paged emergency) elevation that never grants money
+authority — [break-glass.md](break-glass.md).
+
 ## Provisioning
 
 Users come from the identity provider over SCIM 2.0 (joiners, movers, leavers); approval limits and

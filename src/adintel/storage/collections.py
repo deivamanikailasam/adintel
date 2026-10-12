@@ -197,6 +197,13 @@ CATALOGUE: tuple[CollectionSpec, ...] = (
         (IndexSpec((T, ("recommendation_id", 1)), unique=True), IndexSpec((T, ("brand_id", 1), ("measured_at", -1)))),
     ),
     CollectionSpec(
+        "access_grants",
+        True,
+        "Break-glass elevation requests and grants",
+        "7 years",
+        (IndexSpec((T, ("grant_id", 1)), unique=True), IndexSpec((T, ("user_id", 1), ("status", 1)))),
+    ),
+    CollectionSpec(
         "scim_tokens",
         True,
         "Hashed SCIM provisioning tokens per tenant",
