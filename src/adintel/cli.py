@@ -1,7 +1,7 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
 privacy-export, privacy-erase, offboard,
 audit-archive, backup, restore, restore-drill, migrate,
-csv-template, csv-sample, shadow-report, weights, egress-check."""
+csv-template, csv-sample, shadow-report, weights, egress-check, secrets."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import json
 import os
 import sys
 from datetime import date, timedelta
+from pathlib import Path
 from typing import Any
 
 
@@ -340,6 +341,32 @@ def cmd_egress_check(args: argparse.Namespace) -> None:
     _print({"offline": s.offline, "allowlist": s.egress_allowlist, "endpoints": verdict})
 
 
+def cmd_secrets(args: argparse.Namespace) -> None:
+    from adintel.config import get_settings
+    from adintel.security import secret_crypto
+    from adintel.security.secrets import SecretStore
+
+    root = get_settings().secrets_dir
+    if args.action == "keygen":
+        keys = root / ".keys"
+        keys.mkdir(parents=True, exist_ok=True)
+        os.chmod(keys, 0o700)
+        made = []
+        for scope in ("read", "write"):
+            path = keys / f"{scope}.key"
+            if path.exists():
+                continue
+            path.write_text(secret_crypto.generate_key())
+            os.chmod(path, 0o600)
+            made.append(str(path))
+        _print({"created": made, "note": "give write.key ONLY to the executor process"})
+    elif args.action == "encrypt":
+        _print({"encrypted": SecretStore(root).encrypt_existing()})
+    else:
+        values = json.loads(Path(args.from_file).read_text())
+        _print({"written": str(SecretStore(root).put(args.tenant, args.platform, args.scope, values))})
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -445,6 +472,13 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("egress-check", help="show which configured endpoints the egress policy allows").set_defaults(
         fn=cmd_egress_check
     )
+    sp = sub.add_parser("secrets", help="encryption at rest for local platform credentials")
+    sp.add_argument("action", choices=("keygen", "encrypt", "put"))
+    sp.add_argument("--tenant", default="brightwave")
+    sp.add_argument("--platform")
+    sp.add_argument("--scope", choices=("read", "write"))
+    sp.add_argument("--from-file", help="JSON file with the credential values (for put)")
+    sp.set_defaults(fn=cmd_secrets)
     args = p.parse_args(argv)
     args.fn(args)
 

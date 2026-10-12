@@ -21,8 +21,8 @@ $COMPOSE exec -T redis redis-cli BGSAVE >/dev/null
 sleep 2
 $COMPOSE exec -T redis sh -c 'tar -C /data -cf - .' > "$OUT/redis-data.tar"
 
-echo "→ secrets (local platform credentials — keep this backup encrypted)"
-[ -d secrets ] && tar -cf "$OUT/secrets.tar" secrets || echo "  (no secrets directory)"
+echo "→ secrets (encrypted credential files; the keys in secrets/.keys are NOT included — escrow them separately)"
+[ -d secrets ] && tar --exclude='secrets/.keys' -cf "$OUT/secrets.tar" secrets || echo "  (no secrets directory)"
 
 echo "→ audit archive"
 [ -d var/audit-archive ] && tar -cf "$OUT/audit-archive.tar" -C var audit-archive || echo "  (no archive yet)"

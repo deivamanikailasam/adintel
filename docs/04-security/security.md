@@ -40,7 +40,7 @@ abuse is structurally impossible rather than prompt-prevented. Tests:
 | Identity | OIDC RS256/ES256 tokens verified against the IdP's JWKS (Keycloak locally, Cognito in prod, MFA); issuer, audience, expiry checked; tenant claim is immutable; no just-in-time provisioning; roles = IdP roles ∩ AdIntel record (least privilege) | `security/auth.py`, `api/deps.py` |
 | Authorisation | Role checks per route; brand scope on every brand-scoped call; 404 for other tenants' objects | `api/routers/*` |
 | Tenant isolation | Three layers: data access, retrieval pre-filter, output scan (see [tenant-isolation.md](tenant-isolation.md)) | `storage/tenant_repo.py` |
-| Secrets | Read vs write scopes by process role; write creds only in the executor; agents never hold credentials | `security/secrets.py` |
+| Secrets | Read vs write scopes by process role; write creds only in the executor; agents never hold credentials; locally AES-256-GCM at rest with a separate key per scope (`adintel secrets`) | `security/secrets.py` |
 | Model calls | PII redaction before any call; untrusted fencing; schema output; hashed archive | `llm/gateway.py`, `security/pii.py`, `security/fencing.py` |
 | Code execution | AST allow-list, separate process, CPU/memory/file limits, no network (Docker mode), read-only tenant-scoped data | `sandbox/` |
 | Approvals | Signed (HMAC) records, typed exposure, four-eyes, snapshot hash, expiry, replay protection | `approvals/`, `executor/` |

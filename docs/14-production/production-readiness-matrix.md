@@ -49,7 +49,7 @@ decided, why, where it is enforced, and the human actions still needed.
 | Least privilege | IdP roles ∩ AdIntel roles; process-scoped secrets | — | + IAM task roles | `test_oidc.py`, secrets tests | ✅ |
 | Tenant isolation (3 layers) | Data access, retrieval pre-filter, output scan | — | Same | `test_storage.py`, cross-tenant evals (0 leakage gate) | ✅ |
 | Sandboxed code execution | Subprocess with AST allow-list | Docker, network-isolated | Separate task / Firecracker | `test_sandbox.py` | ✅ |
-| Secrets | File store with scope policy | — | Secrets Manager | secrets tests | 🟡 |
+| Secrets | File store with scope policy, AES-256-GCM at rest, one key per scope | plaintext (dev only) | Secrets Manager + KMS + IAM | `test_secret_crypto.py` | ✅ |
 | Supply chain | Pinned models + adapter hashes, Dependabot, gitleaks, SBOMs, Trivy | — | Same + signed images | CI `security`, `supply-chain` | ✅ |
 | Penetration test & DAST | ZAP API scan on every PR, `make dast` | — | External test before go-live and annually ([plan](../04-security/penetration-testing.md)) | CI `dast` | 🟡 decided; engage the firm |
 

@@ -22,6 +22,7 @@ from pathlib import Path
 from adintel.config import get_settings
 from adintel.core.clock import utcnow
 from adintel.core.errors import AuthError
+from adintel.security import secret_crypto
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +57,30 @@ class SecretStore:
     def __init__(self, root: Path | None = None) -> None:
         self.root = Path(root or get_settings().secrets_dir)
 
+    def put(self, tenant_id: str, platform: str, scope: str, values: dict[str, str]) -> Path:
+        """Write a credential encrypted with the scope's key (operator tooling)."""
+        key = secret_crypto.load_key(self.root, scope)
+        if key is None:
+            raise AuthError(f"no {scope} key: run `adintel secrets keygen` first")
+        ref = f"adintel/{tenant_id}/{platform}/{scope}"
+        path = self.root / tenant_id / f"{platform}.{scope}.json.enc"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(secret_crypto.encrypt(key, ref, values))
+        os.chmod(path, 0o600)
+        return path
+
+    def encrypt_existing(self) -> list[str]:
+        """Encrypt every plaintext credential file in place and remove the plaintext."""
+        done = []
+        for path in sorted(self.root.glob("*/*.json")):
+            platform, _, scope = path.name.removesuffix(".json").rpartition(".")
+            if scope not in ("read", "write"):
+                continue
+            self.put(path.parent.name, platform, scope, json.loads(path.read_text()))
+            path.unlink()
+            done.append(f"adintel/{path.parent.name}/{platform}/{scope}")
+        return done
+
     def _log(self, tenant_id: str, ref: str, scope: str, allowed: bool) -> None:
         try:
             from adintel.storage import get_database
@@ -82,8 +107,17 @@ class SecretStore:
             log.error("secret_access_denied", extra={"role": role, "secret_ref": ref})
             raise AuthError(f"process role {role!r} may not read {scope!r} credentials")
         path = self.root / tenant_id / f"{platform}.{scope}.json"
+        enc = path.with_name(path.name + ".enc")
         self._log(tenant_id, ref, scope, True)
+        if enc.exists():
+            key = secret_crypto.load_key(self.root, scope)
+            if key is None:
+                raise AuthError(f"{ref} is encrypted but this process has no {scope} key")
+            return Credential(tenant_id, platform, scope, ref, secret_crypto.decrypt(key, ref, enc.read_text()))
         if path.exists():
+            if get_settings().secrets_require_encryption:
+                raise AuthError(f"{ref} is stored in plaintext; run `adintel secrets encrypt` (encryption required)")
+            log.warning("plaintext_secret", extra={"secret_ref": ref})
             return Credential(tenant_id, platform, scope, ref, json.loads(path.read_text()))
         s = get_settings()
         if s.connector_modes.get(platform, s.connectors) in ("synthetic", "csv"):  # no platform API behind these

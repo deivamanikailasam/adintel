@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     csv_dir: Path = REPO_ROOT / "data" / "import"  # bring-your-own-data: <tenant>/<brand>/<platform>.csv
     secrets: Literal["file", "aws"] = "file"
     secrets_dir: Path = REPO_ROOT / "secrets"
+    secrets_require_encryption: bool = False  # refuse plaintext credential files (security/secret_crypto.py)
 
     # --- audit archive (write-once copy of the hash chain) ----------------------------------------
     # Always written to a local directory (files made read-only); additionally uploaded to an
