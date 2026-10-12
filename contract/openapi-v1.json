@@ -1,0 +1,424 @@
+{
+  "GET /v1/admin/audit": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/admin/audit/verify": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/break-glass": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/cost": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/admin/flags": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/admin/kill-switches": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/models": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/notifications": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/outcomes": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/platform-alerts": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/privacy/users/{user_id}/export": {
+    "required_body": [],
+    "required_params": [
+      "user_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/admin/queues": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/admin/shadow": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/admin/triage": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/anomalies": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/auth/config": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/brands": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/brands/{brand_id}/summary": {
+    "required_body": [],
+    "required_params": [
+      "brand_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/kb/documents": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/me": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/meta/rejection-categories": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/recommendations": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/recommendations/{rec_id}": {
+    "required_body": [],
+    "required_params": [
+      "rec_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/reports/{report_id}": {
+    "required_body": [],
+    "required_params": [
+      "report_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/rule-proposals": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "GET /v1/runs": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/runs/{run_id}": {
+    "required_body": [],
+    "required_params": [
+      "run_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/runs/{run_id}/events": {
+    "required_body": [],
+    "required_params": [
+      "run_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/runs/{run_id}/trace": {
+    "required_body": [],
+    "required_params": [
+      "run_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "GET /v1/status": {
+    "required_body": [],
+    "required_params": [],
+    "responses": [
+      "200"
+    ]
+  },
+  "POST /v1/admin/break-glass/requests": {
+    "required_body": [
+      "reason",
+      "scopes",
+      "ticket"
+    ],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/admin/break-glass/{grant_id}/approve": {
+    "required_body": [],
+    "required_params": [
+      "grant_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/admin/break-glass/{grant_id}/revoke": {
+    "required_body": [],
+    "required_params": [
+      "grant_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/admin/flags": {
+    "required_body": [
+      "enabled",
+      "flag",
+      "reason"
+    ],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/admin/kill-switches": {
+    "required_body": [
+      "engaged",
+      "key",
+      "reason",
+      "scope"
+    ],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/admin/privacy/users/{user_id}/erase": {
+    "required_body": [
+      "reason"
+    ],
+    "required_params": [
+      "user_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/anomalies/{anomaly_id}/dismiss": {
+    "required_body": [
+      "reason"
+    ],
+    "required_params": [
+      "anomaly_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/auth/dev-login": {
+    "required_body": [
+      "email"
+    ],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/chat": {
+    "required_body": [
+      "brand_id",
+      "question",
+      "session_id"
+    ],
+    "required_params": [],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/kb/documents": {
+    "required_body": [
+      "doc_type",
+      "text",
+      "title"
+    ],
+    "required_params": [],
+    "responses": [
+      "201",
+      "422"
+    ]
+  },
+  "POST /v1/recommendations/{rec_id}/approve": {
+    "required_body": [
+      "typed_exposure_usd"
+    ],
+    "required_params": [
+      "rec_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/recommendations/{rec_id}/reject": {
+    "required_body": [
+      "category"
+    ],
+    "required_params": [
+      "rec_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/reports/{report_id}/rating": {
+    "required_body": [
+      "rating"
+    ],
+    "required_params": [
+      "report_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/rule-proposals/{proposal_id}/decision": {
+    "required_body": [
+      "approve"
+    ],
+    "required_params": [
+      "proposal_id"
+    ],
+    "responses": [
+      "200",
+      "422"
+    ]
+  },
+  "POST /v1/runs": {
+    "required_body": [
+      "brand_id"
+    ],
+    "required_params": [],
+    "responses": [
+      "202",
+      "422"
+    ]
+  },
+  "POST /v1/runs/{run_id}/replay": {
+    "required_body": [],
+    "required_params": [
+      "run_id"
+    ],
+    "responses": [
+      "202",
+      "422"
+    ]
+  }
+}

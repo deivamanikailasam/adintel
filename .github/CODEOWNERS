@@ -20,6 +20,9 @@
 /evals/baseline.json                @deivamanikailasam
 /finetune/                          @deivamanikailasam
 
+# API contract — integrators depend on it
+/contract/                          @deivamanikailasam
+
 # Infrastructure and delivery — platform owner must approve
 /infra/                             @deivamanikailasam
 /.github/workflows/                 @deivamanikailasam

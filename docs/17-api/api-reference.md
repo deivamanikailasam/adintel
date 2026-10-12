@@ -1,5 +1,8 @@
 # API reference (api-service)
 
+> Integrators: use the `/v1` prefix (e.g. `/v1/brands`) — a stable contract; see [versioning.md](versioning.md).
+> AI agents: see the read-only [MCP server](mcp.md).
+
 Interactive OpenAPI docs: `http://localhost:8000/docs` when the API is running. All endpoints except
 `/health`, `/ready`, `/metrics` and `/auth/dev-login` require `Authorization: Bearer <JWT>`. The tenant
 always comes from the token; brand access is checked on every brand-scoped call.

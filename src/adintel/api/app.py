@@ -26,6 +26,10 @@ from adintel.storage import get_database
 
 log = logging.getLogger("adintel.api")
 
+API_VERSION = 1
+# Request path (e.g. "/v1/brands") → HTTP-date after which it may be removed. Announced ≥ 6 months ahead (docs/17-api/versioning.md).
+DEPRECATED: dict[str, str] = {}
+
 SECURITY_HEADERS = {
     "Content-Security-Policy": "default-src 'none'; frame-ancestors 'none'",
     "X-Content-Type-Options": "nosniff",
@@ -87,6 +91,12 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
             if k == "Cache-Control" and response.headers.get("content-type", "").startswith("text/event-stream"):
                 continue
             response.headers.setdefault(k, v)
+        response.headers["X-AdIntel-API-Version"] = str(API_VERSION)
+        sunset = DEPRECATED.get(request.url.path)
+        if sunset:  # RFC 8594 / draft-ietf-httpapi-deprecation-header
+            response.headers["Deprecation"] = "true"
+            response.headers["Sunset"] = sunset
+            response.headers["Link"] = '</docs/17-api/versioning.md>; rel="deprecation"'
         if s.env in ("staging", "production"):
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
         return response
@@ -112,19 +122,13 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
         sample()  # refresh host gauges on every scrape
         return PlainTextResponse(generate_latest(REGISTRY).decode(), media_type="text/plain; version=0.0.4")
 
-    for r in (
-        auth.router,
-        brands.router,
-        runs.router,
-        approvals.router,
-        chat.router,
-        kb.router,
-        admin.router,
-        ops.router,
-        scim.router,
-        verify.router,
-        status.router,
-    ):
+    # Versioned integrator contract (/v1/...) for the business API; the unversioned paths are the same routes
+    # for the web app. Infrastructure routes (SCIM, webhooks, provenance) have their own stable paths.
+    versioned = (auth.router, brands.router, runs.router, approvals.router, chat.router, kb.router, admin.router, status.router)
+    for r in versioned:
+        app.include_router(r)
+        app.include_router(r, prefix=f"/v{API_VERSION}")
+    for r in (ops.router, scim.router, verify.router):
         app.include_router(r)
 
     inline = start_inline_worker if start_inline_worker is not None else s.queue == "memory" and s.env == "local"
