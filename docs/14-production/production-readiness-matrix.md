@@ -1,0 +1,93 @@
+# Production-readiness matrix
+
+What an enterprise-grade agentic AI system needs, how AdIntel provides it on one local machine, the
+alternatives you can swap in, the production equivalent, and the evidence. Use it as the review checklist
+before promotion ([promotion-to-production.md](promotion-to-production.md)) and as an honest list of what
+remains a decision for the owner rather than code.
+
+Legend: ✅ implemented and tested · 🟡 implemented, production step is configuration/ops · ⬜ owner decision / outside code
+
+## Agentic core
+
+| Capability | Local implementation | Alternatives | Production | Evidence | Status |
+|-----------|----------------------|--------------|-----------|----------|--------|
+| Multi-agent orchestration | LangGraph supervisor, rules first, model for judgement | — | Same code on ECS | `tests/e2e`, ADRs L-01…L-12 | ✅ |
+| Bounded autonomy (L2) | Agents propose; signed human approval; executor has no model | — | Same | `test_approvals_executor.py`, architecture tests | ✅ |
+| Budgets, timeouts, kill switches | Per-run budget, nested timeouts, 4-level switches | — | Same | `test_harness.py`, chaos tests | ✅ |
+| Feature flags / staged rollout | Per tenant and brand, audited, visible degradation | — | Same | `test_feedback_loop.py` | ✅ |
+| Degradation, never silent failure | 21-row matrix → report caveats + metrics | — | Same | `test_harness.py::matrix covers every code` | ✅ |
+| Checkpoint & resume | State after every step | — | Atlas | chaos tests | ✅ |
+
+## Models
+
+| Capability | Local implementation | Alternatives | Production | Evidence | Status |
+|-----------|----------------------|--------------|-----------|----------|--------|
+| Two-tier models | Qwen3.8-27B-8bit (frontier), Qwen3.6-35B-A3B-4bit (volume) on mlx-lm | Ollama, LM Studio, llama.cpp, vLLM (`ADINTEL_MODEL_PROFILE`) | Bedrock / SageMaker | `test_model_profiles.py`, `adintel models` | ✅ |
+| Validation wrapper | Schema, repair ×2, retry, fallback, PII redaction, fencing | — | Same | `test_llm_gateway.py` | ✅ |
+| Model & prompt registry, pinning | `config/models.yaml`, `prompts/registry.yaml`, floating tags refused | — | Same | registry tests | ✅ |
+| Fine-tuning per brand voice | `mlx_lm.lora`, signed adapters, `report:<tone>` tiers | vLLM LoRA modules, llama.cpp `--lora`, Ollama `ADAPTER` | SageMaker QLoRA | `test_model_profiles.py` | ✅ |
+| Safety classifier, fails closed | Safety tier, no fallback | — | Llama Guard + Bedrock Guardrails | `test_guardrail.py`, injection evals (100% gate) | ✅ |
+
+## Data and retrieval
+
+| Capability | Local implementation | Alternatives | Production | Evidence | Status |
+|-----------|----------------------|--------------|-----------|----------|--------|
+| Ad-platform data | Synthetic worlds with real field shapes | **CSV exports + manual execution** (`ADINTEL_CONNECTORS=csv`) | Live APIs (`connectors/live.py`) | `test_connectors.py`, `test_csv_connector.py` | 🟡 live connectors need each platform's API approval |
+| Storage | Memory backend or MongoDB Atlas Local | — | Atlas over PrivateLink | integration job | ✅ |
+| Hybrid RAG with tenant pre-filter | Vector + BM25, RRF, rerank | fastembed BGE | Atlas Vector Search | `test_rag.py`, RAG evals | ✅ |
+| Migrations | Ordered, locked, recorded, forward-only | — | One-off ECS task in the release | `test_migrations.py`, ADR L-13 | ✅ |
+| Shared state across processes | Redis rate limits + semantic cache | memory (single process) | ElastiCache | `test_shared_state.py` | ✅ |
+
+## Security and identity
+
+| Capability | Local implementation | Alternatives | Production | Evidence | Status |
+|-----------|----------------------|--------------|-----------|----------|--------|
+| Enterprise SSO | Keycloak OIDC, PKCE, JWKS verification | dev login (local only) | Cognito / Entra ID / Okta | `test_oidc.py` | ✅ |
+| Least privilege | IdP roles ∩ AdIntel roles; process-scoped secrets | — | + IAM task roles | `test_oidc.py`, secrets tests | ✅ |
+| Tenant isolation (3 layers) | Data access, retrieval pre-filter, output scan | — | Same | `test_storage.py`, cross-tenant evals (0 leakage gate) | ✅ |
+| Sandboxed code execution | Subprocess with AST allow-list | Docker, network-isolated | Separate task / Firecracker | `test_sandbox.py` | ✅ |
+| Secrets | File store with scope policy | — | Secrets Manager | secrets tests | 🟡 |
+| Supply chain | Pinned models + adapter hashes, Dependabot, gitleaks, SBOMs, Trivy | — | Same + signed images | CI `security`, `supply-chain` | ✅ |
+| Penetration test | — | — | External test before go-live | — | ⬜ |
+
+## Governance, audit and privacy
+
+| Capability | Local implementation | Alternatives | Production | Evidence | Status |
+|-----------|----------------------|--------------|-----------|----------|--------|
+| Approval matrix, four-eyes, signed approvals | 7 server-side checks, HMAC | — | Same + KMS key | `test_approvals_executor.py` | ✅ |
+| Tamper-evident audit | Hash chain, daily verify | — | Same | `test_audit.py` | ✅ |
+| Write-once audit archive | Read-only segments + MinIO Object Lock, compared with the DB nightly | files only (bare metal) | S3 Object Lock, compliance, 7 years | `test_archive_backup.py` | ✅ |
+| Retention & legal hold | Catalogue-driven daily purge | — | Same + Mongo TTL | `test_privacy.py` | ✅ |
+| Data-subject rights | Export and erasure (pseudonymisation) | — | Same | `test_privacy.py`, API tests | ✅ |
+| Tenant offboarding | Kill switch → verifiable export → delete → revoke | — | + revoke platform OAuth grants | `test_privacy.py` | 🟡 OAuth revocation is a runbook step |
+| Repository governance | CODEOWNERS, PR template, SECURITY.md, pre-commit | — | + branch protection settings | `.github/` | 🟡 enable branch protection in GitHub |
+| Contracts (DPA, model-provider terms) | — | — | Legal | — | ⬜ |
+| Licence | — | — | Owner's choice | — | ⬜ |
+
+## Quality, evaluation and learning
+
+| Capability | Local implementation | Alternatives | Production | Evidence | Status |
+|-----------|----------------------|--------------|-----------|----------|--------|
+| Test pyramid | Unit, API, e2e, chaos, architecture, integration, k6 | — | Same in CI | 85% coverage gate | ✅ |
+| Eval suites + promotion gate | 10 suites, ~1,100 cases, hard gates, cost ±15% | `make evals-mlx` on any profile | + shadow / A-B | `make evals gate` | ✅ |
+| Outcome tracking | 14-day actual vs predicted, graded in code | — | Same | `test_feedback_loop.py` | ✅ |
+| Weekly triage | Auto-prepared page + suggested actions | — | Same | `test_feedback_loop.py` | ✅ |
+
+## Operations
+
+| Capability | Local implementation | Alternatives | Production | Evidence | Status |
+|-----------|----------------------|--------------|-----------|----------|--------|
+| Observability | Langfuse, Jaeger, Prometheus, Grafana, Alertmanager | — | + CloudWatch, X-Ray, PagerDuty | `test_observability.py`, dashboards | ✅ |
+| Backups & restore drills | `adintel backup` (auto-drill), `scripts/backup.sh` | — | Atlas PITR + quarterly DR test | `test_archive_backup.py` | ✅ |
+| Runbooks & cadence | P1 runbooks, privacy and offboarding runbooks | — | + on-call rota | `docs/12-operations` | 🟡 staffing |
+| CI/CD | GitHub Actions: lint, types, tests, evals, security, SBOM | — | Blue/green with auto-rollback, migrations task | `.github/workflows` | 🟡 needs AWS accounts and secrets |
+| Capacity | k6 Monday-peak profile | — | Load test at real scale in staging | `tests/load` | 🟡 |
+
+## Known limits of the local setup (by design)
+
+- **Admin UI coverage:** feature flags, triage, outcomes and privacy requests are available through the API
+  and CLI; the Angular governance console shows kill switches, audit and cost but not yet these screens.
+- **Single machine:** availability targets in the [DR plan](../12-operations/disaster-recovery.md) assume
+  multi-AZ production; locally a reboot means a restart (runs resume from checkpoints).
+- **Model quality:** local models are evaluated with the same suites, but production promotion requires the
+  gate to pass on the production models (`release.yml` staging job).

@@ -32,7 +32,7 @@ Plain-English notes for every change live in [changelog/](changelog/).
 | 11 | Cost | [Cost, tokens & latency](11-cost/cost-model.md) |
 | 12 | Operations | [Runbooks](12-operations/runbooks.md) · [Cadence](12-operations/operational-cadence.md) · [Disaster recovery](12-operations/disaster-recovery.md) · [Incident template](12-operations/incidents/TEMPLATE.md) |
 | 13 | Setup | [Local setup](13-setup/local-setup.md) · [Model servers: mlx-lm, Ollama, LM Studio, llama.cpp, vLLM](13-setup/model-servers.md) |
-| 14 | Production | [Promotion to production](14-production/promotion-to-production.md) · [Environments & CI/CD](14-production/environments-and-cicd.md) |
+| 14 | Production | [Promotion to production](14-production/promotion-to-production.md) · [Environments & CI/CD](14-production/environments-and-cicd.md) · [Production-readiness matrix](14-production/production-readiness-matrix.md) |
 | 15 | Fine-tuning | [Report model LoRA](15-finetuning/finetuning.md) |
 | 16 | Frontend | [Angular app](16-frontend/frontend.md) |
 | 17 | API | [API reference](17-api/api-reference.md) |

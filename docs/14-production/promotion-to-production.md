@@ -1,5 +1,8 @@
 # Promoting AdIntel from local to production — step by step
 
+> Review the [production-readiness matrix](production-readiness-matrix.md) first: it lists every capability,
+> its local implementation and alternatives, the production equivalent, evidence, and what remains an owner decision.
+
 This guide takes the system you run on your laptop to a governed production deployment on AWS. Nothing
 in the application code changes: every local component sits behind an interface, and promotion swaps the
 implementation through configuration (`docs/01-architecture/aws-to-local-mapping.md`).

@@ -15,6 +15,9 @@ models served by `mlx-lm`, and promotes to AWS by changing configuration, not co
 | Queues / cache | Redis (or in-memory) | SQS (FIFO for executions) / ElastiCache |
 | Services | 4 local processes or Docker Compose | ECS Fargate with per-service IAM roles |
 | Observability | Langfuse, Jaeger, Prometheus, Grafana, Alertmanager | Langfuse in VPC, X-Ray, CloudWatch, Grafana, PagerDuty |
+| Identity | Keycloak (OIDC, PKCE) or dev login | Cognito / Entra ID / Okta (OIDC) |
+| Audit archive | Read-only files + MinIO Object Lock | S3 Object Lock, compliance mode, 7 years |
+| Ad data | Synthetic worlds or your CSV exports | Live platform APIs (read scopes; writes only in the executor) |
 
 ## 30-second demo (no Docker, no models)
 
@@ -54,7 +57,7 @@ flowchart LR
 
 - **9 agents + 1 deliberately dumb executor**, LangGraph supervisor pattern (`src/adintel/agents`, `graph`).
 - **Harness:** budget guard (25 steps / 400k tokens / $2 / 900 s), kill switches at 4 levels, idempotency,
-  per-step checkpoints with resume, nested timeouts, the 20-row degradation matrix (`src/adintel/harness`).
+  per-step checkpoints with resume, nested timeouts, the 21-row degradation matrix (`src/adintel/harness`).
 - **Validation wrapper** around every model call: schema, repair ×2, retry with jitter, fallback chain,
   PII redaction, untrusted fencing, prompt/response hashing (`src/adintel/llm/gateway.py`).
 - **RAG:** semantic chunking, hybrid vector + BM25 with RRF, mandatory tenant pre-filter, reranking,
@@ -68,7 +71,18 @@ flowchart LR
 - **Testing:** unit, API, end-to-end, chaos, architecture-fitness, integration and k6 load tests (`tests/`).
 - **Fine-tuning:** LoRA on the 4-bit base with `mlx_lm.lora`, signed and hash-pinned adapters (`finetune/`).
 - **Angular 18 UI:** live run timeline, explainability trace, approval screen, streaming chat, governance console (`frontend/`).
-- **Production path:** Terraform for AWS, GitHub Actions CI/CD with blue/green and auto-rollback (`infra/`, `.github/`).
+- **Enterprise identity:** OIDC/JWKS verification (Keycloak locally, Cognito in prod), PKCE sign-in, least-privilege
+  role intersection (`security/auth.py`, `deploy/keycloak/`).
+- **Learning loop:** 14-day outcome tracking (actual vs predicted), per-tenant/brand feature flags, weekly triage
+  page (`feedback/`, `harness/flags.py`).
+- **Data lifecycle:** retention purge with legal hold, data-subject export/erasure, tenant offboarding, write-once
+  audit archive (MinIO Object Lock locally), backups with restore drills, forward-only migrations
+  (`privacy/`, `audit/archive.py`, `ops/`, `storage/migrations/`).
+- **Local alternatives:** bring-your-own-data CSV connector with manual execution; Ollama / LM Studio / llama.cpp /
+  vLLM profiles; per-tone report adapters (`connectors/csv_files.py`, `config/model-profiles.yaml`).
+- **Production path:** Terraform for AWS, GitHub Actions CI/CD with blue/green and auto-rollback, migrations as a
+  one-off task, SBOMs and secret scanning (`infra/`, `.github/`). Readiness:
+  [production-readiness matrix](docs/14-production/production-readiness-matrix.md).
 
 ## Quality gates
 
@@ -76,7 +90,7 @@ flowchart LR
 make lint typecheck test-cov security evals gate
 ```
 
-ruff · mypy --strict · ~200 tests (89% coverage, 85% gate) · bandit · 10 eval suites · promotion gate.
+ruff · mypy --strict · ~260 tests (89% coverage, 85% gate) · bandit · 10 eval suites · promotion gate.
 
 ## Documentation
 
