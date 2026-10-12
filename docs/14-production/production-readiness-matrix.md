@@ -30,6 +30,8 @@ decided, why, where it is enforced, and the human actions still needed.
 | Model & prompt registry, pinning | `config/models.yaml`, `prompts/registry.yaml`, floating tags refused | — | Same | registry tests | ✅ |
 | Fine-tuning per brand voice | `mlx_lm.lora`, signed adapters, `report:<tone>` tiers | vLLM LoRA modules, llama.cpp `--lora`, Ollama `ADAPTER` | SageMaker QLoRA | `test_model_profiles.py` | ✅ |
 | Safety classifier, fails closed | Safety tier, no fallback | — | Llama Guard + Bedrock Guardrails | `test_guardrail.py`, injection evals (100% gate) | ✅ |
+| Bulkheads / backpressure | Per-tier concurrency caps, fast `TierSaturated` → fallback; 2 MB body limit | — | Same + ALB limits | `test_bulkhead.py` | ✅ |
+| Base-weight integrity | `adintel weights lock/verify` (HF cache or any file) | — | Provider-pinned model IDs | `test_egress_weights.py` | ✅ |
 
 ## Data and retrieval
 
@@ -52,6 +54,7 @@ decided, why, where it is enforced, and the human actions still needed.
 | Sandboxed code execution | Subprocess with AST allow-list | Docker, network-isolated | Separate task / Firecracker | `test_sandbox.py` | ✅ |
 | Secrets | File store with scope policy, AES-256-GCM at rest, one key per scope | plaintext (dev only) | Secrets Manager + KMS + IAM | `test_secret_crypto.py` | ✅ |
 | Supply chain | Pinned models + adapter hashes, Dependabot, gitleaks, SBOMs, Trivy | — | Same + signed images | CI `security`, `supply-chain` | ✅ |
+| Egress control / air-gapped | `ADINTEL_OFFLINE`, egress allowlist checked at start-up and connect time | unrestricted (dev) | VPC without internet route + allowlist | `test_egress_weights.py` | ✅ |
 | Penetration test & DAST | ZAP API scan on every PR, `make dast` | — | External test before go-live and annually ([plan](../04-security/penetration-testing.md)) | CI `dast` | 🟡 decided; engage the firm |
 
 ## Governance, audit and privacy
@@ -83,6 +86,7 @@ decided, why, where it is enforced, and the human actions still needed.
 |-----------|----------------------|--------------|-----------|----------|--------|
 | Observability | Langfuse, Jaeger, Prometheus, Grafana, Alertmanager | — | + CloudWatch, X-Ray, PagerDuty | `test_observability.py`, dashboards | ✅ |
 | Backups & restore drills | `adintel backup` (auto-drill), `scripts/backup.sh` | — | Atlas PITR + quarterly DR test | `test_archive_backup.py` | ✅ |
+| Process supervision & TLS | launchd / hardened systemd units (separate executor user), Caddy HTTPS edge ([team access](../13-setup/team-access.md)) | terminals (dev) | ECS services + ALB/CloudFront | `scripts/install_services.sh --print` | ✅ |
 | Runbooks, cadence & on-call | P1 runbooks; [on-call policy](../12-operations/on-call.md); Alertmanager → API webhook → Governance console | — | PagerDuty / Slack receivers | API tests | 🟡 decided; staff the rotation (≥ 4) |
 | CI/CD | GitHub Actions: lint, types, tests, evals, security, SBOM | — | Blue/green with auto-rollback, migrations task | `.github/workflows` | 🟡 needs AWS accounts and secrets |
 | Capacity | k6 Monday-peak profile | — | Load test at real scale in staging | `tests/load` | 🟡 |
