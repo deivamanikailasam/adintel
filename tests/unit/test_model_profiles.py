@@ -88,3 +88,19 @@ def test_report_for_a_warm_brand_uses_the_warm_adapter(db, mock_llm, tmp_path, m
     assert s.report.model_tier == "report:warm" and s.report.adapter_sha256 == adapter_digest(adapter)
     assert s.report.grounding.passed
     reset_registry()
+
+
+def test_data_terms_are_enforced_outside_local(tmp_path):
+    """ADR L-15: no tier may send client data to a provider that trains on it or keeps it."""
+    raw = yaml.safe_load(Path("config/models.yaml").read_text())
+    assert ModelRegistry(raw, Settings(env="production"))  # committed terms satisfy production
+    raw["tiers"]["frontier"].pop("data_terms")
+    assert ModelRegistry(raw, Settings(env="local"))  # local inference: tolerated without a declaration
+    with pytest.raises(ConfigError, match="ADR L-15"):
+        ModelRegistry(raw, Settings(env="production"))
+    raw["tiers"]["frontier"]["data_terms"] = {"no_training": True, "retention": "30 days (abuse monitoring)"}
+    with pytest.raises(ConfigError, match="zero retention"):
+        ModelRegistry(raw, Settings(env="staging"))
+    raw["tiers"]["frontier"]["data_terms"] = {"no_training": False, "retention": "none"}
+    with pytest.raises(ConfigError, match="train on inputs"):
+        ModelRegistry(raw, Settings(env="local"))

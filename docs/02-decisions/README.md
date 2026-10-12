@@ -32,6 +32,7 @@ Every significant decision is logged with its reason **and the condition that wo
 | [L-12](l-12-synchronous-agents-async-edges.md) | Synchronous agents, async edges | accepted | Interactive agent paths become latency-bound on I/O fan-out. |
 | [L-13](l-13-forward-only-data-migrations.md) | Forward-only data migrations with expand/contract | accepted | A single migration takes > 10 min on production data. |
 | [L-14](l-14-proprietary-licence-and-dependency-policy.md) | Proprietary licence, enforced dependency-licence policy | accepted | Strategy moves to open core, or a customer requires an OSS licence. |
+| [L-15](l-15-model-provider-data-terms.md) | Model providers must not train on or retain customer data — enforced in code | accepted | A customer opts into a provider with retention, or regulation requires provider logging. |
 
 ## How to add a decision
 

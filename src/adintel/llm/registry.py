@@ -45,6 +45,19 @@ def _verify_adapter(tier: str, a_path: str, a_sha: str | None, verify: bool) -> 
     return p
 
 
+def _check_data_terms(tier: str, terms: dict[str, Any] | None, env: str) -> None:
+    """ADR L-15: client data may only reach a model whose provider neither trains on it nor keeps it."""
+    terms = terms or {}
+    if terms.get("no_training") is False:
+        raise ConfigError(f"tier {tier}: provider may train on inputs — not allowed in any environment")
+    if env in ("staging", "production"):
+        retention = str(terms.get("retention", "")).lower()
+        if terms.get("no_training") is not True or not retention.startswith(("none", "0", "zero")):
+            raise ConfigError(
+                f"tier {tier}: {env} requires data_terms with no_training: true and zero retention (ADR L-15)"
+            )
+
+
 def load_profile(settings: Settings) -> dict[str, dict[str, str]]:
     """Per-tier {base_url, model_id} for ``ADINTEL_MODEL_PROFILE``; ``small`` also covers report and safety."""
     path = Path(settings.model_profiles_config)
@@ -84,6 +97,7 @@ class ModelRegistry:
                 a_path, a_sha = settings.report_adapter_path, settings.report_adapter_sha256
             if a_path:
                 _verify_adapter(name, a_path, a_sha, verify_adapters)
+            _check_data_terms(name, t.get("data_terms"), settings.env)
             pricing = t.get("pricing", {})
             self.tiers[name] = TierConfig(
                 name=name,

@@ -3,7 +3,9 @@
 # Governance rules (enforced at startup by adintel.llm.registry):
 #   * every model_id is pinned — "latest", empty values and wildcard tags are rejected;
 #   * an adapter must carry the SHA-256 of its weights; a mismatch refuses to start;
-#   * every tier has an owner and the date its eval scores were last recorded.
+#   * every tier has an owner and the date its eval scores were last recorded;
+#   * every tier declares data_terms; staging/production refuse a tier without no_training: true and a
+#     zero retention statement (ADR L-15). Local inference trivially satisfies this.
 #
 # Local defaults assume two mlx_lm.server processes on this machine:
 #   make mlx-small     -> Qwen3.6-35B-A3B-4bit  on :8080  (small / report / safety tiers)
@@ -28,6 +30,7 @@ tiers:
     fallback: small
     owner: "ML lead"
     weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
+    data_terms: { no_training: true, retention: "none (local inference)", region: "this machine" }
     production_equivalent: "anthropic.claude-sonnet (Amazon Bedrock, pinned model ID)"
     pricing:                     # notional USD per 1M tokens (mirrors the production equivalent)
       input: 3.00
@@ -47,6 +50,7 @@ tiers:
     fallback: frontier
     owner: "ML lead"
     weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
+    data_terms: { no_training: true, retention: "none (local inference)", region: "this machine" }
     production_equivalent: "meta.llama3-3-8b-instruct (Bedrock / SageMaker)"
     pricing:
       input: 0.22
@@ -78,6 +82,7 @@ tiers:
     fallback: frontier
     owner: "ML lead"
     weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
+    data_terms: { no_training: true, retention: "none (local inference)", region: "this machine" }
     production_equivalent: "Llama 3.3 8B + QLoRA adapter (SageMaker ml.g5.2xlarge)"
     pricing:
       input: 0.22
@@ -97,6 +102,7 @@ tiers:
     fallback: null
     owner: "Security"
     weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
+    data_terms: { no_training: true, retention: "none (local inference)", region: "this machine" }
     production_equivalent: "Llama Guard 3 8B (SageMaker ml.g5.xlarge) + Bedrock Guardrails"
     pricing:
       input: 0.20
