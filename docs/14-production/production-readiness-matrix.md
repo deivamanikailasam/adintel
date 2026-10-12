@@ -72,7 +72,7 @@ decided, why, where it is enforced, and the human actions still needed.
 | Capability | Local implementation | Alternatives | Production | Evidence | Status |
 |-----------|----------------------|--------------|-----------|----------|--------|
 | Test pyramid | Unit, API, e2e, chaos, architecture, integration, k6 | — | Same in CI | 85% coverage gate | ✅ |
-| Eval suites + promotion gate | 10 suites, ~1,100 cases, hard gates, cost ±15% | `make evals-mlx` on any profile | + shadow / A-B | `make evals gate` | ✅ |
+| Eval suites + promotion gate | 10 suites, ~1,100 cases, hard gates, cost ±15% | `make evals-mlx` on any profile | + shadow mode on live traffic (`llm/shadow.py`) | `make evals gate`, `test_shadow.py` | ✅ |
 | Outcome tracking | 14-day actual vs predicted, graded in code | — | Same | `test_feedback_loop.py` | ✅ |
 | Weekly triage | Auto-prepared page + suggested actions | — | Same | `test_feedback_loop.py` | ✅ |
 

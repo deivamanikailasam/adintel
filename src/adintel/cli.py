@@ -1,7 +1,7 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
 privacy-export, privacy-erase, offboard,
 audit-archive, backup, restore, restore-drill, migrate,
-csv-template, csv-sample."""
+csv-template, csv-sample, shadow-report."""
 
 from __future__ import annotations
 
@@ -291,6 +291,13 @@ def cmd_csv_sample(args: argparse.Namespace) -> None:
     _print([str(p) for p in export_sample(args.tenant, args.brand, end - timedelta(days=args.days - 1), end, out)])
 
 
+def cmd_shadow_report(args: argparse.Namespace) -> None:
+    from adintel.llm.shadow import report
+    from adintel.storage import get_database
+
+    _print(report(get_database(), args.tenant, days=args.days))
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -384,6 +391,10 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--days", type=int, default=120)
     sp.add_argument("--out")
     sp.set_defaults(fn=cmd_csv_sample)
+    sp = sub.add_parser("shadow-report", help="challenger vs champion on live traffic (shadow mode)")
+    sp.add_argument("--tenant", default="brightwave")
+    sp.add_argument("--days", type=int, default=3)
+    sp.set_defaults(fn=cmd_shadow_report)
     args = p.parse_args(argv)
     args.fn(args)
 

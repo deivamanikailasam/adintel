@@ -117,6 +117,12 @@ tiers:
       output: 0.20
       cached_input: 0.02
 
+# Shadow mode (llm/shadow.py): replay a sample of a champion tier's successful calls against a challenger
+# tier, never using the answer, to prove a new model on live traffic before promotion. Example:
+#   tiers:  { ..., frontier_next: { <a full tier definition pointing at the candidate model> } }
+#   shadow: { frontier: { challenger: frontier_next, sample_rate: 0.2 } }
+shadow: {}
+
 # Which tier and decoding settings each agent uses. Temperatures follow the temperature policy
 # (docs/01-architecture/model-strategy.md); token budgets are hard caps enforced in code.
 agents:

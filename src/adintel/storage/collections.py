@@ -197,6 +197,13 @@ CATALOGUE: tuple[CollectionSpec, ...] = (
         (IndexSpec((T, ("recommendation_id", 1)), unique=True), IndexSpec((T, ("brand_id", 1), ("measured_at", -1)))),
     ),
     CollectionSpec(
+        "shadow_results",
+        True,
+        "Challenger model outputs compared with the champion (never used)",
+        "90 days",
+        (IndexSpec((T, ("created_at", -1))),),
+    ),
+    CollectionSpec(
         "schema_migrations",
         False,
         "Which data migrations ran, when, with what code checksum",

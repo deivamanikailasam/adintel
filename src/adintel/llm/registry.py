@@ -139,6 +139,16 @@ class ModelRegistry:
                 adapter_sha256=entry["sha256"],
                 extra_body={**base.extra_body, **(body or {})},
             )
+        self.shadow: dict[str, dict[str, Any]] = {}
+        for champion, plan in (raw.get("shadow") or {}).items():
+            if champion not in self.tiers or plan.get("challenger") not in self.tiers:
+                raise ConfigError(f"shadow {champion}: champion and challenger must both be defined tiers")
+            if champion == "safety":
+                raise ConfigError("the safety tier is never shadowed (it stays single-model and fail-closed)")
+            rate = float(plan.get("sample_rate", 0.2))
+            if not 0 < rate <= 1:
+                raise ConfigError(f"shadow {champion}: sample_rate must be in (0, 1]")
+            self.shadow[champion] = {"challenger": plan["challenger"], "sample_rate": rate}
         for name, t in self.tiers.items():
             if t.fallback and t.fallback not in self.tiers:
                 raise ConfigError(f"tier {name}: unknown fallback {t.fallback}")

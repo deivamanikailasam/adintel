@@ -33,7 +33,7 @@ from adintel.core.hashing import canonical_json, sha256_obj, sha256_text
 from adintel.core.ids import new_id
 from adintel.core.resilience import retry_call
 from adintel.harness.budget import UnlimitedMeter, UsageMeter
-from adintel.llm import bulkhead
+from adintel.llm import bulkhead, shadow
 from adintel.llm.prompts import Prompt, get_prompts
 from adintel.llm.providers import get_provider
 from adintel.llm.registry import ModelRegistry, get_registry
@@ -441,21 +441,31 @@ class LLMGateway:
                         ]
                         continue
                     break  # repairs exhausted → next tier
-                call_ids.append(
-                    self._record(
-                        agent=agent,
-                        tier=tier,
-                        prompt=prompt,
-                        messages=convo,
-                        result=result,
-                        attempt=attempt,
-                        status="ok",
-                        error=None,
-                        temperature=cfg.temperature,
-                        schema_name=schema.__name__,
-                        retrieved=retrieved_doc_ids or [],
-                        cost=cost,
-                    )
+                ok_id = self._record(
+                    agent=agent,
+                    tier=tier,
+                    prompt=prompt,
+                    messages=convo,
+                    result=result,
+                    attempt=attempt,
+                    status="ok",
+                    error=None,
+                    temperature=cfg.temperature,
+                    schema_name=schema.__name__,
+                    retrieved=retrieved_doc_ids or [],
+                    cost=cost,
+                )
+                call_ids.append(ok_id)
+                shadow.maybe_shadow(
+                    self,
+                    agent=agent,
+                    champion=tier,
+                    messages=messages,
+                    request=req,
+                    schema=schema,
+                    value=value,
+                    call_id=ok_id,
+                    latency_ms=result.latency_ms,
                 )
                 return StructuredResult(
                     value=value,

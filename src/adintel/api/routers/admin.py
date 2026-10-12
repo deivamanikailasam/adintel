@@ -177,6 +177,15 @@ def notifications(
     return TenantScopedRepo(database, "notifications", p.tenant_id).find({}, sort=[("created_at", -1)], limit=100)
 
 
+@router.get("/shadow")
+def shadow_report(
+    days: int = 3, p: Principal = Depends(require(Role.ADMIN, *SENIORS)), database: Database = Depends(db)
+) -> list[dict[str, Any]]:
+    from adintel.llm.shadow import report
+
+    return report(database, p.tenant_id, days=max(1, min(days, 30)))
+
+
 @router.get("/platform-alerts")
 def platform_alerts(
     p: Principal = Depends(require(Role.ADMIN)), database: Database = Depends(db)
