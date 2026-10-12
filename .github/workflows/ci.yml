@@ -31,7 +31,7 @@ jobs:
       - run: uv venv -p 3.12 && uv pip install -e ".[dev,mcp]"
       - name: unit + api + e2e + chaos, 85% coverage gate on non-LLM code
         run: .venv/bin/pytest -m "not integration and not mlx" --cov --cov-report=xml --cov-fail-under=85
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: coverage, path: coverage.xml }
 
   integration:
@@ -62,7 +62,7 @@ jobs:
         run: .venv/bin/python -m adintel.evals.runner --provider mock
       - name: promotion gate (hard thresholds, category regressions, cost within ±15%)
         run: .venv/bin/python -m adintel.evals.gate
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with: { name: eval-report, path: evals/reports/latest.* }
 
@@ -104,7 +104,7 @@ jobs:
       - name: SBOM — container image (Syft, SPDX)
         uses: anchore/sbom-action@v0
         with: { image: "adintel:${{ github.sha }}", format: spdx-json, output-file: sbom-image.spdx.json, upload-artifact: false }
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with: { name: sbom, path: "sbom-*.json\nTHIRD_PARTY_NOTICES.md" }
 
   dast:
