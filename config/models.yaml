@@ -1,0 +1,105 @@
+# Model registry — the single source of truth for which model each tier uses.
+#
+# Governance rules (enforced at startup by adintel.llm.registry):
+#   * every model_id is pinned — "latest", empty values and wildcard tags are rejected;
+#   * an adapter must carry the SHA-256 of its weights; a mismatch refuses to start;
+#   * every tier has an owner and the date its eval scores were last recorded.
+#
+# Local defaults assume two mlx_lm.server processes on this machine:
+#   make mlx-small     -> Qwen3.6-35B-A3B-4bit  on :8080  (small / report / safety tiers)
+#   make mlx-frontier  -> Qwen3.8-27B-8bit      on :8081  (frontier / judge tiers)
+#
+# Override per machine with env vars (ADINTEL_MODEL_SMALL_ID, ADINTEL_MODEL_FRONTIER_BASE_URL, ...)
+# rather than editing this file, so the registry in git always reflects the evaluated configuration.
+
+registry_version: "2026-10-12.1"
+
+tiers:
+  frontier:
+    description: "Judgement: Orchestrator decisions, Analyst root cause, Optimizer, complex chat, LLM judge"
+    provider: openai_compat
+    base_url: "http://127.0.0.1:8081/v1"
+    model_id: "mlx-community/Qwen3.8-27B-8bit"
+    context_window: 32768
+    timeout_seconds: 90
+    connect_timeout_seconds: 5
+    max_output_tokens: 2500
+    supports_json_mode: false
+    fallback: small
+    owner: "ML lead"
+    production_equivalent: "anthropic.claude-sonnet (Amazon Bedrock, pinned model ID)"
+    pricing:                     # notional USD per 1M tokens (mirrors the production equivalent)
+      input: 3.00
+      output: 15.00
+      cached_input: 0.30
+
+  small:
+    description: "Volume: field-mapping proposals, DQ summary, chat lookups, routing classification"
+    provider: openai_compat
+    base_url: "http://127.0.0.1:8080/v1"
+    model_id: "mlx-community/Qwen3.6-35B-A3B-4bit"
+    context_window: 32768
+    timeout_seconds: 45
+    connect_timeout_seconds: 5
+    max_output_tokens: 1200
+    supports_json_mode: false
+    fallback: frontier
+    owner: "ML lead"
+    production_equivalent: "meta.llama3-3-8b-instruct (Bedrock / SageMaker)"
+    pricing:
+      input: 0.22
+      output: 0.22
+      cached_input: 0.022
+
+  report:
+    description: "Report writing in brand voice (small base + LoRA adapter per tone cluster)"
+    provider: openai_compat
+    base_url: "http://127.0.0.1:8080/v1"
+    model_id: "mlx-community/Qwen3.6-35B-A3B-4bit"
+    adapter:
+      path: null                 # e.g. finetune/adapters/report-warm-v3 (served with --adapter-path)
+      sha256: null               # required when path is set
+    context_window: 32768
+    timeout_seconds: 60
+    connect_timeout_seconds: 5
+    max_output_tokens: 1800
+    supports_json_mode: false
+    fallback: frontier
+    owner: "ML lead"
+    production_equivalent: "Llama 3.3 8B + QLoRA adapter (SageMaker ml.g5.2xlarge)"
+    pricing:
+      input: 0.22
+      output: 0.22
+      cached_input: 0.022
+
+  safety:
+    description: "Guardrail semantic classifier (Llama-Guard-style taxonomy). Never retried, never falls back."
+    provider: openai_compat
+    base_url: "http://127.0.0.1:8080/v1"
+    model_id: "mlx-community/Qwen3.6-35B-A3B-4bit"
+    context_window: 32768
+    timeout_seconds: 30
+    connect_timeout_seconds: 5
+    max_output_tokens: 300
+    supports_json_mode: false
+    fallback: null
+    owner: "Security"
+    production_equivalent: "Llama Guard 3 8B (SageMaker ml.g5.xlarge) + Bedrock Guardrails"
+    pricing:
+      input: 0.20
+      output: 0.20
+      cached_input: 0.02
+
+# Which tier and decoding settings each agent uses. Temperatures follow the temperature policy
+# (docs/01-architecture/model-strategy.md); token budgets are hard caps enforced in code.
+agents:
+  orchestrator:   { tier: frontier, temperature: 0.0, max_input_tokens: 8000,  max_output_tokens: 400 }
+  analyst:        { tier: frontier, temperature: 0.0, max_input_tokens: 32000, max_output_tokens: 2500 }
+  optimizer:      { tier: frontier, temperature: 0.0, max_input_tokens: 16000, max_output_tokens: 1500 }
+  ingestion:      { tier: small,    temperature: 0.0, max_input_tokens: 4000,  max_output_tokens: 400 }
+  data_quality:   { tier: small,    temperature: 0.0, max_input_tokens: 4000,  max_output_tokens: 300 }
+  report:         { tier: report,   temperature: 0.2, max_input_tokens: 12000, max_output_tokens: 1800 }
+  chat_simple:    { tier: small,    temperature: 0.3, max_input_tokens: 6000,  max_output_tokens: 600 }
+  chat_complex:   { tier: frontier, temperature: 0.3, max_input_tokens: 16000, max_output_tokens: 1200 }
+  guardrail:      { tier: safety,   temperature: 0.0, max_input_tokens: 8000,  max_output_tokens: 300 }
+  judge:          { tier: frontier, temperature: 0.0, max_input_tokens: 12000, max_output_tokens: 500 }
