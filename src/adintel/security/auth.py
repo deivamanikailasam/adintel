@@ -65,11 +65,20 @@ def issue_token(user: User) -> str:
 def _decode_dev(token: str) -> Principal:
     s = get_settings()
     c = jwt.decode(token, s.jwt_secret, algorithms=["HS256"], audience=s.jwt_audience, issuer=s.jwt_issuer)
+    from adintel.storage import get_database
+    from adintel.storage.tenant_repo import TenantScopedRepo
+
+    # the token is only a claim: the current user record decides (deactivated, erased or demoted users lose
+    # access immediately, not when the token expires)
+    doc = TenantScopedRepo(get_database(), "users", c["tenant_id"]).find_one({"user_id": c["sub"]})
+    if doc is None or doc.get("active") is False:
+        raise AuthError("user is not active")
+    current = {str(r) for r in doc.get("roles", [])}
     return Principal(
         user_id=c["sub"],
         tenant_id=c["tenant_id"],
         email=c.get("email", ""),
-        roles=frozenset(Role(r) for r in c.get("roles", [])),
+        roles=frozenset(Role(r) for r in c.get("roles", []) if r in current),
         brand_ids=tuple(c.get("brand_ids", [])),
     )
 
@@ -124,6 +133,8 @@ def _decode_oidc(token: str) -> Principal:
     doc = TenantScopedRepo(get_database(), "users", tenant).find_one({"email": email}) if email else None
     if doc is None:
         raise AuthError("user is not provisioned in AdIntel for this tenant")
+    if doc.get("active") is False:
+        raise AuthError("user is deactivated in AdIntel")
     user = User.from_doc(doc)
     token_roles = _claim(c, s.oidc_roles_claim) or []
     idp_roles = {Role(r) for r in token_roles if r in {x.value for x in Role}}

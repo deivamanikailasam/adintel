@@ -1,7 +1,7 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
 privacy-export, privacy-erase, offboard,
 audit-archive, backup, restore, restore-drill, migrate,
-csv-template, csv-sample, shadow-report, weights, egress-check, secrets."""
+csv-template, csv-sample, shadow-report, weights, egress-check, secrets, scim."""
 
 from __future__ import annotations
 
@@ -367,6 +367,14 @@ def cmd_secrets(args: argparse.Namespace) -> None:
         _print({"written": str(SecretStore(root).put(args.tenant, args.platform, args.scope, values))})
 
 
+def cmd_scim(args: argparse.Namespace) -> None:
+    from adintel.api.routers.scim import issue_token
+    from adintel.storage import get_database
+
+    token = issue_token(get_database(), args.tenant, actor_id=args.actor)
+    _print({"tenant": args.tenant, "token": token, "note": "shown once; paste into the IdP's SCIM app (Bearer)"})
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -479,6 +487,11 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--scope", choices=("read", "write"))
     sp.add_argument("--from-file", help="JSON file with the credential values (for put)")
     sp.set_defaults(fn=cmd_secrets)
+    sp = sub.add_parser("scim", help="issue a SCIM provisioning token for a tenant (shown once)")
+    sp.add_argument("action", choices=("token",))
+    sp.add_argument("--tenant", default="brightwave")
+    sp.add_argument("--actor", default="cli:admin")
+    sp.set_defaults(fn=cmd_scim)
     args = p.parse_args(argv)
     args.fn(args)
 

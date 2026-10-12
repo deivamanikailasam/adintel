@@ -50,6 +50,12 @@ abuse is structurally impossible rather than prompt-prevented. Tests:
 | Web | Strict CSP, no `innerHTML` for model output (Angular interpolation only), security headers, CORS allow-list, WAF + rate limits in prod | `api/app.py`, `frontend/src/index.html` |
 | Abuse / cost | Per-tenant rate limits and daily cost caps, per-run budget, kill switches | `harness/admission.py`, `harness/budget.py` |
 
+## Provisioning
+
+Users come from the identity provider over SCIM 2.0 (joiners, movers, leavers); approval limits and
+brand scope are never set by the IdP; a deactivated user loses access on the next request, whatever
+token they hold. Details: [user-provisioning.md](user-provisioning.md).
+
 ## Assurance
 
 Automated (every PR): tests, adversarial evals, SAST, dependency/image scans, secret scan, licence gate and an

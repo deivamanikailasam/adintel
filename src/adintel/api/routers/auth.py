@@ -26,8 +26,8 @@ def dev_login(body: DevLogin, database: Database = Depends(db)) -> dict[str, Any
     if not s.dev_login_enabled or s.env not in ("local", "test"):
         raise HTTPException(404, "not found")
     doc = SystemRepo(database, "users", purpose="dev login").find_one({"email": body.email})
-    if doc is None:
-        raise HTTPException(401, "unknown user")
+    if doc is None or doc.get("active") is False:
+        raise HTTPException(401, "unknown or inactive user")
     user = User.from_doc(doc)
     return {"access_token": issue_token(user), "token_type": "bearer", "user": user.model_dump(mode="json")}
 

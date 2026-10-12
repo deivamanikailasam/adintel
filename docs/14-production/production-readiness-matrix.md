@@ -47,6 +47,7 @@ decided, why, where it is enforced, and the human actions still needed.
 |-----------|----------------------|--------------|-----------|----------|--------|
 | Enterprise SSO | Keycloak OIDC, PKCE, JWKS verification | dev login (local only) | Cognito / Entra ID / Okta | `test_oidc.py` | ✅ |
 | Least privilege | IdP roles ∩ AdIntel roles; process-scoped secrets | — | + IAM task roles | `test_oidc.py`, secrets tests | ✅ |
+| User lifecycle (SCIM 2.0) | `/scim/v2/Users`, per-tenant hashed tokens, deactivation effective on next request | admin-managed users | Okta / Entra ID provisioning | `test_scim.py` | ✅ |
 | Tenant isolation (3 layers) | Data access, retrieval pre-filter, output scan | — | Same | `test_storage.py`, cross-tenant evals (0 leakage gate) | ✅ |
 | Sandboxed code execution | Subprocess with AST allow-list | Docker, network-isolated | Separate task / Firecracker | `test_sandbox.py` | ✅ |
 | Secrets | File store with scope policy, AES-256-GCM at rest, one key per scope | plaintext (dev only) | Secrets Manager + KMS + IAM | `test_secret_crypto.py` | ✅ |
