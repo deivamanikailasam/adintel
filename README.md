@@ -98,7 +98,7 @@ flowchart LR
 make lint typecheck test-cov security evals gate
 ```
 
-ruff · mypy --strict · ~320 tests (89% coverage, 85% gate) · bandit · 10 eval suites · promotion gate.
+ruff · mypy --strict · ~325 tests (88% coverage, 85% gate) · bandit · 10 eval suites · promotion gate.
 
 ## Documentation
 

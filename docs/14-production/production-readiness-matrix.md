@@ -18,7 +18,7 @@ decided, why, where it is enforced, and the human actions still needed.
 | Bounded autonomy (L2) | Agents propose; signed human approval; executor has no model | — | Same | `test_approvals_executor.py`, architecture tests | ✅ |
 | Budgets, timeouts, kill switches | Per-run budget, nested timeouts, 4-level switches | — | Same | `test_harness.py`, chaos tests | ✅ |
 | Feature flags / staged rollout | Per tenant and brand, audited, visible degradation | — | Same | `test_feedback_loop.py` | ✅ |
-| Agent interoperability (MCP) | Read-only MCP server acting as the signed-in user, outputs fenced as data ([mcp.md](../17-api/mcp.md)) | direct `/v1` API | Same | `test_mcp.py` | ✅ |
+| Agent interoperability (MCP) | Read-only MCP server acting as the signed-in user, outputs fenced as data; verified with official SDK clients 1.30 and 2.3 ([mcp.md](../17-api/mcp.md)) | direct `/v1` API | Same | `test_mcp.py`, `tests/mcp/`, CI `mcp-compat` | ✅ |
 | Degradation, never silent failure | 21-row matrix → report caveats + metrics | — | Same | `test_harness.py::matrix covers every code` | ✅ |
 | Checkpoint & resume | State after every step | — | Atlas | chaos tests | ✅ |
 
@@ -48,11 +48,11 @@ decided, why, where it is enforced, and the human actions still needed.
 
 | Capability | Local implementation | Alternatives | Production | Evidence | Status |
 |-----------|----------------------|--------------|-----------|----------|--------|
-| Enterprise SSO | Keycloak OIDC, PKCE, JWKS verification | dev login (local only) | Cognito / Entra ID / Okta | `test_oidc.py` | ✅ |
+| Enterprise SSO | Keycloak OIDC, PKCE, JWKS verification; endpoints from OIDC discovery (Okta, Entra ID, Auth0, Cognito logout style) | dev login (local only) | Cognito / Entra ID / Okta | `test_oidc.py`, `test_oidc_discovery.py` | ✅ |
 | Least privilege | IdP roles ∩ AdIntel roles; process-scoped secrets | — | + IAM task roles | `test_oidc.py`, secrets tests | ✅ |
 | User lifecycle (SCIM 2.0) | `/scim/v2/Users`, per-tenant hashed tokens, deactivation effective on next request | admin-managed users | Okta / Entra ID provisioning | `test_scim.py` | ✅ |
 | Emergency access (break-glass) | Two-person or paged emergency elevation, auto-expiry, no money authority ([break-glass.md](../04-security/break-glass.md)) | — | Same + IdP PIM | `test_break_glass.py` | ✅ |
-| Web sessions & accessibility | Idle sign-out, refresh, IdP logout; WCAG 2.1 AA target ([details](../16-frontend/accessibility-and-sessions.md)) | — | Same | `auth.service.spec.ts` | 🟡 formal accessibility audit pending |
+| Web sessions & accessibility | Idle sign-out with warning, refresh, IdP logout; axe-core WCAG 2.1 A/AA audit of all 12 screens, 0 violations; [conformance report](../16-frontend/accessibility-conformance-report.md) | — | Same | `a11y.spec.ts`, `auth.service.spec.ts` | 🟡 automated audit done; manual screen-reader walkthrough (script ready) |
 | Tenant isolation (3 layers) | Data access, retrieval pre-filter, output scan | — | Same | `test_storage.py`, cross-tenant evals (0 leakage gate) | ✅ |
 | Sandboxed code execution | Subprocess with AST allow-list | Docker, network-isolated | Separate task / Firecracker | `test_sandbox.py` | ✅ |
 | Secrets | File store with scope policy, AES-256-GCM at rest, one key per scope | plaintext (dev only) | Secrets Manager + KMS + IAM | `test_secret_crypto.py` | ✅ |
