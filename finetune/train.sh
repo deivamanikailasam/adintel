@@ -14,6 +14,7 @@ mlx_lm.lora --config finetune/lora_config.yaml --data "${DATA}" --adapter-path "
 mlx_lm.lora --config finetune/lora_config.yaml --data "${DATA}" --adapter-path "${OUT}" --test --train false
 python finetune/sign_adapter.py sign "${OUT}"
 echo
+echo "Register it: config/models.yaml → tiers.report.tone_adapters.${TONE} = { path: ${OUT}, sha256: <above> }"
 echo "Next: evaluate before promotion (base vs adapter vs frontier):"
 echo "  MLX_ADAPTER=${OUT} scripts/mlx/serve_small.sh mlx-community/Qwen3.6-35B-A3B-4bit 8082"
 echo "  python finetune/evaluate_adapter.py --adapter-url http://127.0.0.1:8082/v1"

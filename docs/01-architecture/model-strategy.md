@@ -61,7 +61,8 @@ in March must be reproducible in September.
 Fine-tuning pays when a task is **narrow, high-volume, style-dependent and has labelled examples**.
 Report writing scores 4/4. Method: LoRA on the 4-bit base (QLoRA) via `mlx_lm.lora` — rank 16,
 scale 2.0 (alpha 32), dropout 0.05, 3 epochs, lr 2e-4, sequence length 4,096, loss masked on the
-prompt. One base model with swappable adapters per tone cluster instead of N full models. See
+prompt. One base model with swappable adapters per tone cluster instead of N full models (registered as
+`report:<tone>` tiers, each hash-pinned; see [model-servers.md](../13-setup/model-servers.md#per-tone-report-adapters)). See
 `docs/15-finetuning/finetuning.md`.
 
 ## Promotion to production

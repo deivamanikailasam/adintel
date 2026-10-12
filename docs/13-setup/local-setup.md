@@ -43,6 +43,9 @@ Then run the tests: `make test` (≈ 3 minutes, no services needed).
 
 ## 3. Serve your two models with mlx-lm
 
+> Not on Apple Silicon, or prefer Ollama / LM Studio / llama.cpp / vLLM? Set `ADINTEL_MODEL_PROFILE` —
+> see [model-servers.md](model-servers.md). Everything else in this guide is the same.
+
 ```bash
 uv pip install "mlx-lm>=0.22"        # in the same venv, or `pipx install mlx-lm`
 ```

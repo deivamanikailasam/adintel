@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # --- models -----------------------------------------------------------------------------------
     llm_provider: Literal["openai_compat", "bedrock", "mock"] = "openai_compat"
     models_config: Path = REPO_ROOT / "config" / "models.yaml"
+    # Which local model server the tiers point at: mlx (default, models.yaml as committed) | ollama |
+    # lmstudio | llamacpp | vllm. Profiles live in config/model-profiles.yaml; env overrides still win.
+    model_profile: str = "mlx"
+    model_profiles_config: Path = REPO_ROOT / "config" / "model-profiles.yaml"
     model_small_base_url: str | None = None
     model_frontier_base_url: str | None = None
     model_report_base_url: str | None = None

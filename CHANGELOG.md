@@ -49,3 +49,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0037 | Write-once audit archive (local files + MinIO Object Lock, S3 in prod) with database comparison; backup, restore and restore-drill tooling | [0037](docs/changelog/0037-audit-archive-backup.md) |
 | 0038 | Schema/data migration runner: ordered, locked, recorded, forward-only with expand/contract (ADR L-13); release pipeline runs it as a one-off task | [0038](docs/changelog/0038-migrations.md) |
 | 0039 | Bring-your-own-data CSV connector with manual execution through an outbox; template, worked example and docs | [0039](docs/changelog/0039-csv-connector.md) |
+| 0040 | Alternative local model servers (Ollama, LM Studio, llama.cpp, vLLM) as one-setting profiles; per-tone report adapters as hash-pinned `report:<tone>` tiers | [0040](docs/changelog/0040-model-servers-tone-adapters.md) |

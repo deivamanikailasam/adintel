@@ -59,6 +59,15 @@ tiers:
     adapter:
       path: null                 # e.g. finetune/adapters/report-warm-v3 (served with --adapter-path)
       sha256: null               # required when path is set
+    # Per-tone-cluster adapters. Each entry becomes its own tier "report:<tone>"; a brand selects one with
+    # profile.tone_cluster and falls back to the adapter above (or the base model) when its tone has none.
+    # The adapter is chosen per request: mlx_lm.server reads the "adapters" field of the request (the
+    # default extra_body below); for vLLM set model_id to the --lora-modules name and extra_body to {}.
+    # Servers that cannot switch adapters per request: serve each tone on its own port and set base_url.
+    tone_adapters: {}
+    #   warm:    { path: finetune/adapters/report-warm-v3,    sha256: "<adintel finetune digest>" }
+    #   premium: { path: finetune/adapters/report-premium-v1, sha256: "<...>", model_id: "report-premium", extra_body: {} }
+    #   bold:    { path: finetune/adapters/report-bold-v1, sha256: "<...>", base_url: "http://127.0.0.1:8083/v1", extra_body: {} }
     context_window: 32768
     timeout_seconds: 60
     connect_timeout_seconds: 5

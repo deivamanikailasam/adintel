@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import threading
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -35,10 +36,34 @@ def _check_pinned(tier: str, model_id: str) -> None:
         raise ConfigError(f"tier {tier}: floating model reference {mid!r} is not allowed; pin an exact version")
 
 
+def _verify_adapter(tier: str, a_path: str, a_sha: str | None, verify: bool) -> Path:
+    if not a_sha:
+        raise ConfigError(f"tier {tier}: adapter {a_path} has no pinned sha256")
+    p = Path(a_path) if Path(a_path).is_absolute() else REPO_ROOT / a_path
+    if verify and p.exists() and adapter_digest(p) != a_sha:
+        raise ConfigError(f"tier {tier}: adapter {a_path} hash mismatch — refusing to start")
+    return p
+
+
+def load_profile(settings: Settings) -> dict[str, dict[str, str]]:
+    """Per-tier {base_url, model_id} for ``ADINTEL_MODEL_PROFILE``; ``small`` also covers report and safety."""
+    path = Path(settings.model_profiles_config)
+    profiles = yaml.safe_load(path.read_text()) if path.exists() else {"mlx": {}}
+    if settings.model_profile not in profiles:
+        raise ConfigError(f"unknown model profile {settings.model_profile!r}; one of {sorted(profiles)}")
+    prof = dict(profiles[settings.model_profile] or {})
+    for derived in ("report", "safety"):
+        if "small" in prof and derived not in prof:
+            prof[derived] = prof["small"]
+    return prof
+
+
 class ModelRegistry:
     def __init__(self, raw: dict[str, Any], settings: Settings, *, verify_adapters: bool = True) -> None:
         self.version = str(raw.get("registry_version", "unversioned"))
+        self.profile = settings.model_profile
         self.tiers: dict[str, TierConfig] = {}
+        profile = load_profile(settings)
         overrides = {
             "small": (settings.model_small_base_url, settings.model_small_id),
             "frontier": (settings.model_frontier_base_url, settings.model_frontier_id),
@@ -46,7 +71,8 @@ class ModelRegistry:
             "safety": (settings.model_small_base_url, settings.model_small_id),
         }
         for name, t in raw["tiers"].items():
-            base_url, model_id = t["base_url"], t["model_id"]
+            p_tier = profile.get(name, {})
+            base_url, model_id = p_tier.get("base_url", t["base_url"]), p_tier.get("model_id", t["model_id"])
             o_url, o_id = overrides.get(name, (None, None))
             base_url = o_url or base_url
             model_id = o_id or model_id
@@ -57,11 +83,7 @@ class ModelRegistry:
             if name == "report" and settings.report_adapter_path:
                 a_path, a_sha = settings.report_adapter_path, settings.report_adapter_sha256
             if a_path:
-                if not a_sha:
-                    raise ConfigError(f"tier {name}: adapter {a_path} has no pinned sha256")
-                p = Path(a_path) if Path(a_path).is_absolute() else REPO_ROOT / a_path
-                if verify_adapters and p.exists() and adapter_digest(p) != a_sha:
-                    raise ConfigError(f"tier {name}: adapter {a_path} hash mismatch — refusing to start")
+                _verify_adapter(name, a_path, a_sha, verify_adapters)
             pricing = t.get("pricing", {})
             self.tiers[name] = TierConfig(
                 name=name,
@@ -84,6 +106,22 @@ class ModelRegistry:
                 extra_body=dict(t.get("extra_body") or {}),
                 owner=str(t.get("owner", "")),
                 production_equivalent=str(t.get("production_equivalent", "")),
+            )
+        for tone, entry in ((raw["tiers"].get("report") or {}).get("tone_adapters") or {}).items():
+            base = self.tiers["report"]
+            name = f"report:{tone}"
+            p = _verify_adapter(name, entry["path"], entry.get("sha256"), verify_adapters)
+            mid = str(entry.get("model_id") or base.model_id)
+            _check_pinned(name, mid)
+            body = entry["extra_body"] if "extra_body" in entry else {"adapters": str(p)}
+            self.tiers[name] = replace(
+                base,
+                name=name,
+                base_url=str(entry.get("base_url") or base.base_url),
+                model_id=mid,
+                adapter_path=entry["path"],
+                adapter_sha256=entry["sha256"],
+                extra_body={**base.extra_body, **(body or {})},
             )
         for name, t in self.tiers.items():
             if t.fallback and t.fallback not in self.tiers:
@@ -111,9 +149,15 @@ class ModelRegistry:
             cur = self.tiers[cur].fallback
         return out
 
+    def report_tier(self, tone_cluster: str | None) -> str:
+        """The tier that writes reports for a tone cluster: its own adapter if one is registered."""
+        name = f"report:{tone_cluster}"
+        return name if tone_cluster and name in self.tiers else "report"
+
     def describe(self) -> dict[str, Any]:
         return {
             "registry_version": self.version,
+            "profile": self.profile,
             "tiers": {
                 n: {
                     "model_id": t.model_id,

@@ -213,9 +213,10 @@ def write(
         "required_sections": SECTION_KEYS,
     }
     degradations = []
-    adapter = ctx.llm.registry.tiers["report"].adapter_sha256
+    tone_tier = ctx.llm.registry.report_tier(context["tone_cluster"])
+    adapter = ctx.llm.registry.tiers[tone_tier].adapter_sha256
     if not budget_exhausted:
-        for tier in ("report", "frontier"):
+        for tier in (tone_tier, "frontier"):
             if tier == "frontier" and not frontier_available:
                 break
             try:
@@ -229,7 +230,7 @@ def write(
                 )
             except (LLMUnavailable, LLMValidationError) as exc:
                 log.warning("report_tier_failed", extra={"tier": tier, "reason": str(exc)[:160]})
-                if tier == "report":
+                if tier != "frontier":
                     degradations.append(
                         degrade(DegradationCode.REPORT_FALLBACK_FRONTIER, AgentName.REPORT, type(exc).__name__)
                     )
@@ -237,7 +238,7 @@ def write(
             except BudgetExceeded:
                 break
             out = _enforce_caveats(r.value, facts["caveats"])
-            report = _to_report(out, facts, tier, template=False, adapter=adapter if tier == "report" else None)
+            report = _to_report(out, facts, tier, template=False, adapter=adapter if tier != "frontier" else None)
             if report.grounding and report.grounding.passed:
                 return {"report": report, "degradations": degradations}
             GROUNDING_FAILURES.labels(agent=f"report:{tier}").inc()
@@ -245,7 +246,7 @@ def write(
                 "report_grounding_failed",
                 extra={"tier": tier, "ungrounded": report.grounding.ungrounded if report.grounding else []},
             )
-            if tier == "report":
+            if tier != "frontier":
                 degradations.append(
                     degrade(DegradationCode.REPORT_FALLBACK_FRONTIER, AgentName.REPORT, "number check failed")
                 )

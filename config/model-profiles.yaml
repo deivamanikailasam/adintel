@@ -1,0 +1,35 @@
+# Alternative local model servers. Every server below speaks the OpenAI-compatible chat API, so switching
+# is configuration only: ADINTEL_MODEL_PROFILE=<name>. Precedence: models.yaml < profile < env overrides
+# (ADINTEL_MODEL_SMALL_ID, ADINTEL_MODEL_FRONTIER_BASE_URL, ...).
+#
+# "small" also feeds the report and safety tiers unless they are listed. Model ids must be pinned (no
+# "latest"): use the exact tag/file your server shows (`ollama list`, `lms ls`, the GGUF file name...).
+# A different server or quantisation is a model change: run `make evals-mlx` and the promotion gate
+# before relying on it (docs/13-setup/model-servers.md).
+
+mlx: {}   # the committed models.yaml defaults (mlx_lm.server on :8080 and :8081)
+
+ollama:
+  # ollama serve (port 11434). One server hosts both models; pull them first:
+  #   ollama pull qwen3.6:35b-a3b-q4_K_M && ollama pull qwen3.8:27b-q8_0
+  small:    { base_url: "http://127.0.0.1:11434/v1", model_id: "qwen3.6:35b-a3b-q4_K_M" }
+  frontier: { base_url: "http://127.0.0.1:11434/v1", model_id: "qwen3.8:27b-q8_0" }
+
+lmstudio:
+  # LM Studio → Developer → Start server (port 1234), load both models (or enable JIT loading).
+  small:    { base_url: "http://127.0.0.1:1234/v1", model_id: "qwen3.6-35b-a3b@q4_k_m" }
+  frontier: { base_url: "http://127.0.0.1:1234/v1", model_id: "qwen3.8-27b@q8_0" }
+
+llamacpp:
+  # Two llama-server processes (llama.cpp), same ports as mlx; the model id is informational:
+  #   llama-server -m Qwen3.6-35B-A3B-Q4_K_M.gguf --port 8080 -c 32768 --jinja
+  #   llama-server -m Qwen3.8-27B-Q8_0.gguf      --port 8081 -c 32768 --jinja
+  small:    { base_url: "http://127.0.0.1:8080/v1", model_id: "Qwen3.6-35B-A3B-Q4_K_M.gguf" }
+  frontier: { base_url: "http://127.0.0.1:8081/v1", model_id: "Qwen3.8-27B-Q8_0.gguf" }
+
+vllm:
+  # Linux + NVIDIA. Ports 8001/8002 (8000 is the AdIntel API):
+  #   vllm serve Qwen/Qwen3.6-35B-A3B-AWQ --port 8001 --max-model-len 32768
+  #   vllm serve Qwen/Qwen3.8-27B-FP8     --port 8002 --max-model-len 32768
+  small:    { base_url: "http://127.0.0.1:8001/v1", model_id: "Qwen/Qwen3.6-35B-A3B-AWQ" }
+  frontier: { base_url: "http://127.0.0.1:8002/v1", model_id: "Qwen/Qwen3.8-27B-FP8" }
