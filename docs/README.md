@@ -11,7 +11,7 @@ Plain-English notes for every change live in [changelog/](changelog/).
 | Setting it up on your Mac | [Local setup, step by step](13-setup/local-setup.md) |
 | Taking it to production | [Promotion to production, step by step](14-production/promotion-to-production.md) |
 | Reviewing the design | [Architecture](01-architecture/architecture.md) → [Decisions](02-decisions/README.md) |
-| Approving it for use (risk, legal, security) | [Governance](03-governance/governance.md) · [Legal & privacy pack](03-governance/legal/README.md) → [Security](04-security/security.md) → [Safety](05-safety/safety.md) → [Data map](04-security/data-map.md) |
+| Approving it for use (risk, legal, security) | [Governance](03-governance/governance.md) · [Legal & privacy pack](03-governance/legal/README.md) · [Owner decisions](03-governance/owner-decisions.md) → [Security](04-security/security.md) → [Safety](05-safety/safety.md) → [Data map](04-security/data-map.md) |
 | Operating it | [Runbooks](12-operations/runbooks.md) → [Alerting](09-observability/alerting.md) → [Cadence](12-operations/operational-cadence.md) |
 
 ## All sections

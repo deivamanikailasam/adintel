@@ -82,7 +82,7 @@ flowchart LR
   vLLM profiles; per-tone report adapters (`connectors/csv_files.py`, `config/model-profiles.yaml`).
 - **Production path:** Terraform for AWS, GitHub Actions CI/CD with blue/green and auto-rollback, migrations as a
   one-off task, SBOMs and secret scanning (`infra/`, `.github/`). Readiness:
-  [production-readiness matrix](docs/14-production/production-readiness-matrix.md).
+  [production-readiness matrix](docs/14-production/production-readiness-matrix.md) and [owner decisions](docs/03-governance/owner-decisions.md).
 
 ## Quality gates
 

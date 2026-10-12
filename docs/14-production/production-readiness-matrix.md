@@ -5,7 +5,10 @@ alternatives you can swap in, the production equivalent, and the evidence. Use i
 before promotion ([promotion-to-production.md](promotion-to-production.md)) and as an honest list of what
 remains a decision for the owner rather than code.
 
-Legend: ✅ implemented and tested · 🟡 implemented, production step is configuration/ops · ⬜ owner decision / outside code
+Legend: ✅ implemented and tested · 🟡 implemented or decided; a production step (configuration, signature, hiring) remains · ⬜ undecided
+
+Every owner decision is now made — see [owner decisions](../03-governance/owner-decisions.md) for what was
+decided, why, where it is enforced, and the human actions still needed.
 
 ## Agentic core
 
@@ -32,7 +35,7 @@ Legend: ✅ implemented and tested · 🟡 implemented, production step is confi
 
 | Capability | Local implementation | Alternatives | Production | Evidence | Status |
 |-----------|----------------------|--------------|-----------|----------|--------|
-| Ad-platform data | Synthetic worlds with real field shapes | **CSV exports + manual execution** (`ADINTEL_CONNECTORS=csv`) | Live APIs (`connectors/live.py`) | `test_connectors.py`, `test_csv_connector.py` | 🟡 live connectors need each platform's API approval |
+| Ad-platform data | Synthetic worlds with real field shapes | **CSV exports + manual execution**; per-platform `ADINTEL_CONNECTOR_MODES` | Live APIs, platform by platform ([access plan](ad-platform-access.md)) | `test_connectors.py`, `test_csv_connector.py` | 🟡 decided; submit platform applications |
 | Storage | Memory backend or MongoDB Atlas Local | — | Atlas over PrivateLink | integration job | ✅ |
 | Hybrid RAG with tenant pre-filter | Vector + BM25, RRF, rerank | fastembed BGE | Atlas Vector Search | `test_rag.py`, RAG evals | ✅ |
 | Migrations | Ordered, locked, recorded, forward-only | — | One-off ECS task in the release | `test_migrations.py`, ADR L-13 | ✅ |
@@ -48,7 +51,7 @@ Legend: ✅ implemented and tested · 🟡 implemented, production step is confi
 | Sandboxed code execution | Subprocess with AST allow-list | Docker, network-isolated | Separate task / Firecracker | `test_sandbox.py` | ✅ |
 | Secrets | File store with scope policy | — | Secrets Manager | secrets tests | 🟡 |
 | Supply chain | Pinned models + adapter hashes, Dependabot, gitleaks, SBOMs, Trivy | — | Same + signed images | CI `security`, `supply-chain` | ✅ |
-| Penetration test | — | — | External test before go-live | — | ⬜ |
+| Penetration test & DAST | ZAP API scan on every PR, `make dast` | — | External test before go-live and annually ([plan](../04-security/penetration-testing.md)) | CI `dast` | 🟡 decided; engage the firm |
 
 ## Governance, audit and privacy
 
@@ -60,9 +63,9 @@ Legend: ✅ implemented and tested · 🟡 implemented, production step is confi
 | Retention & legal hold | Catalogue-driven daily purge | — | Same + Mongo TTL | `test_privacy.py` | ✅ |
 | Data-subject rights | Export and erasure (pseudonymisation) | — | Same | `test_privacy.py`, API tests | ✅ |
 | Tenant offboarding | Kill switch → verifiable export → delete → revoke | — | + revoke platform OAuth grants | `test_privacy.py` | 🟡 OAuth revocation is a runbook step |
-| Repository governance | CODEOWNERS, PR template, SECURITY.md, pre-commit | — | + branch protection settings | `.github/` | 🟡 enable branch protection in GitHub |
-| Contracts (DPA, model-provider terms) | — | — | Legal | — | ⬜ |
-| Licence | — | — | Owner's choice | — | ⬜ |
+| Repository governance | CODEOWNERS, PR template, SECURITY.md, pre-commit, rulesets as code | — | Same | `.github/`, `test_repo_rules.py` | 🟡 decided; run `scripts/apply_repo_rules.sh` once |
+| Contracts & privacy (DPA, sub-processors, RoPA, DPIA, AI system card) | Templates in `docs/03-governance/legal/`; provider data terms enforced at start-up (ADR L-15) | — | Signed per customer | `test_model_profiles.py::test_data_terms…` | 🟡 decided; counsel review + signatures |
+| Licence | Proprietary `LICENSE`; dependency-licence gate; third-party notices (ADR L-14) | — | Same | CI `supply-chain` | ✅ |
 
 ## Quality, evaluation and learning
 
@@ -79,7 +82,7 @@ Legend: ✅ implemented and tested · 🟡 implemented, production step is confi
 |-----------|----------------------|--------------|-----------|----------|--------|
 | Observability | Langfuse, Jaeger, Prometheus, Grafana, Alertmanager | — | + CloudWatch, X-Ray, PagerDuty | `test_observability.py`, dashboards | ✅ |
 | Backups & restore drills | `adintel backup` (auto-drill), `scripts/backup.sh` | — | Atlas PITR + quarterly DR test | `test_archive_backup.py` | ✅ |
-| Runbooks & cadence | P1 runbooks, privacy and offboarding runbooks | — | + on-call rota | `docs/12-operations` | 🟡 staffing |
+| Runbooks, cadence & on-call | P1 runbooks; [on-call policy](../12-operations/on-call.md); Alertmanager → API webhook → Governance console | — | PagerDuty / Slack receivers | API tests | 🟡 decided; staff the rotation (≥ 4) |
 | CI/CD | GitHub Actions: lint, types, tests, evals, security, SBOM | — | Blue/green with auto-rollback, migrations task | `.github/workflows` | 🟡 needs AWS accounts and secrets |
 | Capacity | k6 Monday-peak profile | — | Load test at real scale in staging | `tests/load` | 🟡 |
 
