@@ -32,3 +32,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0020 | API service (FastAPI): JWT + RBAC, SSE streams, approvals, explainability trace, admin; agent worker | [0020](docs/changelog/0020-api-and-worker.md) |
 | 0021 | Scheduler (per-brand timezone + stagger), operational jobs, `adintel` CLI with a one-night demo | [0021](docs/changelog/0021-scheduler-cli.md) |
 | 0022 | Quality gates: ruff format/lint clean, mypy --strict clean, test isolation fixes | [0022](docs/changelog/0022-quality-gates.md) |
+| 0023 | Angular 18 frontend: live run timeline, explainability trace, approval screen, chat, governance | [0023](docs/changelog/0023-frontend.md) |

@@ -1,0 +1,30 @@
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --ink: #1d2433; --muted: #667085; --line: #e4e7ec;
+  --accent: #2459d6; --ok: #0f8a5f; --warn: #b7791f; --bad: #c0392b; --held: #7c3aed;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); }
+a { color: var(--accent); text-decoration: none; }
+h1 { font-size: 1.4rem; margin: 0 0 1rem; } h2 { font-size: 1.1rem; margin: 1.5rem 0 .6rem; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem 1.2rem; margin-bottom: 1rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.row { display: flex; gap: .75rem; align-items: center; flex-wrap: wrap; }
+.muted { color: var(--muted); font-size: .9rem; }
+.badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .78rem; font-weight: 600; background: #eef2ff; color: var(--accent); }
+.badge.completed, .badge.ok, .badge.executed, .badge.approved, .badge.released { background: #e7f6ef; color: var(--ok); }
+.badge.degraded, .badge.awaiting_approval, .badge.pending_approval, .badge.awaiting_second_approval { background: #fdf3e1; color: var(--warn); }
+.badge.failed, .badge.aborted_data_quality, .badge.killed, .badge.rejected, .badge.execution_failed { background: #fdecea; color: var(--bad); }
+.badge.held, .badge.quarantined { background: #f3e8ff; color: var(--held); }
+button { font: inherit; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: .45rem .9rem; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: white; }
+button.danger { background: var(--bad); border-color: var(--bad); color: white; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+input, select, textarea { font: inherit; border: 1px solid var(--line); border-radius: 8px; padding: .45rem .6rem; background: white; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+pre { white-space: pre-wrap; word-break: break-word; background: #f2f4f7; padding: .6rem; border-radius: 8px; font-size: .8rem; max-height: 360px; overflow: auto; }
+.error { color: var(--bad); }
+.timeline li { margin: .3rem 0; }
+.prose p { margin: .4rem 0; line-height: 1.5; }
