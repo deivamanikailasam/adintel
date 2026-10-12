@@ -17,7 +17,7 @@ jobs:
     outputs: { image: "${{ steps.meta.outputs.image }}" }
     steps:
       - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with: { role-to-assume: "${{ secrets.AWS_SHARED_SERVICES_ROLE }}", aws-region: us-east-1 }
       - uses: aws-actions/amazon-ecr-login@v2
         id: ecr
@@ -31,7 +31,7 @@ jobs:
     environment: staging
     steps:
       - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with: { role-to-assume: "${{ secrets.AWS_STAGING_DEPLOY_ROLE }}", aws-region: us-east-1 }
       - uses: hashicorp/setup-terraform@v3
       - working-directory: infra/terraform/envs/staging
@@ -58,7 +58,7 @@ jobs:
     environment: production        # required reviewers = the named human sign-off
     steps:
       - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with: { role-to-assume: "${{ secrets.AWS_PROD_DEPLOY_ROLE }}", aws-region: us-east-1 }
       - uses: hashicorp/setup-terraform@v3
       - name: blue/green deploy (CodeDeploy shifts 10% → 50% → 100%, auto-rollback alarms attached)
