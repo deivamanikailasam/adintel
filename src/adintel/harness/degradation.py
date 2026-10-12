@@ -127,6 +127,13 @@ MATRIX: dict[DegradationCode, MatrixRow] = {
         RunStatus.HELD,
         "Part of tonight's output is held for review by the account team.",
     ),
+    DegradationCode.FEATURE_DISABLED: MatrixRow(
+        "Capability turned off by a feature flag (planned rollout)",
+        "Agent skipped as if unavailable; run health stays ok",
+        None,
+        "Some deeper analysis is not yet switched on for this account, so this report covers performance "
+        "and the changes we observed.",
+    ),
 }
 
 

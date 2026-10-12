@@ -1,4 +1,4 @@
-"""``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token."""
+"""``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags."""
 
 from __future__ import annotations
 
@@ -127,6 +127,37 @@ def cmd_token(args: argparse.Namespace) -> None:
     print(issue_token(load_user(get_database(), args.tenant, args.user)))
 
 
+def cmd_outcomes(args: argparse.Namespace) -> None:
+    from adintel.feedback.outcomes import outcomes_job
+    from adintel.storage import get_database
+
+    _print(outcomes_job(get_database(), today=date.fromisoformat(args.today) if args.today else None))
+
+
+def cmd_triage(args: argparse.Namespace) -> None:
+    from adintel.feedback.triage import render_markdown, weekly_triage
+    from adintel.storage import get_database
+
+    r = weekly_triage(get_database(), args.tenant, days=args.days)
+    if args.format == "json":
+        _print(r)
+    else:
+        print(render_markdown(r))
+
+
+def cmd_flags(args: argparse.Namespace) -> None:
+    from adintel.harness.flags import FeatureFlags
+    from adintel.storage import get_database
+
+    flags = FeatureFlags(get_database(), args.tenant)
+    if args.set:
+        name, _, value = args.set.partition("=")
+        flags.set(
+            name, value.lower() in ("1", "true", "on"), actor_id=args.actor, reason=args.reason, brand_id=args.brand
+        )
+    _print(flags.effective(brand_id=args.brand))
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -155,6 +186,21 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--tenant", default="brightwave")
     sp.add_argument("--user", required=True)
     sp.set_defaults(fn=cmd_token)
+    sp = sub.add_parser("outcomes", help="grade executed changes 14 days later (actual vs predicted)")
+    sp.add_argument("--today", help="YYYY-MM-DD; default: today")
+    sp.set_defaults(fn=cmd_outcomes)
+    sp = sub.add_parser("triage", help="weekly triage report: what humans should look at next")
+    sp.add_argument("--tenant", default="brightwave")
+    sp.add_argument("--days", type=int, default=7)
+    sp.add_argument("--format", choices=("md", "json"), default="md")
+    sp.set_defaults(fn=cmd_triage)
+    sp = sub.add_parser("flags", help="show or set per-tenant/brand feature flags")
+    sp.add_argument("--tenant", default="brightwave")
+    sp.add_argument("--brand")
+    sp.add_argument("--set", help="flag=on|off, e.g. agent.optimizer=off")
+    sp.add_argument("--actor", default="cli:operator")
+    sp.add_argument("--reason", default="set from CLI")
+    sp.set_defaults(fn=cmd_flags)
     args = p.parse_args(argv)
     args.fn(args)
 

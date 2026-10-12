@@ -182,6 +182,20 @@ CATALOGUE: tuple[CollectionSpec, ...] = (
         "24 months",
         (IndexSpec((T, ("kind", 1), ("created_at", -1))),),
     ),
+    CollectionSpec(
+        "feature_flags",
+        True,
+        "Per-tenant / per-brand rollout flags",
+        "indefinite",
+        (IndexSpec((T, ("flag", 1), ("brand_id", 1)), unique=True),),
+    ),
+    CollectionSpec(
+        "outcomes",
+        True,
+        "Actual vs predicted impact, 14 days after each executed change",
+        "7 years",
+        (IndexSpec((T, ("recommendation_id", 1)), unique=True), IndexSpec((T, ("brand_id", 1), ("measured_at", -1)))),
+    ),
     CollectionSpec("eval_datasets", False, "Golden scenarios", "versioned", ()),
     CollectionSpec("secret_access_log", False, "Who read which secret reference", "13 months", ()),
 )

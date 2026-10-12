@@ -136,6 +136,7 @@ class DegradationCode(StrEnum):
     ORCHESTRATOR_RULE_FALLBACK = "orchestrator_rule_fallback"
     CONSTRAINT_REJECTED = "constraint_rejected"
     INJECTION_SUSPECTED = "injection_suspected"
+    FEATURE_DISABLED = "feature_disabled"
 
 
 class AuditAction(StrEnum):
@@ -158,6 +159,8 @@ class AuditAction(StrEnum):
     RECONCILIATION_MISMATCH = "reconciliation.mismatch"
     GUARDRAIL_BLOCK = "guardrail.block"
     KILL_SWITCH_CHANGED = "kill_switch.changed"
+    FEATURE_FLAG_CHANGED = "feature_flag.changed"
+    OUTCOME_MEASURED = "outcome.measured"
     RULE_PROPOSED = "brand_rule.proposed"
     RULE_APPROVED = "brand_rule.approved"
     ANOMALY_DISMISSED = "anomaly.dismissed"

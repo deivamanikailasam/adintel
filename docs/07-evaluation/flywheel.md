@@ -22,6 +22,23 @@ Review every rejection and categorise it (`wrong_diagnosis`, `right_diagnosis_wr
 block and ungrounded number, dismissed anomalies, and the top 3 degradation causes. Assign each to
 one of four fixes.
 
+**Prepared automatically.** `adintel triage --tenant brightwave` (or `GET /admin/triage`, or the Monday
+09:00 UTC scheduler job that posts it to the Head of Performance) assembles the week's runs, degradations,
+decisions, rejection reasons, approved-÷-proposed ratio, report ratings, guardrail blocks, cost and
+outcomes into one page with suggested actions (`src/adintel/feedback/triage.py`). The meeting starts from
+that page instead of from raw queries.
+
+## Outcome tracking (actual vs predicted, `src/adintel/feedback/outcomes.py`)
+
+Every day at 05:00 UTC the scheduler grades each successful execution that is at least 14 days old:
+blended CPA of the touched entities in the 14 days before vs the 14 days after (execution day excluded),
+compared with the Optimizer's predicted range. Verdicts: `within_range`, `better_than_expected`,
+`improved_less_than_expected`, `worsened` (account manager notified, consider reverting) and
+`insufficient_data` (fewer than 7 days or zero conversions on either side — nothing is claimed). Results go
+to `outcomes`, the recommendation's `outcome` field, `feedback` (`outcome_measured`), the audit log and the
+`adintel_outcomes_total{verdict}` metric. It is plain arithmetic: no model grades its own work. Run it by
+hand with `adintel outcomes`.
+
 ## The four fixes, in order of preference
 
 | Fix | When to use it | Takes | Risk |

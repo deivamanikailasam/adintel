@@ -61,6 +61,24 @@ decrease the source first, so a partial failure removes money rather than doubli
 at most once and never after a partial apply. A **nightly reconciliation** compares every executed
 change with what was approved; any mismatch pages immediately (P1).
 
+## Feature flags: planned rollout, per tenant and per brand (`src/adintel/harness/flags.py`)
+
+Kill switches are emergency brakes; feature flags are the rollout dial. A flag turns one capability on
+or off for a tenant or a single brand, and the brand override wins:
+
+| Flag | Default | When off |
+|------|---------|----------|
+| `agent.analyst` | on | No root-cause investigation; report covers performance and anomalies |
+| `agent.optimizer` | on | No budget proposals — "report-only" mode for a new client |
+| `chat.frontier_route` | on | Complex chat questions are answered by the small model without RAG |
+| `outcome_tracking` | on | 14-day actual-vs-predicted grading is skipped |
+
+A flagged-off agent is skipped through the same path as an unavailable one, with the
+`feature_disabled` degradation, so the client report says what was not done (run health stays *ok*:
+it was planned). Changes are admin-only (`POST /admin/flags`, `adintel flags --set agent.optimizer=off`)
+and every change is written to the audit log (`feature_flag.changed`). Typical rollout: new agency starts
+with `agent.optimizer` off for two weekly cycles, then on for one pilot brand, then tenant-wide.
+
 ## Governance artefacts
 
 | Artefact | Purpose | Owner | Where |

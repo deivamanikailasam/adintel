@@ -67,3 +67,15 @@ def test_cli_demo_runs_the_night(seeded, capsys, monkeypatch):
     cli.main(["demo", "--period-end", "2026-10-11"])
     out = capsys.readouterr().out
     assert "awaiting_approval" in out and "aborted_data_quality" in out and "completed" in out
+
+
+def test_feedback_cli_commands(seeded, monkeypatch, capsys):
+    from adintel.cli import main
+
+    monkeypatch.setattr("adintel.storage.get_database", lambda: seeded)
+    main(["flags", "--set", "agent.analyst=off", "--brand", "fitely"])
+    assert '"agent.analyst": false' in capsys.readouterr().out
+    main(["triage", "--days", "7"])
+    assert "Suggested actions" in capsys.readouterr().out
+    main(["outcomes"])
+    assert capsys.readouterr().out.strip() == "{}"

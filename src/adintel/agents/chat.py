@@ -20,6 +20,7 @@ from adintel.agents import guardrail
 from adintel.analytics.frames import load_frame, period_summary
 from adintel.core.clock import utcnow
 from adintel.core.errors import AdIntelError
+from adintel.harness.flags import FeatureFlags
 from adintel.llm.gateway import CallContext, LLMGateway, TextResult
 from adintel.llm.semantic_cache import get_semantic_cache
 from adintel.memory.conversational import ConversationStore
@@ -118,6 +119,10 @@ class ChatService:
             return
         flagged = injection_markers(question)
         route = self.route(question)
+        if route.route == "complex" and not FeatureFlags(self.db, self.tenant_id).enabled(
+            "chat.frontier_route", brand_id=self.brand_id
+        ):
+            route = Route(route="simple")
         facts = self.facts()
         brand = TenantScopedRepo(self.db, "brands", self.tenant_id).find_one({"brand_id": self.brand_id}) or {}
         sources: list[dict[str, str]] = []

@@ -23,6 +23,7 @@ from adintel.domain.enums import AgentName, DegradationCode, RunStatus
 from adintel.domain.models import GuardrailFinding, GuardrailVerdict, TraceEvent
 from adintel.domain.state import FROZEN_FIELDS, RunState
 from adintel.harness.degradation import degrade
+from adintel.harness.flags import AGENT_FLAGS, FeatureFlags
 from adintel.harness.killswitch import KillSwitches
 from adintel.harness.timeouts import AGENT_SECONDS
 from adintel.observability import metrics
@@ -99,6 +100,10 @@ def make_node(agent: AgentName, ctx_factory: Callable[[], AgentContext]) -> Call
         scope = KillSwitches(ctx._db).engaged(tenant_id=state.tenant_id, brand_id=state.brand_id, agent=str(agent))
         if scope:
             return {"status": RunStatus.KILLED, "abort_reason": f"kill switch {scope}"}
+        flag = AGENT_FLAGS.get(agent)
+        if flag and not FeatureFlags(ctx._db, state.tenant_id).enabled(flag, brand_id=state.brand_id):
+            skipped = timeout_policy(agent, state, ctx, f"feature flag {flag} is off")
+            return {**skipped, "degradations": [degrade(DegradationCode.FEATURE_DISABLED, agent, flag)]}
         meter.step()
         extra: dict[str, Any] = {}
         reason = meter.exhausted_reason()

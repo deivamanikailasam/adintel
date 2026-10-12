@@ -138,8 +138,9 @@ exactly the messiness that breaks production. Models are the same as production 
 1. **Shadow mode:** for each brand, runs execute but reports are not sent and recommendations are not
    actionable; analysts compare and rate the outputs (feedback collection). Minimum **3 days on 20% of
    traffic** per change (the promotion gate).
-2. Move a brand to live when its analysts sign off; feature flags enable new agents per tenant.
-3. Start the **weekly 60-minute eval triage** from the first live week (`docs/07-evaluation/flywheel.md`).
+2. Move a brand to live when its analysts sign off; feature flags (`agent.optimizer`, `agent.analyst`, … — see governance) enable agents per tenant or brand.
+3. Start the **weekly 60-minute eval triage** from the first live week (`docs/07-evaluation/flywheel.md`); the
+   scheduler posts the prepared triage page every Monday and grades executed changes after 14 days.
 
 ## Phase 8 — Prove value and hand over (weeks 11–14)
 

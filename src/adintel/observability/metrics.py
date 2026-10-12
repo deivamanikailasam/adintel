@@ -77,6 +77,7 @@ CACHE = Counter("adintel_cache_lookups_total", "Cache lookups", ["cache", "resul
 RECOMMENDATION_DECISIONS = Counter(
     "adintel_recommendation_decisions_total", "Approve/reject/modify/expire", ["decision"], registry=REGISTRY
 )
+OUTCOMES = Counter("adintel_outcomes_total", "Executed changes graded 14 days later", ["verdict"], registry=REGISTRY)
 REJECTION_REASONS = Counter("adintel_rejection_reasons_total", "Why humans rejected", ["category"], registry=REGISTRY)
 ANOMALY_DISMISSALS = Counter("adintel_anomaly_dismissals_total", "Dismissed anomalies", ["reason"], registry=REGISTRY)
 GUARDRAIL_BLOCKS = Counter("adintel_guardrail_blocks_total", "Guardrail blocks", ["check"], registry=REGISTRY)

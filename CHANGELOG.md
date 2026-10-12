@@ -44,3 +44,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0032 | Documentation front door: README, full docs index and repository map, glossary, FAQ | [0032](docs/changelog/0032-docs-front-door.md) |
 | 0033 | Shared state across processes: Redis-backed rate limiter and semantic cache | [0033](docs/changelog/0033-shared-state.md) |
 | 0034 | Enterprise single sign-on: OIDC token verification against JWKS, Keycloak as the local identity provider, PKCE login in the UI | [0034](docs/changelog/0034-oidc-sso.md) |
+| 0035 | Feedback loop: 14-day outcome tracking (actual vs predicted), per-tenant/brand feature flags, weekly triage report | [0035](docs/changelog/0035-feedback-loop.md) |

@@ -141,3 +141,21 @@ def test_dev_login_is_disabled_outside_local(client, monkeypatch):
 
     monkeypatch.setattr(get_settings(), "dev_login_enabled", False)
     assert client.post("/auth/dev-login", json={"email": "jordan@brightwave.example"}).status_code == 404
+
+
+def test_admin_flags_triage_and_outcomes_endpoints(client):
+    admin = login(client, "admin@brightwave.example")
+    r = client.post(
+        "/admin/flags", json={"flag": "chat.frontier_route", "enabled": False, "reason": "pilot"}, headers=admin
+    )
+    assert r.status_code == 200
+    eff = client.get("/admin/flags", headers=admin).json()["effective"]
+    assert eff["chat.frontier_route"] is False and eff["agent.analyst"] is True
+    assert (
+        client.post("/admin/flags", json={"flag": "nope", "enabled": True, "reason": "x"}, headers=admin).status_code
+        == 422
+    )
+    viewer = login(client, "viewer@brightwave.example")
+    assert client.get("/admin/flags", headers=viewer).status_code == 403
+    assert client.get("/admin/triage", headers=admin).json()["tenant_id"] == "brightwave"
+    assert client.get("/admin/outcomes", headers=admin).json() == []
