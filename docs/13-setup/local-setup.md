@@ -235,6 +235,18 @@ scripts/backup.sh                          # native Mongo/Redis/secrets backup â
 
 See [disaster recovery](../12-operations/disaster-recovery.md) for restores.
 
+## 8c. Run fully offline (air-gapped)
+
+After one online setup (dependencies, BGE models via a fastembed seed, container images, model weights):
+
+```bash
+.venv/bin/adintel weights lock            # pin the exact weight files you evaluated
+echo 'ADINTEL_OFFLINE=true' >> .env       # only local/LAN destinations; no downloads, no telemetry
+.venv/bin/adintel egress-check            # every endpoint should say "allowed"
+```
+
+Details: [egress-and-offline.md](../04-security/egress-and-offline.md).
+
 ## 9. Everyday commands
 
 | Command | What it does |

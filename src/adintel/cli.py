@@ -1,7 +1,7 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
 privacy-export, privacy-erase, offboard,
 audit-archive, backup, restore, restore-drill, migrate,
-csv-template, csv-sample, shadow-report."""
+csv-template, csv-sample, shadow-report, weights, egress-check."""
 
 from __future__ import annotations
 
@@ -298,6 +298,48 @@ def cmd_shadow_report(args: argparse.Namespace) -> None:
     _print(report(get_database(), args.tenant, days=args.days))
 
 
+def _local_model_ids() -> list[str]:
+    from adintel.llm.registry import get_registry
+
+    return sorted({t.model_id for t in get_registry().tiers.values() if t.provider == "openai_compat"})
+
+
+def cmd_weights(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from adintel.llm import weights
+
+    ids = args.model or _local_model_ids()
+    if args.action == "lock":
+        paths = {k: Path(v) for k, _, v in (p.partition("=") for p in args.path)}
+        data = weights.lock(sorted(set(ids) | set(paths)), paths)
+        _print({m: len(e["files"]) for m, e in data.items() if m != "_missing"} | {"missing": data.get("_missing", [])})
+        return
+    out = weights.verify(ids)
+    _print(out)
+    sys.exit(1 if any(out.values()) else 0)
+
+
+def cmd_egress_check(args: argparse.Namespace) -> None:
+    from adintel.config import get_settings
+    from adintel.security.egress import allowed, configured_endpoints
+
+    s = get_settings()
+    from adintel.llm.registry import get_registry
+
+    rows = configured_endpoints(s)
+    rows |= {f"model tier {n}": t.base_url for n, t in get_registry().tiers.items()}
+    verdict = {
+        k: (
+            "not configured"
+            if not v
+            else ("allowed" if allowed(v, offline=s.offline, allowlist=s.egress_allowlist) else "DENIED")
+        )
+        for k, v in rows.items()
+    }
+    _print({"offline": s.offline, "allowlist": s.egress_allowlist, "endpoints": verdict})
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -395,6 +437,14 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--tenant", default="brightwave")
     sp.add_argument("--days", type=int, default=3)
     sp.set_defaults(fn=cmd_shadow_report)
+    sp = sub.add_parser("weights", help="pin (lock) or verify the SHA-256 of local base-model weight files")
+    sp.add_argument("action", choices=("lock", "verify"))
+    sp.add_argument("--model", action="append", help="model id (default: every local tier's model)")
+    sp.add_argument("--path", action="append", default=[], help="model_id=/path/to/weights for non-HF servers")
+    sp.set_defaults(fn=cmd_weights)
+    sub.add_parser("egress-check", help="show which configured endpoints the egress policy allows").set_defaults(
+        fn=cmd_egress_check
+    )
     args = p.parse_args(argv)
     args.fn(args)
 

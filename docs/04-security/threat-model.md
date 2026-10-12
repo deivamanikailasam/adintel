@@ -1,4 +1,4 @@
-# Threat model (STRIDE-informed catalogue — the 13 threats to know)
+# Threat model (STRIDE-informed catalogue — the 15 threats to know)
 
 | # | Threat | Mitigation | Verified by |
 |---|--------|------------|-------------|
@@ -15,6 +15,8 @@
 | T11 | **Insider viewing a competitor client** | Tenant scope per JWT, brand scope per user, all access audit-logged, anomalous-access alerts | `test_api.py::test_auth_required_and_rbac` |
 | T12 | **Compromised agent worker** | Cannot spend money: write credentials and executor role are disjoint; execution needs a signed approval and a snapshot match | `test_approvals_executor.py::test_worker_role_cannot_execute` |
 | T13 | **Tampering with history** (covering tracks) | Append-only code path, hash chain verified daily, Object Lock copy in prod | `test_audit.py` |
+| T14 | **Data exfiltration through a configured endpoint** (rogue model URL, webhook, tracing backend) | Egress allowlist / offline mode checked at start-up and connect time | `test_egress_weights.py` |
+| T15 | **Swapped or corrupted base-model weights** | Weight-file SHA-256 lock, `adintel weights verify` | `test_egress_weights.py` |
 
 **If you could keep only one control, keep the separation in T12.** An attacker inside the agent worker can
 call models (cost alerts catch that) but cannot spend money.

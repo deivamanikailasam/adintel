@@ -18,6 +18,7 @@ from adintel.core.errors import LLMTimeout, LLMUnavailable
 from adintel.core.resilience import CircuitOpen, breaker
 from adintel.llm.providers.base import LLMProvider
 from adintel.llm.types import CompletionRequest, CompletionResult, TierConfig, estimate_tokens
+from adintel.security import egress
 
 
 class OpenAICompatProvider(LLMProvider):
@@ -39,6 +40,7 @@ class OpenAICompatProvider(LLMProvider):
         with self._clients_lock:
             if tier.name not in self._clients:
                 read = max(1.0, tier.timeout_seconds - 5)
+                egress.check(tier.base_url, f"model tier {tier.name}")
                 self._clients[tier.name] = httpx.Client(
                     base_url=tier.base_url.rstrip("/"),
                     timeout=httpx.Timeout(read, connect=tier.connect_timeout_seconds),

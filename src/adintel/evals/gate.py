@@ -70,7 +70,9 @@ def main(argv: list[str] | None = None) -> int:
         for p in problems:
             print(f"  ✗ {p}")
         return 1
-    print("PROMOTION GATE: PASS (remaining steps: 3-day shadow on 20% traffic → `adintel shadow-report` ready, named sign-off)")
+    print(
+        "PROMOTION GATE: PASS (remaining steps: 3-day shadow on 20% traffic → `adintel shadow-report` ready, named sign-off)"
+    )
     if args.write_baseline:
         bpath.write_text(
             json.dumps(

@@ -65,7 +65,7 @@ flowchart LR
 - **Governance:** L2 autonomy, approval matrix with 7 server-side checks, four-eyes, signed approvals,
   hash-chained audit log, model & prompt registries with pinning (`src/adintel/approvals`, `audit`, `config/`, `prompts/`).
 - **Security:** three-layer tenant isolation, process-scoped secrets, sandboxed analyst code, CSP, threat
-  model with 13 threats (`docs/04-security`).
+  model with 15 threats (`docs/04-security`).
 - **Evaluation:** 10 suites, ~1,100 golden cases, hard 100% gates on safety and money, LLM-judge with a
   variance band, promotion gate with cost ±15% (`src/adintel/evals`, `evals/`).
 - **Testing:** unit, API, end-to-end, chaos, architecture-fitness, integration and k6 load tests (`tests/`).

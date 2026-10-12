@@ -13,6 +13,7 @@ import yaml
 from adintel.config import REPO_ROOT, Settings, get_settings
 from adintel.core.errors import ConfigError
 from adintel.llm.types import AgentModelConfig, TierConfig
+from adintel.security import egress
 
 _FLOATING = ("latest", "*", "main", "head")
 
@@ -90,6 +91,8 @@ class ModelRegistry:
             base_url = o_url or base_url
             model_id = o_id or model_id
             _check_pinned(name, model_id)
+            if t.get("provider", "openai_compat") == "openai_compat" and settings.llm_provider == "openai_compat":
+                egress.check(base_url, f"model tier {name}", settings)
             adapter = t.get("adapter") or {}
             a_path = adapter.get("path")
             a_sha = adapter.get("sha256")

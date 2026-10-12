@@ -69,6 +69,9 @@ def raise_alert(
     url = get_settings().alert_webhook_url
     if url:
         try:
+            from adintel.security import egress
+
+            egress.check(url, "alert webhook")
             httpx.post(url, json={"text": f"[{severity}] {title}", "alert": alert}, timeout=3.0)
         except Exception as exc:
             log.warning("alert_webhook_failed", extra={"reason": str(exc)[:200]})

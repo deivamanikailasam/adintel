@@ -96,6 +96,9 @@ class Settings(BaseSettings):
     oidc_roles_claim: str = "realm_access.roles"  # Cognito: "cognito:groups"; Entra: "roles"
     approval_signing_key: str = _DEV_APPROVAL_KEY
     recommendation_ttl_hours: int = 72
+    # Egress control (security/egress.py): offline = air-gapped, only internal destinations + allowlist.
+    offline: bool = False
+    egress_allowlist: list[str] = Field(default_factory=list)  # host, host:port or *.suffix
     max_request_bytes: int = 2_000_000  # request bodies above this are refused with 413 before parsing
     api_docs: bool | None = None  # None = on in local/test, off in staging/production
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4200"])
@@ -155,6 +158,9 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     settings = Settings()
     settings.validate_for_environment()
+    from adintel.security.egress import validate as validate_egress
+
+    validate_egress(settings)
     return settings
 
 
