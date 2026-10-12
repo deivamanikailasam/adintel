@@ -38,3 +38,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0026 | LoRA fine-tuning pipeline for the Report model (mlx_lm.lora), adapter signing, base-vs-adapter-vs-frontier evaluation | [0026](docs/changelog/0026-finetuning.md) |
 | 0027 | CI/CD: GitHub Actions for every PR (lint, types, tests + coverage, integration, evals + gate, security scans, frontend, Terraform) and release (staging gates, manual prod, blue/green); k6 load test | [0027](docs/changelog/0027-cicd.md) |
 | 0028 | Terraform for AWS production and the step-by-step promotion-to-production guide | [0028](docs/changelog/0028-terraform-and-promotion.md) |
+| 0029 | Security & safety documentation: trust boundaries, 13-threat model, tenant isolation, data map, red team, safety principles mapped to code and tests | [0029](docs/changelog/0029-security-safety-docs.md) |

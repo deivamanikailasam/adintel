@@ -1,0 +1,23 @@
+# Data map
+
+| Data | Source | Where (local / prod) | Contains PII? | Retention | Who can read |
+|------|--------|----------------------|---------------|-----------|--------------|
+| Daily metrics | Ad platforms (read API) | `metrics_daily` (Mongo) | No (aggregates) | 25 months | Tenant users in brand scope; agents via tenant repo |
+| Campaign/entity names | Ad platforms | `metrics_daily` | Unlikely; treated as untrusted | 25 months | As above |
+| Platform credentials | Agency onboarding | `secrets/` / Secrets Manager | Secret | Rotated 90 days | Read: worker, api, executor; **Write: executor only** |
+| Run state & checkpoints | AdIntel | `runs`, `run_checkpoints` | No | Checkpoints 30 days; runs 24 months | Tenant users; engine |
+| Prompts and responses | AdIntel | `prompt_archive` / S3 | Redacted before sending | 13 months | Tenant seniors, auditors |
+| LLM call records | AdIntel | `llm_calls` | No | 13 months | Tenant seniors, ML lead |
+| Reports | AdIntel | `reports` | No | 24 months | Tenant users in brand scope |
+| Recommendations, approvals, executions | AdIntel + humans | Mongo | Approver user IDs | 7 years (approvals/executions) | Tenant users; auditors |
+| Audit log | AdIntel | `audit_log` + S3 Object Lock | User IDs | 7 years | Admins, auditors |
+| Knowledge base | Agency uploads, playbooks, past reports | `kb_chunks` | Possible in uploads → flagged | Indefinite, versioned, soft delete | Tenant (anonymised cross-brand) |
+| Chat sessions | Account managers | `chat_sessions` | Possibly | 90 days | The user, tenant admins |
+| Feedback | Account managers | `feedback` | User IDs | 24 months | ML lead (flywheel) |
+| Users | Agency | `users` / Cognito | Name, email | Account lifetime | Tenant admins |
+
+**Models:** locally, all inference runs on your machine (mlx-lm); nothing leaves it. In production, Bedrock
+is used with data retention disabled and no training on inputs; self-hosted models run inside the VPC.
+
+**Deletion requests (GDPR/CCPA):** user data in `users`, `chat_sessions`, `feedback` is deleted; audit
+entries keep the user ID as a pseudonymous reference (legal basis: legitimate interest / legal obligation).
