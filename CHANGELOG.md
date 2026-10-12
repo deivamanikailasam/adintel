@@ -30,3 +30,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0018 | Approval gate (matrix + 7 checks + signing), queues, executor (no LLM), reconciliation | [0018](docs/changelog/0018-approvals-executor.md) |
 | 0019 | Chat agent (routing, semantic cache, streaming output guard) and conversational + procedural memory | [0019](docs/changelog/0019-chat-and-memory.md) |
 | 0020 | API service (FastAPI): JWT + RBAC, SSE streams, approvals, explainability trace, admin; agent worker | [0020](docs/changelog/0020-api-and-worker.md) |
+| 0021 | Scheduler (per-brand timezone + stagger), operational jobs, `adintel` CLI with a one-night demo | [0021](docs/changelog/0021-scheduler-cli.md) |
