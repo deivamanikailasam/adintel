@@ -29,41 +29,72 @@ class Severity(StrEnum):
     P4 = "P4"
 
 
-def raise_alert(severity: Severity, title: str, *, tenant_id: str | None = None, brand_id: str | None = None,
-                details: dict[str, Any] | None = None, audience: str = "on_call") -> dict[str, Any]:
+def raise_alert(
+    severity: Severity,
+    title: str,
+    *,
+    tenant_id: str | None = None,
+    brand_id: str | None = None,
+    details: dict[str, Any] | None = None,
+    audience: str = "on_call",
+) -> dict[str, Any]:
     from adintel.config import get_settings
     from adintel.storage import get_database
     from adintel.storage.tenant_repo import SystemRepo
 
-    alert = {"alert_id": new_id("alr"), "severity": str(severity), "title": title, "tenant_id": tenant_id,
-             "brand_id": brand_id, "details": details or {}, "audience": audience,
-             "created_at": utcnow().isoformat(), "acknowledged": False}
-    level = {Severity.P1: logging.CRITICAL, Severity.P2: logging.ERROR,
-             Severity.P3: logging.WARNING, Severity.P4: logging.INFO}[severity]
+    alert = {
+        "alert_id": new_id("alr"),
+        "severity": str(severity),
+        "title": title,
+        "tenant_id": tenant_id,
+        "brand_id": brand_id,
+        "details": details or {},
+        "audience": audience,
+        "created_at": utcnow().isoformat(),
+        "acknowledged": False,
+    }
+    level = {
+        Severity.P1: logging.CRITICAL,
+        Severity.P2: logging.ERROR,
+        Severity.P3: logging.WARNING,
+        Severity.P4: logging.INFO,
+    }[severity]
     log.log(level, "alert", extra={"severity": str(severity), "title": title, "audience": audience})
     if severity == Severity.P4:
         return alert
     try:
         SystemRepo(get_database(), "notifications", purpose="alert routing").insert(dict(alert))
-    except Exception:  # noqa: BLE001 - alerting must not crash the caller
+    except Exception:
         log.exception("alert_persist_failed")
     url = get_settings().alert_webhook_url
     if url:
         try:
             httpx.post(url, json={"text": f"[{severity}] {title}", "alert": alert}, timeout=3.0)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             log.warning("alert_webhook_failed", extra={"reason": str(exc)[:200]})
     return alert
 
 
+_hooks_installed = False
+
+
 def install_security_hooks() -> None:
-    """Wire tenant-isolation violations to a metric and a P1 page."""
+    """Wire tenant-isolation violations to a metric and a P1 page (idempotent)."""
+    global _hooks_installed
+    if _hooks_installed:
+        return
+    _hooks_installed = True
     from adintel.observability.metrics import TENANT_VIOLATIONS
     from adintel.storage.tenant_repo import register_violation_hook
 
     def _hook(tenant_id: str, collection: str, detail: str) -> None:
         TENANT_VIOLATIONS.labels(collection=collection).inc()
-        raise_alert(Severity.P1, "Cross-tenant access attempt", tenant_id=tenant_id,
-                    details={"collection": collection, "detail": detail}, audience="security")
+        raise_alert(
+            Severity.P1,
+            "Cross-tenant access attempt",
+            tenant_id=tenant_id,
+            details={"collection": collection, "detail": detail},
+            audience="security",
+        )
 
     register_violation_hook(_hook)

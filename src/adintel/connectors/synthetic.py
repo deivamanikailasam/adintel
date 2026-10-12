@@ -49,8 +49,9 @@ def _rng(*parts: object) -> np.random.Generator:
     return np.random.default_rng(seed)
 
 
-def simulate_day(world: BrandWorld, platform: Platform, spec: EntitySpec, day: date, anchor: date,
-                 brand_id: str) -> dict[str, float]:
+def simulate_day(
+    world: BrandWorld, platform: Platform, spec: EntitySpec, day: date, anchor: date, brand_id: str
+) -> dict[str, float]:
     """Return USD-agnostic daily metrics for one entity (account currency)."""
     rng = _rng(brand_id, spec.entity_id, day.isoformat())
     days_from_end = (anchor - day).days
@@ -81,47 +82,92 @@ def simulate_day(world: BrandWorld, platform: Platform, spec: EntitySpec, day: d
         if ev.kind == "zero_conversions" and 0 <= days_from_end < ev.last_days:
             conversions = 0.0
     revenue = round(conversions * spec.aov * float(rng.lognormal(0, 0.05)), 2)
-    return {"impressions": impressions, "clicks": clicks, "spend": round(spend, 2), "conversions": conversions,
-            "revenue": revenue}
+    return {
+        "impressions": impressions,
+        "clicks": clicks,
+        "spend": round(spend, 2),
+        "conversions": conversions,
+        "revenue": revenue,
+    }
 
 
 def _raw_row(platform: Platform, spec: EntitySpec, day: date, m: dict[str, float]) -> dict[str, Any]:
     if platform == Platform.GOOGLE_ADS:
-        return {"segments.date": day.isoformat(), "campaign.id": spec.campaign_id, "campaign.name": spec.campaign_name,
-                "ad_group.id": spec.entity_id, "ad_group.name": spec.entity_name,
-                "metrics.impressions": int(m["impressions"]), "metrics.clicks": int(m["clicks"]),
-                "metrics.cost_micros": int(round(m["spend"] * 1_000_000)), "metrics.conversions": m["conversions"],
-                "metrics.conversions_value": m["revenue"],
-                "campaign_budget.amount_micros": int(spec.daily_budget * 1_000_000)}
+        return {
+            "segments.date": day.isoformat(),
+            "campaign.id": spec.campaign_id,
+            "campaign.name": spec.campaign_name,
+            "ad_group.id": spec.entity_id,
+            "ad_group.name": spec.entity_name,
+            "metrics.impressions": int(m["impressions"]),
+            "metrics.clicks": int(m["clicks"]),
+            "metrics.cost_micros": round(m["spend"] * 1_000_000),
+            "metrics.conversions": m["conversions"],
+            "metrics.conversions_value": m["revenue"],
+            "campaign_budget.amount_micros": int(spec.daily_budget * 1_000_000),
+        }
     if platform == Platform.META:
-        return {"date_start": day.isoformat(), "date_stop": day.isoformat(), "campaign_id": spec.campaign_id,
-                "campaign_name": spec.campaign_name, "adset_id": spec.entity_id, "adset_name": spec.entity_name,
-                "impressions": str(int(m["impressions"])), "clicks": str(int(m["clicks"])), "spend": f"{m['spend']:.2f}",
-                "actions": [{"action_type": "link_click", "value": str(int(m["clicks"]))},
-                            {"action_type": "purchase", "value": str(int(m["conversions"]))}],
-                "action_values": [{"action_type": "purchase", "value": f"{m['revenue']:.2f}"}],
-                "daily_budget": str(int(spec.daily_budget * 100))}
+        return {
+            "date_start": day.isoformat(),
+            "date_stop": day.isoformat(),
+            "campaign_id": spec.campaign_id,
+            "campaign_name": spec.campaign_name,
+            "adset_id": spec.entity_id,
+            "adset_name": spec.entity_name,
+            "impressions": str(int(m["impressions"])),
+            "clicks": str(int(m["clicks"])),
+            "spend": f"{m['spend']:.2f}",
+            "actions": [
+                {"action_type": "link_click", "value": str(int(m["clicks"]))},
+                {"action_type": "purchase", "value": str(int(m["conversions"]))},
+            ],
+            "action_values": [{"action_type": "purchase", "value": f"{m['revenue']:.2f}"}],
+            "daily_budget": str(int(spec.daily_budget * 100)),
+        }
     if platform == Platform.TIKTOK:
-        return {"stat_time_day": f"{day.isoformat()} 00:00:00", "campaign_id": spec.campaign_id,
-                "campaign_name": spec.campaign_name, "adgroup_id": spec.entity_id, "adgroup_name": spec.entity_name,
-                "impressions": str(int(m["impressions"])), "clicks": str(int(m["clicks"])), "spend": f"{m['spend']:.2f}",
-                "conversion": str(int(m["conversions"])), "total_complete_payment_rate": "0",
-                "complete_payment_roas": "0", "total_purchase_value": f"{m['revenue']:.2f}",
-                "budget": f"{spec.daily_budget:.2f}"}
+        return {
+            "stat_time_day": f"{day.isoformat()} 00:00:00",
+            "campaign_id": spec.campaign_id,
+            "campaign_name": spec.campaign_name,
+            "adgroup_id": spec.entity_id,
+            "adgroup_name": spec.entity_name,
+            "impressions": str(int(m["impressions"])),
+            "clicks": str(int(m["clicks"])),
+            "spend": f"{m['spend']:.2f}",
+            "conversion": str(int(m["conversions"])),
+            "total_complete_payment_rate": "0",
+            "complete_payment_roas": "0",
+            "total_purchase_value": f"{m['revenue']:.2f}",
+            "budget": f"{spec.daily_budget:.2f}",
+        }
     if platform == Platform.LINKEDIN:
-        return {"dateRange": {"start": {"year": day.year, "month": day.month, "day": day.day}},
-                "pivotValues": [f"urn:li:sponsoredCampaign:{spec.entity_id}"], "campaignName": spec.entity_name,
-                "campaignGroup": f"urn:li:sponsoredCampaignGroup:{spec.campaign_id}",
-                "campaignGroupName": spec.campaign_name, "impressions": int(m["impressions"]),
-                "clicks": int(m["clicks"]), "costInLocalCurrency": f"{m['spend']:.2f}",
-                "externalWebsiteConversions": int(m["conversions"]),
-                "conversionValueInLocalCurrency": f"{m['revenue']:.2f}",
-                "dailyBudget": {"amount": f"{spec.daily_budget:.2f}", "currencyCode": "USD"}}
+        return {
+            "dateRange": {"start": {"year": day.year, "month": day.month, "day": day.day}},
+            "pivotValues": [f"urn:li:sponsoredCampaign:{spec.entity_id}"],
+            "campaignName": spec.entity_name,
+            "campaignGroup": f"urn:li:sponsoredCampaignGroup:{spec.campaign_id}",
+            "campaignGroupName": spec.campaign_name,
+            "impressions": int(m["impressions"]),
+            "clicks": int(m["clicks"]),
+            "costInLocalCurrency": f"{m['spend']:.2f}",
+            "externalWebsiteConversions": int(m["conversions"]),
+            "conversionValueInLocalCurrency": f"{m['revenue']:.2f}",
+            "dailyBudget": {"amount": f"{spec.daily_budget:.2f}", "currencyCode": "USD"},
+        }
     if platform == Platform.AMAZON_ADS:
-        return {"date": day.strftime("%Y%m%d"), "campaignId": spec.campaign_id, "campaignName": spec.campaign_name,
-                "adGroupId": spec.entity_id, "adGroupName": spec.entity_name, "impressions": int(m["impressions"]),
-                "clicks": int(m["clicks"]), "cost": round(m["spend"], 2), "purchases14d": int(m["conversions"]),
-                "sales14d": m["revenue"], "campaignBudgetAmount": spec.daily_budget}
+        return {
+            "date": day.strftime("%Y%m%d"),
+            "campaignId": spec.campaign_id,
+            "campaignName": spec.campaign_name,
+            "adGroupId": spec.entity_id,
+            "adGroupName": spec.entity_name,
+            "impressions": int(m["impressions"]),
+            "clicks": int(m["clicks"]),
+            "cost": round(m["spend"], 2),
+            "purchases14d": int(m["conversions"]),
+            "sales14d": m["revenue"],
+            "campaignBudgetAmount": spec.daily_budget,
+        }
     raise ValueError(platform)
 
 
@@ -149,12 +195,17 @@ class SyntheticConnector(PlatformConnector):
             for spec in specs:
                 row = _raw_row(self.platform, spec, day, simulate_day(world, self.platform, spec, day, end, brand_id))
                 if kind == "schema_drift":
-                    row["metrics.engaged_view_conversions" if self.platform == Platform.GOOGLE_ADS
-                        else "new_metric_v2"] = 1
+                    row[
+                        "metrics.engaged_view_conversions" if self.platform == Platform.GOOGLE_ADS else "new_metric_v2"
+                    ] = 1
                 rows.append(row)
             day += timedelta(days=1)
-        return RawFetch(platform=self.platform, rows=rows, account_currency=world.currency.get(self.platform, "USD"),
-                        api_version="synthetic-1")
+        return RawFetch(
+            platform=self.platform,
+            rows=rows,
+            account_currency=world.currency.get(self.platform, "USD"),
+            api_version="synthetic-1",
+        )
 
     def _state(self, brand_id: str, entity_id: str) -> dict[str, Any]:
         with _lock:
@@ -166,8 +217,14 @@ class SyntheticConnector(PlatformConnector):
                     raise PlatformUnavailable(f"{self.platform}: entity {entity_id} not found (HTTP 404)")
                 fx = FX_TO_USD[world.currency.get(self.platform, "USD")]
                 budget = world.live_budgets.get(entity_id, spec.daily_budget * fx)
-                _live_state[key] = {"entity_id": entity_id, "name": spec.entity_name, "campaign_id": spec.campaign_id,
-                                    "daily_budget": round(budget, 2), "status": "ACTIVE", "version": 1}
+                _live_state[key] = {
+                    "entity_id": entity_id,
+                    "name": spec.entity_name,
+                    "campaign_id": spec.campaign_id,
+                    "daily_budget": round(budget, 2),
+                    "status": "ACTIVE",
+                    "version": 1,
+                }
             return dict(_live_state[key])
 
     def get_entity(self, cred: Credential, brand_id: str, entity_id: str) -> dict[str, Any]:
@@ -189,5 +246,9 @@ class SyntheticConnector(PlatformConnector):
             else:
                 raise ValueError(f"unsupported op {change['op']}")
             st["version"] = state["version"] + 1
-            return {"ok": True, "entity_id": entity_id, "new_state": dict(st),
-                    "request_id": hashlib.sha256(repr(change).encode()).hexdigest()[:16]}
+            return {
+                "ok": True,
+                "entity_id": entity_id,
+                "new_state": dict(st),
+                "request_id": hashlib.sha256(repr(change).encode()).hexdigest()[:16],
+            }

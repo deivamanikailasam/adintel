@@ -33,13 +33,19 @@ class Requirement:
 def requirement(rec: Recommendation, exposure: float) -> Requirement:
     senior = frozenset({Role.SENIOR_ACCOUNT_MANAGER, Role.HEAD_OF_PERFORMANCE})
     if rec.risk == RiskLevel.HIGH or rec.irreversible:
-        return Requirement(frozenset({Role.HEAD_OF_PERFORMANCE}), False, True, "high risk: Head of Performance + second approver")
+        return Requirement(
+            frozenset({Role.HEAD_OF_PERFORMANCE}), False, True, "high risk: Head of Performance + second approver"
+        )
     if exposure > SECOND_APPROVER_THRESHOLD:
-        return Requirement(frozenset({Role.HEAD_OF_PERFORMANCE}), False, True, "> $2,000/day: Head of Performance + second approver")
+        return Requirement(
+            frozenset({Role.HEAD_OF_PERFORMANCE}), False, True, "> $2,000/day: Head of Performance + second approver"
+        )
     if exposure >= 500:
         return Requirement(senior, False, False, "$500–$2,000/day: senior AM or Head of Performance")
     if exposure >= 50:
-        return Requirement(frozenset({Role.ACCOUNT_MANAGER}) | senior, True, False, "$50–$500/day: the brand's assigned AM")
+        return Requirement(
+            frozenset({Role.ACCOUNT_MANAGER}) | senior, True, False, "$50–$500/day: the brand's assigned AM"
+        )
     return Requirement(frozenset({Role.ACCOUNT_MANAGER}) | senior, False, False, "< $50/day: any account manager")
 
 

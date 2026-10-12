@@ -30,12 +30,13 @@ def register_violation_hook(hook: ViolationHook) -> None:
 
 
 def _fire(tenant_id: str, collection: str, detail: str) -> None:
-    log.critical("tenant_isolation_violation", extra={"tenant_id": tenant_id, "collection": collection,
-                                                       "detail": detail})
+    log.critical(
+        "tenant_isolation_violation", extra={"tenant_id": tenant_id, "collection": collection, "detail": detail}
+    )
     for hook in _violation_hooks:
         try:
             hook(tenant_id, collection, detail)
-        except Exception:  # noqa: BLE001 - a broken hook must never mask the violation
+        except Exception:
             log.exception("violation_hook_failed")
 
 
@@ -100,8 +101,14 @@ class TenantScopedRepo:
     def insert_many(self, docs: Sequence[Doc]) -> None:
         self._coll.insert_many([self._stamp(d) for d in docs])
 
-    def find(self, flt: Filter | None = None, *, sort: SortSpec | None = None, limit: int | None = None,
-             projection: dict[str, int] | None = None) -> list[Doc]:
+    def find(
+        self,
+        flt: Filter | None = None,
+        *,
+        sort: SortSpec | None = None,
+        limit: int | None = None,
+        projection: dict[str, int] | None = None,
+    ) -> list[Doc]:
         return self._coll.find(self._scope(flt), sort=sort, limit=limit, projection=projection)
 
     def find_one(self, flt: Filter | None = None, *, sort: SortSpec | None = None) -> Doc | None:
@@ -120,8 +127,9 @@ class TenantScopedRepo:
     def count(self, flt: Filter | None = None) -> int:
         return self._coll.count(self._scope(flt))
 
-    def vector_search(self, vector: Sequence[float], flt: Filter, *, limit: int, num_candidates: int
-                      ) -> list[tuple[Doc, float]]:
+    def vector_search(
+        self, vector: Sequence[float], flt: Filter, *, limit: int, num_candidates: int
+    ) -> list[tuple[Doc, float]]:
         """Tenant isolation, layer 2: the tenant pre-filter runs *inside* the vector query."""
         return self._coll.vector_search(vector, self._scope(flt), limit=limit, num_candidates=num_candidates)
 
@@ -141,8 +149,7 @@ class SystemRepo:
         self.purpose = purpose
         log.info("system_repo_opened", extra={"collection": collection, "purpose": purpose})
 
-    def find(self, flt: Filter | None = None, *, sort: SortSpec | None = None, limit: int | None = None
-             ) -> list[Doc]:
+    def find(self, flt: Filter | None = None, *, sort: SortSpec | None = None, limit: int | None = None) -> list[Doc]:
         return self._coll.find(dict(flt or {}), sort=sort, limit=limit)
 
     def find_one(self, flt: Filter | None = None) -> Doc | None:

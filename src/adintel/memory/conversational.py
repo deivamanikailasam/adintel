@@ -24,8 +24,15 @@ class ConversationStore:
     def ensure(self, session_id: str, *, brand_id: str, user_id: str) -> dict[str, Any]:
         doc = self.load(session_id)
         if doc is None:
-            doc = {"session_id": session_id, "brand_id": brand_id, "user_id": user_id, "turns": [], "summary": "",
-                   "created_at": utcnow().isoformat(), "expire_at": utcnow() + RETENTION}
+            doc = {
+                "session_id": session_id,
+                "brand_id": brand_id,
+                "user_id": user_id,
+                "turns": [],
+                "summary": "",
+                "created_at": utcnow().isoformat(),
+                "expire_at": utcnow() + RETENTION,
+            }
             self._repo.insert(doc)
         return doc
 
@@ -39,14 +46,25 @@ class ConversationStore:
 
     def append(self, session_id: str, question: str, answer: str) -> None:
         doc = self.load(session_id) or {}
-        turns = [*doc.get("turns", []), {"role": "user", "content": question, "at": utcnow().isoformat()},
-                 {"role": "assistant", "content": answer, "at": utcnow().isoformat()}]
+        turns = [
+            *doc.get("turns", []),
+            {"role": "user", "content": question, "at": utcnow().isoformat()},
+            {"role": "assistant", "content": answer, "at": utcnow().isoformat()},
+        ]
         summary = doc.get("summary", "")
         if len(turns) > KEEP_TURNS:
             old, turns = turns[:-KEEP_TURNS], turns[-KEEP_TURNS:]
             gist = "; ".join(t["content"][:120] for t in old if t["role"] == "user")
             summary = (summary + " | " if summary else "") + f"Earlier questions: {gist}"
             summary = summary[-2000:]
-        self._repo.update_one({"session_id": session_id}, {"$set": {
-            "turns": turns, "summary": summary, "updated_at": utcnow().isoformat(),
-            "expire_at": utcnow() + RETENTION}})
+        self._repo.update_one(
+            {"session_id": session_id},
+            {
+                "$set": {
+                    "turns": turns,
+                    "summary": summary,
+                    "updated_at": utcnow().isoformat(),
+                    "expire_at": utcnow() + RETENTION,
+                }
+            },
+        )

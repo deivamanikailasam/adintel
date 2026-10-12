@@ -36,13 +36,26 @@ def upload(body: Doc, p: Principal = Depends(require(*APPROVERS)), database: Dat
     if body.brand_id != "*":
         check_brand(p, body.brand_id)
     doc_id = new_id("doc")
-    chunks = index_document(database, p.tenant_id, doc_id=doc_id, title=body.title, text=body.text,
-                            doc_type=body.doc_type, brand_id=body.brand_id, vertical=body.vertical,
-                            source=f"upload:{p.user_id}")
+    chunks = index_document(
+        database,
+        p.tenant_id,
+        doc_id=doc_id,
+        title=body.title,
+        text=body.text,
+        doc_type=body.doc_type,
+        brand_id=body.brand_id,
+        vertical=body.vertical,
+        source=f"upload:{p.user_id}",
+    )
     flagged = sorted({m for c in chunks for m in c["injection_markers"]})
-    AuditLog(database, p.tenant_id).append(AuditAction.DATA_ACCESS, actor_type="human", actor_id=p.user_id,
-                                           subject_type="kb_document", subject_id=doc_id,
-                                           details={"op": "upload", "chunks": len(chunks), "flags": flagged})
+    AuditLog(database, p.tenant_id).append(
+        AuditAction.DATA_ACCESS,
+        actor_type="human",
+        actor_id=p.user_id,
+        subject_type="kb_document",
+        subject_id=doc_id,
+        details={"op": "upload", "chunks": len(chunks), "flags": flagged},
+    )
     return {"doc_id": doc_id, "chunks": len(chunks), "injection_markers": flagged}
 
 
@@ -51,6 +64,14 @@ def list_docs(p: Principal = Depends(require(*ANY_STAFF)), database: Database = 
     rows = TenantScopedRepo(database, "kb_chunks", p.tenant_id).find({"is_active": True}, projection={"embedding": 0})
     seen: dict[str, dict[str, Any]] = {}
     for r in rows:
-        seen.setdefault(r["doc_id"], {"doc_id": r["doc_id"], "title": r["doc_title"], "doc_type": r["doc_type"],
-                                      "brand_id": r["brand_id"], "chunks": 0})["chunks"] += 1
+        seen.setdefault(
+            r["doc_id"],
+            {
+                "doc_id": r["doc_id"],
+                "title": r["doc_title"],
+                "doc_type": r["doc_type"],
+                "brand_id": r["brand_id"],
+                "chunks": 0,
+            },
+        )["chunks"] += 1
     return sorted(seen.values(), key=lambda d: d["title"])

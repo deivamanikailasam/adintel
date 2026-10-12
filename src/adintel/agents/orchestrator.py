@@ -37,8 +37,11 @@ class OrchestratorOutput(BaseModel):
 def rule_decision(state: RunState, remaining: float) -> tuple[NextAction, str, str] | None:
     """Return (action, rule_name, reasoning) or None if the model must decide."""
     if state.budget_exhausted:
-        return (NextAction.GUARDRAIL if state.report else NextAction.REPORT, "budget_exhausted",
-                "Budget exhausted: best-effort deterministic finalize.")
+        return (
+            NextAction.GUARDRAIL if state.report else NextAction.REPORT,
+            "budget_exhausted",
+            "Budget exhausted: best-effort deterministic finalize.",
+        )
     if state.report is not None:
         return NextAction.GUARDRAIL, "report_done", "A report exists; the run is complete."
     if not state.anomaly_pass_done:
@@ -81,16 +84,31 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
         allowed = {NextAction.ANALYST, NextAction.REPORT}
         context = {
             "data_quality": str(state.dq.verdict) if state.dq else None,
-            "anomalies": [{"metric": str(a.metric), "severity": str(a.severity), "deviation_pct": a.deviation_pct,
-                           "days": a.days, "spend_at_risk_weekly": a.spend_at_risk_weekly,
-                           "iforest_confirmed": a.iforest_confirmed} for a in state.material_anomalies()[:5]],
-            "root_cause_exists": bool(state.root_causes), "recommendations": len(state.recommendations),
-            "visits": state.visits, "remaining_budget_fraction": round(remaining, 2),
+            "anomalies": [
+                {
+                    "metric": str(a.metric),
+                    "severity": str(a.severity),
+                    "deviation_pct": a.deviation_pct,
+                    "days": a.days,
+                    "spend_at_risk_weekly": a.spend_at_risk_weekly,
+                    "iforest_confirmed": a.iforest_confirmed,
+                }
+                for a in state.material_anomalies()[:5]
+            ],
+            "root_cause_exists": bool(state.root_causes),
+            "recommendations": len(state.recommendations),
+            "visits": state.visits,
+            "remaining_budget_fraction": round(remaining, 2),
             "allowed_actions": sorted(str(a) for a in allowed),
         }
         try:
-            r = ctx.llm.structured(agent="orchestrator", prompt_id="orchestrator", schema=OrchestratorOutput,
-                                   context=context, allow_fallback=False)
+            r = ctx.llm.structured(
+                agent="orchestrator",
+                prompt_id="orchestrator",
+                schema=OrchestratorOutput,
+                context=context,
+                allow_fallback=False,
+            )
             action = NextAction(r.value.next_action)
             why = r.value.reasoning
             decided_by = "model"
@@ -100,11 +118,11 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
             action = fallback_rule(state)
             why = f"Model decision unavailable ({type(exc).__name__}); fallback rule."
             decided_by = "fallback_rule"
-            update["degradations"] = [degrade(DegradationCode.ORCHESTRATOR_RULE_FALLBACK, AgentName.ORCHESTRATOR,
-                                              str(exc)[:120])]
+            update["degradations"] = [
+                degrade(DegradationCode.ORCHESTRATOR_RULE_FALLBACK, AgentName.ORCHESTRATOR, str(exc)[:120])
+            ]
     ORCH_DECISIONS.labels(decided_by=decided_by.split(":")[0], action=str(action)).inc()
     log.info("orchestrator_decision", extra={"next_action": str(action), "decided_by": decided_by})
     update["next_action"] = str(action)
-    update["decisions"] = [OrchestratorDecision(step=step, next_action=action, decided_by=decided_by,
-                                                reasoning=why)]
+    update["decisions"] = [OrchestratorDecision(step=step, next_action=action, decided_by=decided_by, reasoning=why)]
     return update

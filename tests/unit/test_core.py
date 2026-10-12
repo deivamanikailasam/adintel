@@ -41,9 +41,8 @@ def test_local_defaults_are_accepted():
 
 
 def test_runstate_identity_fields_and_helpers():
-    s = RunState(run_id="r", tenant_id="t", brand_id="b", period_start=date(2026, 10, 5),
-                 period_end=date(2026, 10, 11))
-    assert FROZEN_FIELDS == {"run_id", "tenant_id", "brand_id"}
+    s = RunState(run_id="r", tenant_id="t", brand_id="b", period_start=date(2026, 10, 5), period_end=date(2026, 10, 11))
+    assert {"run_id", "tenant_id", "brand_id"} == FROZEN_FIELDS
     assert s.status == RunStatus.RUNNING
     assert 0.99 <= s.remaining_budget_fraction() <= 1.0
     assert Severity.HIGH.rank > Severity.MEDIUM.rank

@@ -50,20 +50,31 @@ def _fetch_one(ctx: AgentContext, platform: Platform, start: date, end: date) ->
         return PlatformFetch(platform=platform, ok=False, error="circuit open"), []
     try:
         cred = SecretStore().get(ctx.tenant_id, str(platform), "read")
-        raw = retry_call(lambda: get_connector(platform).fetch(cred, ctx.brand_id, start, end), retries=1,
-                         transient=(PlatformUnavailable,), base_delay=0.5)
+        raw = retry_call(
+            lambda: get_connector(platform).fetch(cred, ctx.brand_id, start, end),
+            retries=1,
+            transient=(PlatformUnavailable,),
+            base_delay=0.5,
+        )
         rows, unmapped = normalise(raw, tenant_id=ctx.tenant_id, brand_id=ctx.brand_id)
         cb.record_success()
     except AdIntelError as exc:
         cb.record_failure()
-        return PlatformFetch(platform=platform, ok=False, error=str(exc)[:300],
-                             latency_ms=(time.perf_counter() - t0) * 1000), []
+        return PlatformFetch(
+            platform=platform, ok=False, error=str(exc)[:300], latency_ms=(time.perf_counter() - t0) * 1000
+        ), []
     keys = [(r.platform, r.entity_id, r.date) for r in rows]
     raw_total = round(sum(r.spend for r in rows), 2)
-    return PlatformFetch(platform=platform, ok=True, rows=len(rows), latency_ms=(time.perf_counter() - t0) * 1000,
-                         unmapped_fields=unmapped, raw_spend_total_usd=raw_total,
-                         duplicates=len(keys) - len(set(keys)),
-                         currencies=sorted({r.currency_original for r in rows})), rows
+    return PlatformFetch(
+        platform=platform,
+        ok=True,
+        rows=len(rows),
+        latency_ms=(time.perf_counter() - t0) * 1000,
+        unmapped_fields=unmapped,
+        raw_spend_total_usd=raw_total,
+        duplicates=len(keys) - len(set(keys)),
+        currencies=sorted({r.currency_original for r in rows}),
+    ), rows
 
 
 def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
@@ -88,8 +99,11 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     repo = ctx.repo("metrics_daily")
     for r in all_rows:
         doc = r.model_dump(mode="json")
-        repo.update_one({"brand_id": r.brand_id, "platform": doc["platform"], "entity_id": r.entity_id,
-                         "date": doc["date"]}, {"$set": doc}, upsert=True)
+        repo.update_one(
+            {"brand_id": r.brand_id, "platform": doc["platform"], "entity_id": r.entity_id, "date": doc["date"]},
+            {"$set": doc},
+            upsert=True,
+        )
 
     drift = {str(f.platform): f.unmapped_fields for f in fetches if f.unmapped_fields}
     for platform, fields in drift.items():
@@ -99,14 +113,21 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     ok = [str(f.platform) for f in fetches if f.ok]
     update: dict[str, Any] = {"fetches": fetches, "degradations": degradations}
     if not ok:
-        update["degradations"] = [*degradations, degrade(DegradationCode.ALL_PLATFORMS_UNAVAILABLE,
-                                                         AgentName.INGESTION, "all")]
+        update["degradations"] = [
+            *degradations,
+            degrade(DegradationCode.ALL_PLATFORMS_UNAVAILABLE, AgentName.INGESTION, "all"),
+        ]
         update["status"] = RunStatus.FAILED
         update["abort_reason"] = "all platforms unavailable; retry scheduled for 06:00"
         return update
     df = load_frame(repo, ctx.brand_id, start, state.period_end, ok)
-    update["metrics_ref"] = {"collection": "metrics_daily", "brand_id": ctx.brand_id, "start": start.isoformat(),
-                             "end": state.period_end.isoformat(), "platforms": ok}
+    update["metrics_ref"] = {
+        "collection": "metrics_daily",
+        "brand_id": ctx.brand_id,
+        "start": start.isoformat(),
+        "end": state.period_end.isoformat(),
+        "platforms": ok,
+    }
     update["metrics_summary"] = period_summary(df, state.period_start, state.period_end)
     return update
 
@@ -114,14 +135,34 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
 def _propose_mapping(ctx: AgentContext, platform: str, fields: list[str]) -> None:
     """Best effort: a proposal for engineering review. Never applied, never blocks the run."""
     try:
-        res = ctx.llm.structured(agent="ingestion", prompt_id="ingestion_mapping", schema=MappingProposal,
-                                 context={"platform": platform,
-                                          "canonical_fields": ["impressions", "clicks", "spend", "conversions",
-                                                               "revenue", "daily_budget", "ignore"]},
-                                 untrusted={f"{platform}_unknown_fields": fields})
-        ctx.repo("notifications").insert({"kind": "schema_mapping_proposal", "platform": platform,
-                                          "brand_id": ctx.brand_id, "run_id": ctx.run_id,
-                                          "proposal": res.value.model_dump(), "audience": "engineering",
-                                          "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
-    except Exception as exc:  # noqa: BLE001 - a proposal must never fail ingestion
+        res = ctx.llm.structured(
+            agent="ingestion",
+            prompt_id="ingestion_mapping",
+            schema=MappingProposal,
+            context={
+                "platform": platform,
+                "canonical_fields": [
+                    "impressions",
+                    "clicks",
+                    "spend",
+                    "conversions",
+                    "revenue",
+                    "daily_budget",
+                    "ignore",
+                ],
+            },
+            untrusted={f"{platform}_unknown_fields": fields},
+        )
+        ctx.repo("notifications").insert(
+            {
+                "kind": "schema_mapping_proposal",
+                "platform": platform,
+                "brand_id": ctx.brand_id,
+                "run_id": ctx.run_id,
+                "proposal": res.value.model_dump(),
+                "audience": "engineering",
+                "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+        )
+    except Exception as exc:
         log.warning("mapping_proposal_failed", extra={"platform": platform, "reason": str(exc)[:200]})

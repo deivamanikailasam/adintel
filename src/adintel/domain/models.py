@@ -7,7 +7,7 @@ beyond validation, so the same objects travel through state, storage, the API an
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -32,7 +32,7 @@ class Model(BaseModel):
     model_config = ConfigDict(use_enum_values=False, extra="forbid")
 
     @classmethod
-    def from_doc(cls, doc: dict[str, Any]) -> Any:
+    def from_doc(cls, doc: dict[str, Any]) -> Self:
         """Build from a stored document, ignoring workflow fields added by other services."""
         return cls.model_validate({k: v for k, v in doc.items() if k in cls.model_fields})
 

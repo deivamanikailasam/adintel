@@ -102,8 +102,9 @@ class AuditLog:
                     continue  # another process appended concurrently; re-read head and retry
         raise RuntimeError("audit append contention: could not obtain a sequence number")
 
-    def entries(self, *, subject_id: str | None = None, run_id: str | None = None,
-                limit: int | None = None) -> list[AuditEntry]:
+    def entries(
+        self, *, subject_id: str | None = None, run_id: str | None = None, limit: int | None = None
+    ) -> list[AuditEntry]:
         flt: dict[str, Any] = {}
         if subject_id:
             flt["subject_id"] = subject_id
@@ -119,14 +120,29 @@ class AuditLog:
         for row in rows:
             entry = AuditEntry.model_validate(row)
             if entry.seq != expected_seq:
-                return ChainVerification(tenant_id=self.tenant_id, ok=False, entries=len(rows),
-                                         broken_at_seq=entry.seq, reason=f"gap: expected seq {expected_seq}")
+                return ChainVerification(
+                    tenant_id=self.tenant_id,
+                    ok=False,
+                    entries=len(rows),
+                    broken_at_seq=entry.seq,
+                    reason=f"gap: expected seq {expected_seq}",
+                )
             if entry.prev_hash != prev:
-                return ChainVerification(tenant_id=self.tenant_id, ok=False, entries=len(rows),
-                                         broken_at_seq=entry.seq, reason="prev_hash does not link")
+                return ChainVerification(
+                    tenant_id=self.tenant_id,
+                    ok=False,
+                    entries=len(rows),
+                    broken_at_seq=entry.seq,
+                    reason="prev_hash does not link",
+                )
             if entry.compute_hash() != entry.hash:
-                return ChainVerification(tenant_id=self.tenant_id, ok=False, entries=len(rows),
-                                         broken_at_seq=entry.seq, reason="content hash mismatch (edited)")
+                return ChainVerification(
+                    tenant_id=self.tenant_id,
+                    ok=False,
+                    entries=len(rows),
+                    broken_at_seq=entry.seq,
+                    reason="content hash mismatch (edited)",
+                )
             prev = entry.hash
             expected_seq += 1
         return ChainVerification(tenant_id=self.tenant_id, ok=True, entries=len(rows))
@@ -139,6 +155,7 @@ def verify_all_tenants(db: Database) -> list[ChainVerification]:
     results = [AuditLog(db, t).verify() for t in sorted(tenants)]
     for r in results:
         if not r.ok:
-            log.critical("audit_chain_broken", extra={"tenant_id": r.tenant_id, "seq": r.broken_at_seq,
-                                                      "reason": r.reason})
+            log.critical(
+                "audit_chain_broken", extra={"tenant_id": r.tenant_id, "seq": r.broken_at_seq, "reason": r.reason}
+            )
     return results

@@ -34,5 +34,11 @@ def dev_login(body: DevLogin, database: Database = Depends(db)) -> dict[str, Any
 
 @router.get("/me")
 def me(p: Principal = Depends(principal)) -> dict[str, Any]:
-    return {"user_id": p.user_id, "tenant_id": p.tenant_id, "email": p.email, "roles": sorted(p.roles),
-            "brand_ids": list(p.brand_ids), "senior": p.senior}
+    return {
+        "user_id": p.user_id,
+        "tenant_id": p.tenant_id,
+        "email": p.email,
+        "roles": sorted(p.roles),
+        "brand_ids": list(p.brand_ids),
+        "senior": p.senior,
+    }

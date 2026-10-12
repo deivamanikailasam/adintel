@@ -17,10 +17,29 @@ from typing import Any
 _FENCE_RE = re.compile(r"</?\s*untrusted_content[^>]*>", re.IGNORECASE)
 
 INJECTION_MARKERS = (
-    "ignore previous", "ignore prior", "ignore all previous", "disregard previous", "disregard the above",
-    "system:", "system prompt", "you are now", "new instructions", "developer mode", "act as",
-    "override", "jailbreak", "do anything now", "<|im_start|>", "<|system|>", "[inst]", "</s>",
-    "assistant:", "reveal your", "print your instructions", "exfiltrate", "base64",
+    "ignore previous",
+    "ignore prior",
+    "ignore all previous",
+    "disregard previous",
+    "disregard the above",
+    "system:",
+    "system prompt",
+    "you are now",
+    "new instructions",
+    "developer mode",
+    "act as",
+    "override",
+    "jailbreak",
+    "do anything now",
+    "<|im_start|>",
+    "<|system|>",
+    "[inst]",
+    "</s>",
+    "assistant:",
+    "reveal your",
+    "print your instructions",
+    "exfiltrate",
+    "base64",
 )
 
 FENCE_PREAMBLE = (

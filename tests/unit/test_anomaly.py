@@ -59,9 +59,19 @@ def test_insufficient_history_degrades(db):
 
 
 def test_human_approved_suppression_hides_the_anomaly(db):
-    rules = BrandRules(tenant_id="brightwave", brand_id="urban-roast", suppressions=[Suppression(
-        description="Planned retargeting push", metric=Metric.CPA, entity_id="cmp_ur_meta_rt", approved_by="u_head",
-        approved_at=datetime.now(UTC))])
+    rules = BrandRules(
+        tenant_id="brightwave",
+        brand_id="urban-roast",
+        suppressions=[
+            Suppression(
+                description="Planned retargeting push",
+                metric=Metric.CPA,
+                entity_id="cmp_ur_meta_rt",
+                approved_by="u_head",
+                approved_at=datetime.now(UTC),
+            )
+        ],
+    )
     TenantScopedRepo(db, "brand_rules", "brightwave").insert(rules.model_dump(mode="json"))
     s = _run(db, "urban-roast")
     assert all(not (a.metric == Metric.CPA and a.campaign_id == "cmp_ur_meta_rt") for a in s.anomalies)

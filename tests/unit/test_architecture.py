@@ -2,8 +2,6 @@
 
 import ast
 import pathlib
-import subprocess
-import sys
 
 SRC = pathlib.Path(__file__).resolve().parents[2] / "src" / "adintel"
 

@@ -89,14 +89,15 @@ def extract_json(text: str) -> str:
         elif ch == "}":
             depth -= 1
             if depth == 0:
-                return text[start:i + 1]
+                return text[start : i + 1]
     return text[start:]
 
 
 def cost_of(tier: TierConfig, tokens_in: int, tokens_out: int, cached: int = 0) -> float:
     uncached = max(0, tokens_in - cached)
-    return round((uncached * tier.price_input + cached * tier.price_cached_input
-                  + tokens_out * tier.price_output) / 1_000_000, 8)
+    return round(
+        (uncached * tier.price_input + cached * tier.price_cached_input + tokens_out * tier.price_output) / 1_000_000, 8
+    )
 
 
 @dataclass
@@ -134,8 +135,15 @@ class CallContext:
 
 
 class LLMGateway:
-    def __init__(self, db: Database, ctx: CallContext, *, meter: UsageMeter | None = None,
-                 registry: ModelRegistry | None = None, no_think: bool | None = None) -> None:
+    def __init__(
+        self,
+        db: Database,
+        ctx: CallContext,
+        *,
+        meter: UsageMeter | None = None,
+        registry: ModelRegistry | None = None,
+        no_think: bool | None = None,
+    ) -> None:
         from adintel.config import get_settings
 
         self._db = db
@@ -152,15 +160,24 @@ class LLMGateway:
     # ------------------------------------------------------------------------------------------------
     # message assembly: stable prefix first (system prompt + schema), variable content last
     # ------------------------------------------------------------------------------------------------
-    def build_messages(self, prompt: Prompt, *, schema: type[BaseModel] | None, context: Any,
-                       untrusted: dict[str, Any] | None, task: str | None, max_input_tokens: int,
-                       history: list[Message] | None = None) -> tuple[list[Message], list[str]]:
+    def build_messages(
+        self,
+        prompt: Prompt,
+        *,
+        schema: type[BaseModel] | None,
+        context: Any,
+        untrusted: dict[str, Any] | None,
+        task: str | None,
+        max_input_tokens: int,
+        history: list[Message] | None = None,
+    ) -> tuple[list[Message], list[str]]:
         system = prompt.text
         if untrusted:
             system += "\n\n" + FENCE_PREAMBLE
         if schema is not None:
-            system += ("\n\nRespond with ONE JSON object only, no prose, matching this JSON Schema:\n"
-                       + json.dumps(schema.model_json_schema(), sort_keys=True))
+            system += "\n\nRespond with ONE JSON object only, no prose, matching this JSON Schema:\n" + json.dumps(
+                schema.model_json_schema(), sort_keys=True
+            )
         if self._no_think:
             system += "\n/no_think"
 
@@ -177,8 +194,9 @@ class LLMGateway:
                 redacted_kinds += k2
                 if len(block) > budget_chars:
                     keep = max(0, budget_chars)
-                    block = block[:keep] + ("\n[TRUNCATED: %d characters of %s omitted to fit the context budget]"
-                                            % (len(block) - keep, source))
+                    block = block[:keep] + (
+                        f"\n[TRUNCATED: {len(block) - keep} characters of {source} omitted to fit the context budget]"
+                    )
                 budget_chars -= len(block)
                 parts.append(block)
         if task:
@@ -190,9 +208,22 @@ class LLMGateway:
     def _seed(self, agent: str) -> int:
         return int(sha256_text(f"{self.ctx.run_id}:{agent}:{self.ctx.step}")[:8], 16)
 
-    def _record(self, *, agent: str, tier: TierConfig, prompt: Prompt, messages: list[Message],
-                result: CompletionResult | None, attempt: int, status: str, error: str | None,
-                temperature: float, schema_name: str | None, retrieved: list[str], cost: float) -> str:
+    def _record(
+        self,
+        *,
+        agent: str,
+        tier: TierConfig,
+        prompt: Prompt,
+        messages: list[Message],
+        result: CompletionResult | None,
+        attempt: int,
+        status: str,
+        error: str | None,
+        temperature: float,
+        schema_name: str | None,
+        retrieved: list[str],
+        cost: float,
+    ) -> str:
         call_id = new_id("llm")
         prompt_payload = [{"role": m.role, "content": m.content} for m in messages]
         prompt_hash = sha256_obj(prompt_payload)
@@ -200,24 +231,54 @@ class LLMGateway:
         response_hash = sha256_text(response_text)
         expire = utcnow() + timedelta(days=395)
         for sha, kind, body in ((prompt_hash, "prompt", prompt_payload), (response_hash, "response", response_text)):
-            self._archive.update_one({"sha256": sha}, {"$setOnInsert": {"sha256": sha, "kind": kind, "body": body,
-                                                                          "expire_at": expire}}, upsert=True)
-        rec = {
-            "call_id": call_id, "run_id": self.ctx.run_id, "brand_id": self.ctx.brand_id, "agent": agent,
-            "step": self.ctx.step, "tier": tier.name, "model_id": tier.model_id,
-            "adapter_sha256": tier.adapter_sha256, "prompt_id": prompt.prompt_id, "prompt_version": prompt.version,
-            "prompt_sha256": prompt.sha256, "prompt_hash": prompt_hash, "response_hash": response_hash,
-            "schema": schema_name, "temperature": temperature, "seed": self._seed(agent),
-            "retrieved_doc_ids": retrieved, "tokens_in": result.tokens_in if result else 0,
-            "tokens_out": result.tokens_out if result else 0, "cached_tokens": result.cached_tokens if result else 0,
-            "cost_usd": cost, "latency_ms": result.latency_ms if result else None, "attempt": attempt,
-            "status": status, "error": error, "created_at": utcnow().isoformat(), "expire_at": expire,
+            self._archive.update_one(
+                {"sha256": sha},
+                {"$setOnInsert": {"sha256": sha, "kind": kind, "body": body, "expire_at": expire}},
+                upsert=True,
+            )
+        rec: dict[str, Any] = {
+            "call_id": call_id,
+            "run_id": self.ctx.run_id,
+            "brand_id": self.ctx.brand_id,
+            "agent": agent,
+            "step": self.ctx.step,
+            "tier": tier.name,
+            "model_id": tier.model_id,
+            "adapter_sha256": tier.adapter_sha256,
+            "prompt_id": prompt.prompt_id,
+            "prompt_version": prompt.version,
+            "prompt_sha256": prompt.sha256,
+            "prompt_hash": prompt_hash,
+            "response_hash": response_hash,
+            "schema": schema_name,
+            "temperature": temperature,
+            "seed": self._seed(agent),
+            "retrieved_doc_ids": retrieved,
+            "tokens_in": result.tokens_in if result else 0,
+            "tokens_out": result.tokens_out if result else 0,
+            "cached_tokens": result.cached_tokens if result else 0,
+            "cost_usd": cost,
+            "latency_ms": result.latency_ms if result else None,
+            "attempt": attempt,
+            "status": status,
+            "error": error,
+            "created_at": utcnow().isoformat(),
+            "expire_at": expire,
         }
         self._calls.insert(rec)
         self.call_log.append(rec)
         day = utcnow().date().isoformat()
-        self._cost.insert({"day": day, "brand_id": self.ctx.brand_id, "run_id": self.ctx.run_id, "agent": agent,
-                           "tier": tier.name, "cost_usd": cost, "tokens": rec["tokens_in"] + rec["tokens_out"]})
+        self._cost.insert(
+            {
+                "day": day,
+                "brand_id": self.ctx.brand_id,
+                "run_id": self.ctx.run_id,
+                "agent": agent,
+                "tier": tier.name,
+                "cost_usd": cost,
+                "tokens": rec["tokens_in"] + rec["tokens_out"],
+            }
+        )
         labels = {"agent": agent, "model": tier.model_id}
         metrics.LLM_TOKENS.labels(**labels, tenant=self.ctx.tenant_id, direction="in").inc(rec["tokens_in"])
         metrics.LLM_TOKENS.labels(**labels, tenant=self.ctx.tenant_id, direction="out").inc(rec["tokens_out"])
@@ -226,15 +287,22 @@ class LLMGateway:
             metrics.LLM_LATENCY.labels(**labels).observe(result.latency_ms / 1000)
         if self._lf and self.ctx.run_id:
             now = utcnow()
-            self._lf.generation(self.ctx.run_id, name=f"{agent}:{prompt.prompt_id}", model=tier.model_id,
-                                input=prompt_payload, output=response_text,
-                                usage={"input": rec["tokens_in"], "output": rec["tokens_out"]},
-                                metadata={"status": status, "attempt": attempt, "tier": tier.name},
-                                start=now - timedelta(milliseconds=rec["latency_ms"] or 0), end=now)
+            self._lf.generation(
+                self.ctx.run_id,
+                name=f"{agent}:{prompt.prompt_id}",
+                model=tier.model_id,
+                input=prompt_payload,
+                output=response_text,
+                usage={"input": rec["tokens_in"], "output": rec["tokens_out"]},
+                metadata={"status": status, "attempt": attempt, "tier": tier.name},
+                start=now - timedelta(milliseconds=rec["latency_ms"] or 0),
+                end=now,
+            )
         return call_id
 
-    def _call(self, agent: str, tier: TierConfig, req: CompletionRequest,
-              retries: int = TRANSIENT_RETRIES) -> CompletionResult:
+    def _call(
+        self, agent: str, tier: TierConfig, req: CompletionRequest, retries: int = TRANSIENT_RETRIES
+    ) -> CompletionResult:
         provider = get_provider(tier.provider)
 
         def on_retry(n: int, exc: BaseException) -> None:
@@ -244,22 +312,42 @@ class LLMGateway:
             c = cost_of(tier, est, 0)
             self.meter.charge(est, 0, c)
 
-        return retry_call(lambda: provider.complete(req, tier), retries=retries,
-                          transient=(LLMTimeout, LLMUnavailable), on_retry=on_retry)
+        return retry_call(
+            lambda: provider.complete(req, tier),
+            retries=retries,
+            transient=(LLMTimeout, LLMUnavailable),
+            on_retry=on_retry,
+        )
 
     # ------------------------------------------------------------------------------------------------
-    def structured(self, *, agent: str, prompt_id: str, schema: type[T], context: Any,
-                   untrusted: dict[str, Any] | None = None, task: str | None = None,
-                   retrieved_doc_ids: list[str] | None = None, tier_override: str | None = None,
-                   allow_fallback: bool = True, max_repairs: int = MAX_REPAIRS,
-                   transient_retries: int = TRANSIENT_RETRIES) -> StructuredResult[T]:
+    def structured(
+        self,
+        *,
+        agent: str,
+        prompt_id: str,
+        schema: type[T],
+        context: Any,
+        untrusted: dict[str, Any] | None = None,
+        task: str | None = None,
+        retrieved_doc_ids: list[str] | None = None,
+        tier_override: str | None = None,
+        allow_fallback: bool = True,
+        max_repairs: int = MAX_REPAIRS,
+        transient_retries: int = TRANSIENT_RETRIES,
+    ) -> StructuredResult[T]:
         cfg = self.registry.agents[agent]
         prompt = get_prompts().get(prompt_id)
         chain = self.registry.chain(tier_override or cfg.tier)
         if not allow_fallback:
             chain = chain[:1]
-        messages, redacted = self.build_messages(prompt, schema=schema, context=context, untrusted=untrusted,
-                                                 task=task, max_input_tokens=cfg.max_input_tokens)
+        messages, redacted = self.build_messages(
+            prompt,
+            schema=schema,
+            context=context,
+            untrusted=untrusted,
+            task=task,
+            max_input_tokens=cfg.max_input_tokens,
+        )
         if redacted:
             log.info("pii_redacted", extra={"agent": agent, "kinds": sorted(set(redacted))})
         call_ids: list[str] = []
@@ -274,10 +362,13 @@ class LLMGateway:
             for attempt in range(1, max_repairs + 2):
                 est = estimate_tokens("".join(m.content for m in convo))
                 self.meter.precheck(tokens=est + cfg.max_output_tokens, cost=cost_of(tier, est, cfg.max_output_tokens))
-                req = CompletionRequest(messages=convo, temperature=cfg.temperature,
-                                        max_tokens=min(cfg.max_output_tokens, tier.max_output_tokens),
-                                        seed=self._seed(agent),
-                                        metadata={"schema": schema.__name__, "agent": agent, "prompt_id": prompt_id})
+                req = CompletionRequest(
+                    messages=convo,
+                    temperature=cfg.temperature,
+                    max_tokens=min(cfg.max_output_tokens, tier.max_output_tokens),
+                    seed=self._seed(agent),
+                    metadata={"schema": schema.__name__, "agent": agent, "prompt_id": prompt_id},
+                )
                 try:
                     result = self._call(agent, tier, req, retries=transient_retries)
                 except (LLMTimeout, LLMUnavailable) as exc:
@@ -285,10 +376,22 @@ class LLMGateway:
                     est_cost = cost_of(tier, est, 0)
                     self.meter.charge(est, 0, est_cost)
                     spent += est_cost
-                    call_ids.append(self._record(agent=agent, tier=tier, prompt=prompt, messages=convo, result=None,
-                                                 attempt=attempt, status=type(exc).__name__, error=str(exc)[:300],
-                                                 temperature=cfg.temperature, schema_name=schema.__name__,
-                                                 retrieved=retrieved_doc_ids or [], cost=est_cost))
+                    call_ids.append(
+                        self._record(
+                            agent=agent,
+                            tier=tier,
+                            prompt=prompt,
+                            messages=convo,
+                            result=None,
+                            attempt=attempt,
+                            status=type(exc).__name__,
+                            error=str(exc)[:300],
+                            temperature=cfg.temperature,
+                            schema_name=schema.__name__,
+                            retrieved=retrieved_doc_ids or [],
+                            cost=est_cost,
+                        )
+                    )
                     last_error = exc
                     break  # next tier in the fallback chain
                 cost = cost_of(tier, result.tokens_in, result.tokens_out, result.cached_tokens)
@@ -302,44 +405,102 @@ class LLMGateway:
                 except ValidationError as exc:
                     metrics.LLM_VALIDATION_FAILURES.labels(schema=schema.__name__).inc()
                     err = "; ".join(f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors()[:8])
-                    call_ids.append(self._record(agent=agent, tier=tier, prompt=prompt, messages=convo, result=result,
-                                                 attempt=attempt, status="validation_failed", error=err[:500],
-                                                 temperature=cfg.temperature, schema_name=schema.__name__,
-                                                 retrieved=retrieved_doc_ids or [], cost=cost))
+                    call_ids.append(
+                        self._record(
+                            agent=agent,
+                            tier=tier,
+                            prompt=prompt,
+                            messages=convo,
+                            result=result,
+                            attempt=attempt,
+                            status="validation_failed",
+                            error=err[:500],
+                            temperature=cfg.temperature,
+                            schema_name=schema.__name__,
+                            retrieved=retrieved_doc_ids or [],
+                            cost=cost,
+                        )
+                    )
                     last_error = LLMValidationError(err)
                     if attempt <= max_repairs:
                         metrics.LLM_REPAIRS.labels(schema=schema.__name__, attempt=str(attempt)).inc()
-                        convo = [*convo, Message("assistant", result.text[:4000]), Message(
-                            "user", "Your previous output failed validation with these errors:\n" + err
-                            + "\nReturn ONLY one valid JSON object matching the schema in the system message.")]
+                        convo = [
+                            *convo,
+                            Message("assistant", result.text[:4000]),
+                            Message(
+                                "user",
+                                "Your previous output failed validation with these errors:\n"
+                                + err
+                                + "\nReturn ONLY one valid JSON object matching the schema in the system message.",
+                            ),
+                        ]
                         continue
                     break  # repairs exhausted → next tier
-                call_ids.append(self._record(agent=agent, tier=tier, prompt=prompt, messages=convo, result=result,
-                                             attempt=attempt, status="ok", error=None, temperature=cfg.temperature,
-                                             schema_name=schema.__name__, retrieved=retrieved_doc_ids or [],
-                                             cost=cost))
-                return StructuredResult(value=value, tier=tier.name, model_id=tier.model_id, fallback_used=idx > 0,
-                                        call_ids=call_ids, tokens_in=tin, tokens_out=tout, cost_usd=spent,
-                                        repairs=attempt - 1)
+                call_ids.append(
+                    self._record(
+                        agent=agent,
+                        tier=tier,
+                        prompt=prompt,
+                        messages=convo,
+                        result=result,
+                        attempt=attempt,
+                        status="ok",
+                        error=None,
+                        temperature=cfg.temperature,
+                        schema_name=schema.__name__,
+                        retrieved=retrieved_doc_ids or [],
+                        cost=cost,
+                    )
+                )
+                return StructuredResult(
+                    value=value,
+                    tier=tier.name,
+                    model_id=tier.model_id,
+                    fallback_used=idx > 0,
+                    call_ids=call_ids,
+                    tokens_in=tin,
+                    tokens_out=tout,
+                    cost_usd=spent,
+                    repairs=attempt - 1,
+                )
         if isinstance(last_error, LLMValidationError):
             raise last_error
         raise LLMUnavailable(f"all tiers failed for {agent}: {last_error}") from last_error
 
     # ------------------------------------------------------------------------------------------------
-    def text(self, *, agent: str, prompt_id: str, context: Any, untrusted: dict[str, Any] | None = None,
-             task: str | None = None, history: list[Message] | None = None,
-             tier_override: str | None = None) -> TextResult:
+    def text(
+        self,
+        *,
+        agent: str,
+        prompt_id: str,
+        context: Any,
+        untrusted: dict[str, Any] | None = None,
+        task: str | None = None,
+        history: list[Message] | None = None,
+        tier_override: str | None = None,
+    ) -> TextResult:
         cfg = self.registry.agents[agent]
         prompt = get_prompts().get(prompt_id)
-        messages, _ = self.build_messages(prompt, schema=None, context=context, untrusted=untrusted, task=task,
-                                          max_input_tokens=cfg.max_input_tokens, history=history)
+        messages, _ = self.build_messages(
+            prompt,
+            schema=None,
+            context=context,
+            untrusted=untrusted,
+            task=task,
+            max_input_tokens=cfg.max_input_tokens,
+            history=history,
+        )
         last: Exception | None = None
         for idx, tier in enumerate(self.registry.chain(tier_override or cfg.tier)):
             est = estimate_tokens("".join(m.content for m in messages))
             self.meter.precheck(tokens=est + cfg.max_output_tokens)
-            req = CompletionRequest(messages=messages, temperature=cfg.temperature,
-                                    max_tokens=min(cfg.max_output_tokens, tier.max_output_tokens),
-                                    seed=self._seed(agent), metadata={"agent": agent, "prompt_id": prompt_id})
+            req = CompletionRequest(
+                messages=messages,
+                temperature=cfg.temperature,
+                max_tokens=min(cfg.max_output_tokens, tier.max_output_tokens),
+                seed=self._seed(agent),
+                metadata={"agent": agent, "prompt_id": prompt_id},
+            )
             try:
                 result = self._call(agent, tier, req)
             except (LLMTimeout, LLMUnavailable) as exc:
@@ -348,25 +509,62 @@ class LLMGateway:
                 continue
             cost = cost_of(tier, result.tokens_in, result.tokens_out, result.cached_tokens)
             self.meter.charge(result.tokens_in, result.tokens_out, cost)
-            cid = self._record(agent=agent, tier=tier, prompt=prompt, messages=messages, result=result, attempt=1,
-                               status="ok", error=None, temperature=cfg.temperature, schema_name=None,
-                               retrieved=[], cost=cost)
-            return TextResult(strip_thinking(result.text), tier.name, tier.model_id, idx > 0, [cid],
-                              result.tokens_in, result.tokens_out, cost)
+            cid = self._record(
+                agent=agent,
+                tier=tier,
+                prompt=prompt,
+                messages=messages,
+                result=result,
+                attempt=1,
+                status="ok",
+                error=None,
+                temperature=cfg.temperature,
+                schema_name=None,
+                retrieved=[],
+                cost=cost,
+            )
+            return TextResult(
+                strip_thinking(result.text),
+                tier.name,
+                tier.model_id,
+                idx > 0,
+                [cid],
+                result.tokens_in,
+                result.tokens_out,
+                cost,
+            )
         raise LLMUnavailable(f"all tiers failed for {agent}: {last}") from last
 
-    def stream(self, *, agent: str, prompt_id: str, context: Any, untrusted: dict[str, Any] | None = None,
-               task: str | None = None, history: list[Message] | None = None,
-               tier_override: str | None = None) -> Iterator[str | TextResult]:
+    def stream(
+        self,
+        *,
+        agent: str,
+        prompt_id: str,
+        context: Any,
+        untrusted: dict[str, Any] | None = None,
+        task: str | None = None,
+        history: list[Message] | None = None,
+        tier_override: str | None = None,
+    ) -> Iterator[str | TextResult]:
         """Yield text deltas (thinking blocks suppressed), then a final TextResult."""
         cfg = self.registry.agents[agent]
         prompt = get_prompts().get(prompt_id)
-        messages, _ = self.build_messages(prompt, schema=None, context=context, untrusted=untrusted, task=task,
-                                          max_input_tokens=cfg.max_input_tokens, history=history)
+        messages, _ = self.build_messages(
+            prompt,
+            schema=None,
+            context=context,
+            untrusted=untrusted,
+            task=task,
+            max_input_tokens=cfg.max_input_tokens,
+            history=history,
+        )
         tier = self.registry.tiers[tier_override or cfg.tier]
-        req = CompletionRequest(messages=messages, temperature=cfg.temperature,
-                                max_tokens=min(cfg.max_output_tokens, tier.max_output_tokens),
-                                metadata={"agent": agent, "prompt_id": prompt_id})
+        req = CompletionRequest(
+            messages=messages,
+            temperature=cfg.temperature,
+            max_tokens=min(cfg.max_output_tokens, tier.max_output_tokens),
+            metadata={"agent": agent, "prompt_id": prompt_id},
+        )
         t0 = utcnow()
         first = True
         in_think = False
@@ -374,11 +572,30 @@ class LLMGateway:
             if isinstance(item, CompletionResult):
                 cost = cost_of(tier, item.tokens_in, item.tokens_out)
                 self.meter.charge(item.tokens_in, item.tokens_out, cost)
-                cid = self._record(agent=agent, tier=tier, prompt=prompt, messages=messages, result=item, attempt=1,
-                                   status="ok", error=None, temperature=cfg.temperature, schema_name=None,
-                                   retrieved=[], cost=cost)
-                yield TextResult(strip_thinking(item.text), tier.name, tier.model_id, False, [cid], item.tokens_in,
-                                 item.tokens_out, cost)
+                cid = self._record(
+                    agent=agent,
+                    tier=tier,
+                    prompt=prompt,
+                    messages=messages,
+                    result=item,
+                    attempt=1,
+                    status="ok",
+                    error=None,
+                    temperature=cfg.temperature,
+                    schema_name=None,
+                    retrieved=[],
+                    cost=cost,
+                )
+                yield TextResult(
+                    strip_thinking(item.text),
+                    tier.name,
+                    tier.model_id,
+                    False,
+                    [cid],
+                    item.tokens_in,
+                    item.tokens_out,
+                    cost,
+                )
                 return
             delta = item
             if "<think>" in delta:
@@ -396,5 +613,12 @@ class LLMGateway:
                 yield delta
 
 
-__all__ = ["BudgetExceeded", "CallContext", "LLMGateway", "StructuredResult", "TextResult", "extract_json",
-           "strip_thinking"]
+__all__ = [
+    "BudgetExceeded",
+    "CallContext",
+    "LLMGateway",
+    "StructuredResult",
+    "TextResult",
+    "extract_json",
+    "strip_thinking",
+]

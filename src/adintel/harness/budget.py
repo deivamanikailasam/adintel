@@ -64,14 +64,21 @@ class UsageMeter:
 
     def remaining_fraction(self) -> float:
         u, lim = self.usage, self.limits
-        return max(0.0, min(1 - u.steps / lim.max_steps, 1 - u.tokens / lim.max_tokens,
-                            1 - u.cost_usd / lim.max_cost_usd,
-                            1 - (utcnow() - u.started_at).total_seconds() / lim.max_wall_seconds))
+        return max(
+            0.0,
+            min(
+                1 - u.steps / lim.max_steps,
+                1 - u.tokens / lim.max_tokens,
+                1 - u.cost_usd / lim.max_cost_usd,
+                1 - (utcnow() - u.started_at).total_seconds() / lim.max_wall_seconds,
+            ),
+        )
 
 
 class UnlimitedMeter(UsageMeter):
     """For chat and evals outside a run: still records usage, never blocks."""
 
     def __init__(self) -> None:
-        super().__init__(BudgetLimits(max_steps=10**9, max_tokens=10**12, max_cost_usd=10**9,
-                                      max_wall_seconds=10**12), BudgetUsage())
+        super().__init__(
+            BudgetLimits(max_steps=10**9, max_tokens=10**12, max_cost_usd=10**9, max_wall_seconds=10**12), BudgetUsage()
+        )

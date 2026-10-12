@@ -9,12 +9,12 @@ import threading
 
 os.environ.setdefault("ADINTEL_PROCESS_ROLE", "executor")
 
-from adintel.config import get_settings  # noqa: E402
-from adintel.executor.service import Executor  # noqa: E402
-from adintel.observability.logging import configure_logging  # noqa: E402
-from adintel.observability.metrics import DLQ_DEPTH, QUEUE_DEPTH, serve_metrics  # noqa: E402
-from adintel.queueing import EXECUTIONS, get_queue  # noqa: E402
-from adintel.storage import get_database  # noqa: E402
+from adintel.config import get_settings
+from adintel.executor.service import Executor
+from adintel.observability.logging import configure_logging
+from adintel.observability.metrics import DLQ_DEPTH, QUEUE_DEPTH, serve_metrics
+from adintel.queueing import EXECUTIONS, get_queue
+from adintel.storage import get_database
 
 log = logging.getLogger("adintel.executor")
 

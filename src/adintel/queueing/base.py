@@ -60,8 +60,13 @@ def get_queue(name: str) -> Queue:
             if kind == "redis":
                 from adintel.queueing.redis_queue import RedisQueue
 
-                _queues[name] = RedisQueue(name, get_settings().redis_url, visibility=VISIBILITY.get(name, 300.0),
-                                           max_receives=MAX_RECEIVES, fifo=fifo)
+                _queues[name] = RedisQueue(
+                    name,
+                    get_settings().redis_url,
+                    visibility=VISIBILITY.get(name, 300.0),
+                    max_receives=MAX_RECEIVES,
+                    fifo=fifo,
+                )
             elif kind == "sqs":
                 from adintel.queueing.sqs import SqsQueue
 

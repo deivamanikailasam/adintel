@@ -57,15 +57,23 @@ def entity_facts(df: pd.DataFrame, anomaly: Anomaly, end: date) -> dict[str, Any
         out: dict[str, dict[str, Any]] = {}
         total = float(w["spend"].sum()) or 1.0
         for eid, g in w.groupby("entity_id"):
-            s, c, cl, im = (float(g["spend"].sum()), float(g["conversions"].sum()), float(g["clicks"].sum()),
-                            float(g["impressions"].sum()))
+            s, c, cl, im = (
+                float(g["spend"].sum()),
+                float(g["conversions"].sum()),
+                float(g["clicks"].sum()),
+                float(g["impressions"].sum()),
+            )
             days = max(1, g["date"].nunique())
-            out[str(eid)] = {"entity_name": str(g["entity_name"].iloc[0]), "spend_per_day": round(s / days, 2),
-                             "spend_share_pct": round(100 * s / total, 1),
-                             "cpa": round(s / c, 2) if c else None, "ctr_pct": round(100 * cl / im, 3) if im else None,
-                             "cpc": round(s / cl, 2) if cl else None, "cvr_pct": round(100 * c / cl, 2) if cl else None,
-                             "daily_budget": float(g["daily_budget"].dropna().iloc[-1])
-                             if g["daily_budget"].notna().any() else None}
+            out[str(eid)] = {
+                "entity_name": str(g["entity_name"].iloc[0]),
+                "spend_per_day": round(s / days, 2),
+                "spend_share_pct": round(100 * s / total, 1),
+                "cpa": round(s / c, 2) if c else None,
+                "ctr_pct": round(100 * cl / im, 3) if im else None,
+                "cpc": round(s / cl, 2) if cl else None,
+                "cvr_pct": round(100 * c / cl, 2) if cl else None,
+                "daily_budget": float(g["daily_budget"].dropna().iloc[-1]) if g["daily_budget"].notna().any() else None,
+            }
         return out
 
     b, a = econ(before), econ(after)
@@ -81,12 +89,21 @@ def entity_facts(df: pd.DataFrame, anomaly: Anomaly, end: date) -> dict[str, Any
     total_change = cpa_a - cpa_b
     rate_effect = cpa_cf - cpa_b
     mix_effect = total_change - rate_effect
-    return {"campaign_id": anomaly.campaign_id, "anomaly_days": k, "baseline_days": BASELINE_DAYS,
-            "campaign_cpa_before": round(cpa_b, 2), "campaign_cpa_after": round(cpa_a, 2),
-            "entities_before": b, "entities_after": a,
-            "decomposition": {"total_cpa_change": round(total_change, 2), "mix_effect": round(mix_effect, 2),
-                              "rate_effect": round(rate_effect, 2),
-                              "mix_share_pct": round(100 * mix_effect / total_change, 1) if total_change else None}}
+    return {
+        "campaign_id": anomaly.campaign_id,
+        "anomaly_days": k,
+        "baseline_days": BASELINE_DAYS,
+        "campaign_cpa_before": round(cpa_b, 2),
+        "campaign_cpa_after": round(cpa_a, 2),
+        "entities_before": b,
+        "entities_after": a,
+        "decomposition": {
+            "total_cpa_change": round(total_change, 2),
+            "mix_effect": round(mix_effect, 2),
+            "rate_effect": round(rate_effect, 2),
+            "mix_share_pct": round(100 * mix_effect / total_change, 1) if total_change else None,
+        },
+    }
 
 
 def _target(state: RunState) -> Anomaly | None:
@@ -103,8 +120,13 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     if target is None:
         return update
     ref = state.metrics_ref or {}
-    df = load_frame(ctx.repo("metrics_daily"), ctx.brand_id, state.period_end - timedelta(days=60), state.period_end,
-                    ref.get("platforms"))
+    df = load_frame(
+        ctx.repo("metrics_daily"),
+        ctx.brand_id,
+        state.period_end - timedelta(days=60),
+        state.period_end,
+        ref.get("platforms"),
+    )
     facts = entity_facts(df, target, state.period_end)
     brand = ctx.repo("brands").find_one({"brand_id": ctx.brand_id}) or {}
     evidence: list[dict[str, Any]] = []
@@ -112,8 +134,11 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     try:
         res = ctx.retriever().search(
             f"{target.metric} {target.direction} {target.platform} {target.entity_name} budget spend shift diagnosis",
-            brand_id=ctx.brand_id, vertical=(brand.get("profile") or {}).get("vertical"),
-            doc_types=["incident", "playbook", "report"], k=5)
+            brand_id=ctx.brand_id,
+            vertical=(brand.get("profile") or {}).get("vertical"),
+            doc_types=["incident", "playbook", "report"],
+            k=5,
+        )
         evidence = [c.as_evidence() for c in res.chunks]
         chunk_ids = res.ids
     except RetrievalUnavailable:
@@ -125,18 +150,34 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     call_ids: list[str] = []
     for round_no in range(1, MAX_ROUNDS + 1):
         ctx.check_cancelled()
-        context = {"anomaly": target.model_dump(mode="json"), "facts": facts, "round": round_no,
-                   "max_rounds": MAX_ROUNDS, "dataframe_columns": list(camp_rows.columns)}
+        context = {
+            "anomaly": target.model_dump(mode="json"),
+            "facts": facts,
+            "round": round_no,
+            "max_rounds": MAX_ROUNDS,
+            "dataframe_columns": list(camp_rows.columns),
+        }
         try:
-            r = ctx.llm.structured(agent="analyst", prompt_id="analyst", schema=AnalystOutput, context=context,
-                                   untrusted={"retrieved_evidence": evidence, "query_results": query_results,
-                                              "entity_names": sorted(set(camp_rows["entity_name"]))},
-                                   retrieved_doc_ids=chunk_ids, allow_fallback=False)
+            r = ctx.llm.structured(
+                agent="analyst",
+                prompt_id="analyst",
+                schema=AnalystOutput,
+                context=context,
+                untrusted={
+                    "retrieved_evidence": evidence,
+                    "query_results": query_results,
+                    "entity_names": sorted(set(camp_rows["entity_name"])),
+                },
+                retrieved_doc_ids=chunk_ids,
+                allow_fallback=False,
+            )
         except LLMUnavailable as exc:
             log.warning("analyst_frontier_unavailable", extra={"reason": str(exc)[:200]})
             update["frontier_available"] = False
-            update["degradations"] = [degrade(DegradationCode.FRONTIER_UNAVAILABLE, AgentName.ANALYST),
-                                      degrade(DegradationCode.ANALYST_SKIPPED, AgentName.ANALYST, "frontier down")]
+            update["degradations"] = [
+                degrade(DegradationCode.FRONTIER_UNAVAILABLE, AgentName.ANALYST),
+                degrade(DegradationCode.ANALYST_SKIPPED, AgentName.ANALYST, "frontier down"),
+            ]
             return update
         except LLMValidationError as exc:
             update["degradations"] = [degrade(DegradationCode.ANALYST_SKIPPED, AgentName.ANALYST, str(exc)[:120])]
@@ -157,14 +198,28 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     assert out is not None
     if out.injection_suspected:
         INJECTION_FLAGS.labels(agent="analyst").inc()
-        raise_alert(Severity.P1, "Prompt injection suspected in ad-platform data", tenant_id=ctx.tenant_id,
-                    brand_id=ctx.brand_id, details={"run_id": ctx.run_id, "detail": out.injection_detail[:300]},
-                    audience="security")
-        update["degradations"] = [degrade(DegradationCode.INJECTION_SUSPECTED, AgentName.ANALYST,
-                                          out.injection_detail[:200])]
-    update["root_causes"] = [*state.root_causes, RootCause(
-        anomaly_id=target.anomaly_id, summary=out.root_cause_summary or "inconclusive", confidence=out.confidence,
-        hypotheses=out.hypotheses, evidence_chunk_ids=chunk_ids, queries_run=[q["query"] for q in query_results],
-        injection_suspected=out.injection_suspected)]
+        raise_alert(
+            Severity.P1,
+            "Prompt injection suspected in ad-platform data",
+            tenant_id=ctx.tenant_id,
+            brand_id=ctx.brand_id,
+            details={"run_id": ctx.run_id, "detail": out.injection_detail[:300]},
+            audience="security",
+        )
+        update["degradations"] = [
+            degrade(DegradationCode.INJECTION_SUSPECTED, AgentName.ANALYST, out.injection_detail[:200])
+        ]
+    update["root_causes"] = [
+        *state.root_causes,
+        RootCause(
+            anomaly_id=target.anomaly_id,
+            summary=out.root_cause_summary or "inconclusive",
+            confidence=out.confidence,
+            hypotheses=out.hypotheses,
+            evidence_chunk_ids=chunk_ids,
+            queries_run=[q["query"] for q in query_results],
+            injection_suspected=out.injection_suspected,
+        ),
+    ]
     update["metrics_summary"] = {**state.metrics_summary, "analyst_facts": facts}
     return update

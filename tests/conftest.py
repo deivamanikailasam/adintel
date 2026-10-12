@@ -26,6 +26,9 @@ def _fresh_state(tmp_path, monkeypatch):
     from adintel.llm.registry import reset_registry
 
     reset_breakers()
+    import adintel.llm.semantic_cache as sc
+
+    sc._cache = sc.SemanticCache()
     reset_registry()
     MockProvider.reset_shared()
     set_provider_override(None)

@@ -35,8 +35,10 @@ def tracer() -> trace.Tracer:
 
 @contextlib.contextmanager
 def span(name: str, **attributes: Any) -> Iterator[Span]:
-    attrs = {**{f"adintel.{k}": v for k, v in context.current().items()},
-             **{k: v for k, v in attributes.items() if v is not None}}
+    attrs = {
+        **{f"adintel.{k}": v for k, v in context.current().items()},
+        **{k: v for k, v in attributes.items() if v is not None},
+    }
     with tracer().start_as_current_span(name, attributes={k: str(v) for k, v in attrs.items()}) as s:
         try:
             yield s

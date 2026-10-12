@@ -61,7 +61,7 @@ def redact(text: str) -> tuple[str, list[str]]:
     for f in findings:
         if f.start < last:
             continue
-        pieces.append(text[last:f.start])
+        pieces.append(text[last : f.start])
         pieces.append(f"[REDACTED:{f.kind}]")
         kinds.append(f.kind)
         last = f.end

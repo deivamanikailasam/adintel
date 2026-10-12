@@ -4,6 +4,7 @@ from datetime import timedelta
 
 import pytest
 
+from adintel.approvals.service import ApprovalService, load_user
 from adintel.connectors.synthetic import SyntheticConnector, reset_world
 from adintel.core.clock import utcnow
 from adintel.core.errors import ApprovalError
@@ -11,7 +12,6 @@ from adintel.domain.enums import Platform, RecommendationStatus
 from adintel.executor.reconciliation import reconcile
 from adintel.executor.service import Executor
 from adintel.graph.engine import RunEngine
-from adintel.approvals.service import ApprovalService, load_user
 from adintel.queueing import EXECUTIONS, get_queue
 from adintel.rag.retriever import clear_cache
 from adintel.security.secrets import Credential
@@ -26,8 +26,9 @@ def pending(db, mock_llm):
     reset_world()
     clear_cache()
     seed(db)
-    s = RunEngine(db).run(tenant_id="brightwave", brand_id="urban-roast", period_start=PERIOD_START,
-                          period_end=PERIOD_END)
+    s = RunEngine(db).run(
+        tenant_id="brightwave", brand_id="urban-roast", period_start=PERIOD_START, period_end=PERIOD_END
+    )
     return s.recommendations[0].recommendation_id
 
 
@@ -85,8 +86,9 @@ def test_modified_approval_reduces_amount(db, pending):
 def test_forged_signature_is_refused_and_pages_security(db, pending):
     svc(db).approve(pending, user(db, "u_jordan"), typed_exposure_usd=200.0)
     msg = get_queue(EXECUTIONS).receive(wait_seconds=0.1)
-    db.collection("approvals").update_one({"approval_id": msg.body["approval_id"]},
-                                          {"$set": {"typed_exposure_usd": 9999.0}})
+    db.collection("approvals").update_one(
+        {"approval_id": msg.body["approval_id"]}, {"$set": {"typed_exposure_usd": 9999.0}}
+    )
     res = Executor(db, "brightwave").execute(msg.body["recommendation_id"], msg.body["approval_id"])
     assert res["status"] == "refused" and "signature" in res["reason"]
     assert db.collection("notifications").find_one({"title": "Forged or tampered approval record"})
@@ -95,17 +97,20 @@ def test_forged_signature_is_refused_and_pages_security(db, pending):
 def test_live_entity_change_blocks_approval_and_execution(db, pending):
     from adintel.security.secrets import Credential as C
 
-    SyntheticConnector(Platform.META).apply_change(C("brightwave", "meta", "write", "w", {}, True), "urban-roast",
-                                                   {"op": "set_daily_budget", "entity_id": "as_ur_b",
-                                                    "daily_budget": 700})
+    SyntheticConnector(Platform.META).apply_change(
+        C("brightwave", "meta", "write", "w", {}, True),
+        "urban-roast",
+        {"op": "set_daily_budget", "entity_id": "as_ur_b", "daily_budget": 700},
+    )
     with pytest.raises(ApprovalError) as e:
         svc(db).approve(pending, user(db, "u_jordan"), typed_exposure_usd=200.0)
     assert e.value.check in ("snapshot", "constraints_now")
 
 
 def test_expired_recommendation_cannot_be_approved(db, pending):
-    db.collection("recommendations").update_one({"recommendation_id": pending}, {"$set": {
-        "expires_at": (utcnow() - timedelta(hours=1)).isoformat()}})
+    db.collection("recommendations").update_one(
+        {"recommendation_id": pending}, {"$set": {"expires_at": (utcnow() - timedelta(hours=1)).isoformat()}}
+    )
     with pytest.raises(ApprovalError, match="not_expired"):
         svc(db).approve(pending, user(db, "u_jordan"), typed_exposure_usd=200.0)
 
@@ -132,11 +137,18 @@ def test_rejection_feeds_the_flywheel(db, pending):
 
 
 def test_executor_cannot_import_any_model_code():
-    code = ("import sys; import adintel.executor.service, adintel.executor.reconciliation; "
-            "print([m for m in sys.modules if m.startswith(('adintel.llm', 'adintel.agents', 'adintel.rag', "
-            "'adintel.graph', 'httpx2', 'openai', 'langgraph'))])")
-    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True,
-                         env={"PYTHONPATH": "src", "PATH": "/usr/bin"}, cwd=".")
+    code = (
+        "import sys; import adintel.executor.service, adintel.executor.reconciliation; "
+        "print([m for m in sys.modules if m.startswith(('adintel.llm', 'adintel.agents', 'adintel.rag', "
+        "'adintel.graph', 'httpx2', 'openai', 'langgraph'))])"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        env={"PYTHONPATH": "src", "PATH": "/usr/bin"},
+        cwd=".",
+    )
     assert out.returncode == 0, out.stderr
     assert out.stdout.strip() == "[]"
 

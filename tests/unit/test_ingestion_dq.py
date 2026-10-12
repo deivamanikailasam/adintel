@@ -48,9 +48,15 @@ def test_schema_drift_is_flagged_and_a_mapping_is_proposed_not_applied(db):
     assert prop["audience"] == "engineering"
 
 
-@pytest.mark.parametrize("brand,verdict", [("urban-roast", DQVerdict.TRUSTWORTHY), ("fitely", DQVerdict.TRUSTWORTHY),
-                                           ("cobalt-saas", DQVerdict.TRUSTWORTHY),
-                                           ("northpeak", DQVerdict.UNTRUSTWORTHY)])
+@pytest.mark.parametrize(
+    "brand,verdict",
+    [
+        ("urban-roast", DQVerdict.TRUSTWORTHY),
+        ("fitely", DQVerdict.TRUSTWORTHY),
+        ("cobalt-saas", DQVerdict.TRUSTWORTHY),
+        ("northpeak", DQVerdict.UNTRUSTWORTHY),
+    ],
+)
 def test_data_quality_verdicts(db, brand, verdict):
     s = ingest(db, brand)
     s = apply(s, data_quality.run(s, make_ctx(db, s)))

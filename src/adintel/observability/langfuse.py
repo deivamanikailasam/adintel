@@ -37,21 +37,52 @@ class LangfuseClient:
             log.warning("langfuse_queue_full")
 
     def trace(self, trace_id: str, name: str, *, tenant_id: str, metadata: dict[str, Any]) -> None:
-        self._event("trace-create", {"id": trace_id, "name": name, "userId": tenant_id, "metadata": metadata,
-                                     "tags": [tenant_id]})
+        self._event(
+            "trace-create",
+            {"id": trace_id, "name": name, "userId": tenant_id, "metadata": metadata, "tags": [tenant_id]},
+        )
 
-    def generation(self, trace_id: str, *, name: str, model: str, input: Any, output: Any,
-                   usage: dict[str, int], metadata: dict[str, Any], start: datetime, end: datetime) -> None:
-        self._event("generation-create", {
-            "id": uuid.uuid4().hex, "traceId": trace_id, "name": name, "model": model, "input": input,
-            "output": output, "metadata": metadata, "startTime": start.isoformat(), "endTime": end.isoformat(),
-            "usage": {"input": usage.get("input", 0), "output": usage.get("output", 0), "unit": "TOKENS"},
-        })
+    def generation(
+        self,
+        trace_id: str,
+        *,
+        name: str,
+        model: str,
+        input: Any,
+        output: Any,
+        usage: dict[str, int],
+        metadata: dict[str, Any],
+        start: datetime,
+        end: datetime,
+    ) -> None:
+        self._event(
+            "generation-create",
+            {
+                "id": uuid.uuid4().hex,
+                "traceId": trace_id,
+                "name": name,
+                "model": model,
+                "input": input,
+                "output": output,
+                "metadata": metadata,
+                "startTime": start.isoformat(),
+                "endTime": end.isoformat(),
+                "usage": {"input": usage.get("input", 0), "output": usage.get("output", 0), "unit": "TOKENS"},
+            },
+        )
 
     def span(self, trace_id: str, *, name: str, metadata: dict[str, Any], start: datetime, end: datetime) -> None:
-        self._event("span-create", {"id": uuid.uuid4().hex, "traceId": trace_id, "name": name,
-                                    "metadata": metadata, "startTime": start.isoformat(),
-                                    "endTime": end.isoformat()})
+        self._event(
+            "span-create",
+            {
+                "id": uuid.uuid4().hex,
+                "traceId": trace_id,
+                "name": name,
+                "metadata": metadata,
+                "startTime": start.isoformat(),
+                "endTime": end.isoformat(),
+            },
+        )
 
     def _loop(self) -> None:
         with httpx.Client(timeout=5.0) as client:
@@ -67,7 +98,7 @@ class LangfuseClient:
                     continue
                 try:
                     client.post(self._url, json={"batch": batch}, auth=self._auth)
-                except Exception as exc:  # noqa: BLE001
+                except Exception as exc:
                     log.warning("langfuse_flush_failed", extra={"reason": str(exc)[:200]})
 
 

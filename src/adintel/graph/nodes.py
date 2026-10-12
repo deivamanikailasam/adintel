@@ -15,8 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from typing import Any
 
-from adintel.agents import (analyst, anomaly, data_quality, guardrail, ingestion, optimizer, orchestrator,
-                            report)
+from adintel.agents import analyst, anomaly, data_quality, guardrail, ingestion, optimizer, orchestrator, report
 from adintel.agents.base import AgentContext
 from adintel.core.clock import utcnow
 from adintel.core.errors import AdIntelError, BudgetExceeded, TenantIsolationViolation
@@ -35,9 +34,14 @@ log = logging.getLogger(__name__)
 AgentFn = Callable[[RunState, AgentContext], dict[str, Any]]
 
 AGENTS: dict[AgentName, AgentFn] = {
-    AgentName.INGESTION: ingestion.run, AgentName.DATA_QUALITY: data_quality.run,
-    AgentName.ORCHESTRATOR: orchestrator.run, AgentName.ANOMALY: anomaly.run, AgentName.ANALYST: analyst.run,
-    AgentName.OPTIMIZER: optimizer.run, AgentName.REPORT: report.run, AgentName.GUARDRAIL: guardrail.run,
+    AgentName.INGESTION: ingestion.run,
+    AgentName.DATA_QUALITY: data_quality.run,
+    AgentName.ORCHESTRATOR: orchestrator.run,
+    AgentName.ANOMALY: anomaly.run,
+    AgentName.ANALYST: analyst.run,
+    AgentName.OPTIMIZER: optimizer.run,
+    AgentName.REPORT: report.run,
+    AgentName.GUARDRAIL: guardrail.run,
 }
 
 TERMINAL_FOR_ROUTING = (RunStatus.FAILED, RunStatus.ABORTED_DATA_QUALITY, RunStatus.KILLED)
@@ -47,8 +51,11 @@ BUDGET_EXEMPT = (AgentName.REPORT, AgentName.GUARDRAIL, AgentName.ORCHESTRATOR)
 def timeout_policy(agent: AgentName, state: RunState, ctx: AgentContext, reason: str) -> dict[str, Any]:
     """What the user gets when an agent times out or fails unexpectedly (degradation matrix)."""
     if agent == AgentName.INGESTION:
-        return {"status": RunStatus.FAILED, "abort_reason": f"ingestion failed: {reason}",
-                "degradations": [degrade(DegradationCode.ALL_PLATFORMS_UNAVAILABLE, agent, reason)]}
+        return {
+            "status": RunStatus.FAILED,
+            "abort_reason": f"ingestion failed: {reason}",
+            "degradations": [degrade(DegradationCode.ALL_PLATFORMS_UNAVAILABLE, agent, reason)],
+        }
     if agent == AgentName.DATA_QUALITY:
         return {"status": RunStatus.FAILED, "abort_reason": f"no data-quality verdict ({reason}); no analysis"}
     if agent == AgentName.ANOMALY:
@@ -56,16 +63,24 @@ def timeout_policy(agent: AgentName, state: RunState, ctx: AgentContext, reason:
     if agent == AgentName.ANALYST:
         return {"analyst_done": True, "degradations": [degrade(DegradationCode.ANALYST_SKIPPED, agent, reason)]}
     if agent == AgentName.OPTIMIZER:
-        return {"optimizer_done": True,
-                "degradations": [degrade(DegradationCode.OPTIMIZER_SKIPPED, agent, reason)]}
+        return {"optimizer_done": True, "degradations": [degrade(DegradationCode.OPTIMIZER_SKIPPED, agent, reason)]}
     if agent == AgentName.REPORT:
         return report.run(state.model_copy(update={"budget_exhausted": True}), ctx)  # deterministic template
     if agent == AgentName.GUARDRAIL:
-        return {"guardrail": GuardrailVerdict(passed=False, classifier_used=False, findings=[GuardrailFinding(
-            check="guardrail_timeout", severity="block", detail=f"fail closed: {reason}")])}
+        return {
+            "guardrail": GuardrailVerdict(
+                passed=False,
+                classifier_used=False,
+                findings=[
+                    GuardrailFinding(check="guardrail_timeout", severity="block", detail=f"fail closed: {reason}")
+                ],
+            )
+        }
     if agent == AgentName.ORCHESTRATOR:
-        return {"next_action": "report", "degradations": [degrade(DegradationCode.ORCHESTRATOR_RULE_FALLBACK,
-                                                                  agent, reason)]}
+        return {
+            "next_action": "report",
+            "degradations": [degrade(DegradationCode.ORCHESTRATOR_RULE_FALLBACK, agent, reason)],
+        }
     raise ValueError(agent)
 
 
@@ -91,13 +106,24 @@ def make_node(agent: AgentName, ctx_factory: Callable[[], AgentContext]) -> Call
             metrics.BUDGET_EXHAUSTED.labels(limit=reason).inc()
             code = DegradationCode.STEP_LIMIT if reason == "steps" else DegradationCode.BUDGET_EXHAUSTED
             if code == DegradationCode.STEP_LIMIT:
-                raise_alert(Severity.P2, "Run hit its step limit (possible orchestration loop)",
-                            tenant_id=state.tenant_id, brand_id=state.brand_id, details={"run_id": state.run_id})
-            return {"budget_exhausted": True, "degradations": [degrade(code, agent, reason)],
-                    "usage": meter.usage.model_copy(), "next_action": None}
+                raise_alert(
+                    Severity.P2,
+                    "Run hit its step limit (possible orchestration loop)",
+                    tenant_id=state.tenant_id,
+                    brand_id=state.brand_id,
+                    details={"run_id": state.run_id},
+                )
+            return {
+                "budget_exhausted": True,
+                "degradations": [degrade(code, agent, reason)],
+                "usage": meter.usage.model_copy(),
+                "next_action": None,
+            }
         if reason and agent in BUDGET_EXEMPT and not state.budget_exhausted:
-            extra = {"budget_exhausted": True,
-                     "degradations": [degrade(DegradationCode.BUDGET_EXHAUSTED, agent, reason)]}
+            extra = {
+                "budget_exhausted": True,
+                "degradations": [degrade(DegradationCode.BUDGET_EXHAUSTED, agent, reason)],
+            }
             state = state.model_copy(update={"budget_exhausted": True})
         if agent == AgentName.GUARDRAIL:
             meter.reserve_mode = True
@@ -115,10 +141,17 @@ def make_node(agent: AgentName, ctx_factory: Callable[[], AgentContext]) -> Call
             except BudgetExceeded as exc:
                 status = "degraded"
                 metrics.BUDGET_EXHAUSTED.labels(limit=str(exc)).inc()
-                update = timeout_policy(agent, state.model_copy(update={"budget_exhausted": True}), ctx,
-                                        f"budget exhausted ({exc})")
-                update = {**update, "budget_exhausted": True, "degradations": [
-                    degrade(DegradationCode.BUDGET_EXHAUSTED, agent, str(exc)), *update.get("degradations", [])]}
+                update = timeout_policy(
+                    agent, state.model_copy(update={"budget_exhausted": True}), ctx, f"budget exhausted ({exc})"
+                )
+                update = {
+                    **update,
+                    "budget_exhausted": True,
+                    "degradations": [
+                        degrade(DegradationCode.BUDGET_EXHAUSTED, agent, str(exc)),
+                        *update.get("degradations", []),
+                    ],
+                }
             except TenantIsolationViolation as exc:
                 status = "failed"
                 update = {"status": RunStatus.FAILED, "abort_reason": f"tenant isolation violation: {exc}"}
@@ -126,7 +159,7 @@ def make_node(agent: AgentName, ctx_factory: Callable[[], AgentContext]) -> Call
                 status = "failed"
                 log.exception("agent_failed", extra={"agent": str(agent)})
                 update = timeout_policy(agent, state, ctx, f"{type(exc).__name__}: {str(exc)[:160]}")
-            except Exception as exc:  # noqa: BLE001 - an unexpected bug degrades, it does not crash the run
+            except Exception as exc:
                 status = "failed"
                 log.exception("agent_crashed", extra={"agent": str(agent)})
                 update = timeout_policy(agent, state, ctx, f"{type(exc).__name__}: {str(exc)[:160]}")
@@ -145,11 +178,18 @@ def make_node(agent: AgentName, ctx_factory: Callable[[], AgentContext]) -> Call
         visits[str(agent)] = visits.get(str(agent), 0) + 1
         after = meter.usage
         calls = [c["call_id"] for c in ctx.llm.call_log]
-        trace = TraceEvent(step=after.steps, agent=agent, status=status,
-                           summary=_summarise(agent, update), started_at=started,
-                           duration_ms=round((time.perf_counter() - t0) * 1000, 1),
-                           tokens_in=after.tokens_in - before.tokens_in, tokens_out=after.tokens_out - before.tokens_out,
-                           cost_usd=round(after.cost_usd - before.cost_usd, 6), llm_call_ids=calls)
+        trace = TraceEvent(
+            step=after.steps,
+            agent=agent,
+            status=status,
+            summary=_summarise(agent, update),
+            started_at=started,
+            duration_ms=round((time.perf_counter() - t0) * 1000, 1),
+            tokens_in=after.tokens_in - before.tokens_in,
+            tokens_out=after.tokens_out - before.tokens_out,
+            cost_usd=round(after.cost_usd - before.cost_usd, 6),
+            llm_call_ids=calls,
+        )
         metrics.AGENT_CALLS.labels(agent=str(agent), status=status).inc()
         return {**update, "usage": after.model_copy(), "visits": visits, "traces": [*update.get("traces", []), trace]}
 

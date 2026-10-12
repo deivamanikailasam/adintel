@@ -40,10 +40,18 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
     configure_logging(s.log_level, s.log_json)
     configure_tracing("adintel-api", s.otel_endpoint)
     install_security_hooks()
-    app = FastAPI(title="AdIntel API", version=__version__,
-                  description="Enterprise-governed multi-agent paid-ad intelligence. AI proposes; humans approve.")
-    app.add_middleware(CORSMiddleware, allow_origins=s.cors_origins, allow_credentials=False,
-                       allow_methods=["GET", "POST"], allow_headers=["Authorization", "Content-Type", "Last-Event-ID"])
+    app = FastAPI(
+        title="AdIntel API",
+        version=__version__,
+        description="Enterprise-governed multi-agent paid-ad intelligence. AI proposes; humans approve.",
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=s.cors_origins,
+        allow_credentials=False,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Authorization", "Content-Type", "Last-Event-ID"],
+    )
 
     @app.middleware("http")
     async def observe(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
@@ -93,4 +101,5 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
             from adintel.workers.agent_worker import Worker
 
             threading.Thread(target=Worker().loop, name="inline-agent-worker", daemon=True).start()
+
     return app

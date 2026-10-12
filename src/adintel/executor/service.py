@@ -35,14 +35,30 @@ def plan_writes(rec: Recommendation, amount: float, live: dict[str, dict[str, An
         assert rec.source_entity_id
         src, tgt = live[rec.source_entity_id], live[rec.target_entity_id]
         # decrease first: if the second write fails, money was removed, never doubled
-        return [{"op": "set_daily_budget", "entity_id": rec.source_entity_id,
-                 "daily_budget": round(float(src["daily_budget"]) - amount, 2), "previous": src["daily_budget"]},
-                {"op": "set_daily_budget", "entity_id": rec.target_entity_id,
-                 "daily_budget": round(float(tgt["daily_budget"]) + amount, 2), "previous": tgt["daily_budget"]}]
+        return [
+            {
+                "op": "set_daily_budget",
+                "entity_id": rec.source_entity_id,
+                "daily_budget": round(float(src["daily_budget"]) - amount, 2),
+                "previous": src["daily_budget"],
+            },
+            {
+                "op": "set_daily_budget",
+                "entity_id": rec.target_entity_id,
+                "daily_budget": round(float(tgt["daily_budget"]) + amount, 2),
+                "previous": tgt["daily_budget"],
+            },
+        ]
     if rec.action_type == ActionType.BUDGET_CHANGE:
         tgt = live[rec.target_entity_id]
-        return [{"op": "set_daily_budget", "entity_id": rec.target_entity_id,
-                 "daily_budget": round(float(tgt["daily_budget"]) + amount, 2), "previous": tgt["daily_budget"]}]
+        return [
+            {
+                "op": "set_daily_budget",
+                "entity_id": rec.target_entity_id,
+                "daily_budget": round(float(tgt["daily_budget"]) + amount, 2),
+                "previous": tgt["daily_budget"],
+            }
+        ]
     if rec.action_type == ActionType.PAUSE_ENTITY:
         return [{"op": "pause", "entity_id": rec.target_entity_id}]
     raise ExecutionError(f"unsupported action {rec.action_type}")
@@ -57,8 +73,15 @@ class Executor:
         self.audit = AuditLog(db, tenant_id, system_version=get_settings().system_version)
 
     def _refuse(self, rec_id: str, reason: str, run_id: str | None = None) -> dict[str, Any]:
-        self.audit.append(AuditAction.EXECUTION_REFUSED, actor_type="system", actor_id="system:executor",
-                          subject_type="recommendation", subject_id=rec_id, run_id=run_id, details={"reason": reason})
+        self.audit.append(
+            AuditAction.EXECUTION_REFUSED,
+            actor_type="system",
+            actor_id="system:executor",
+            subject_type="recommendation",
+            subject_id=rec_id,
+            run_id=run_id,
+            details={"reason": reason},
+        )
         log.error("execution_refused", extra={"recommendation_id": rec_id, "reason": reason})
         return {"status": "refused", "reason": reason}
 
@@ -71,8 +94,13 @@ class Executor:
         approval = Approval.from_doc(apr_doc)
         payload = approval.model_dump(mode="json", exclude={"signature"})
         if not hmac_verify(get_settings().approval_signing_key, payload, approval.signature):
-            raise_alert(Severity.P1, "Forged or tampered approval record", tenant_id=self.tenant_id,
-                        details={"recommendation_id": recommendation_id}, audience="security")
+            raise_alert(
+                Severity.P1,
+                "Forged or tampered approval record",
+                tenant_id=self.tenant_id,
+                details={"recommendation_id": recommendation_id},
+                audience="security",
+            )
             return self._refuse(recommendation_id, "approval signature invalid", rec.run_id)
         if approval.recommendation_id != recommendation_id or rec_doc.get("approval_id") != approval_id:
             return self._refuse(recommendation_id, "approval does not belong to this recommendation", rec.run_id)
@@ -94,11 +122,18 @@ class Executor:
             return self._refuse(recommendation_id, "live entity changed after approval", rec.run_id)
         amount = float(rec_doc.get("approved_amount_usd_per_day", rec.amount_usd_per_day))
         writes = plan_writes(rec, amount, live)
-        self.recs.update_one({"recommendation_id": recommendation_id},
-                             {"$set": {"status": str(RecommendationStatus.EXECUTING)}})
-        self.audit.append(AuditAction.EXECUTION_STARTED, actor_type="system", actor_id="system:executor",
-                          subject_type="recommendation", subject_id=recommendation_id, run_id=rec.run_id,
-                          details={"writes": writes, "approval_id": approval_id})
+        self.recs.update_one(
+            {"recommendation_id": recommendation_id}, {"$set": {"status": str(RecommendationStatus.EXECUTING)}}
+        )
+        self.audit.append(
+            AuditAction.EXECUTION_STARTED,
+            actor_type="system",
+            actor_id="system:executor",
+            subject_type="recommendation",
+            subject_id=recommendation_id,
+            run_id=rec.run_id,
+            details={"writes": writes, "approval_id": approval_id},
+        )
         applied: list[dict[str, Any]] = []
         error: str | None = None
         attempts = 0
@@ -119,28 +154,59 @@ class Executor:
             if error:
                 break
         status = "succeeded" if not error else "failed"
-        execution = Execution(tenant_id=self.tenant_id, brand_id=rec.brand_id, recommendation_id=recommendation_id,
-                              approval_id=approval_id, platform=rec.platform, request={"writes": writes},
-                              status=status, platform_response={"applied": applied}, error=error, attempts=attempts)
+        execution = Execution(
+            tenant_id=self.tenant_id,
+            brand_id=rec.brand_id,
+            recommendation_id=recommendation_id,
+            approval_id=approval_id,
+            platform=rec.platform,
+            request={"writes": writes},
+            status=status,
+            platform_response={"applied": applied},
+            error=error,
+            attempts=attempts,
+        )
         try:
             self.execs.insert(execution.model_dump(mode="json"))
         except DuplicateKey:
             return self._refuse(recommendation_id, "concurrent execution detected", rec.run_id)
         new_status = RecommendationStatus.EXECUTED if not error else RecommendationStatus.EXECUTION_FAILED
-        self.recs.update_one({"recommendation_id": recommendation_id}, {"$set": {
-            "status": str(new_status), "execution_id": execution.execution_id}})
-        self.audit.append(AuditAction.EXECUTION_SUCCEEDED if not error else AuditAction.EXECUTION_FAILED,
-                          actor_type="system", actor_id="system:executor", subject_type="recommendation",
-                          subject_id=recommendation_id, run_id=rec.run_id,
-                          details={"execution_id": execution.execution_id, "applied": len(applied),
-                                   "planned": len(writes), "error": error})
-        TenantScopedRepo(self.db, "notifications", self.tenant_id).insert({
-            "kind": "execution_result", "brand_id": rec.brand_id, "recommendation_id": recommendation_id,
-            "audience": "account_manager", "title": f"Change {status}", "detail": error or "applied as approved",
-            "created_at": utcnow().isoformat()})
+        self.recs.update_one(
+            {"recommendation_id": recommendation_id},
+            {"$set": {"status": str(new_status), "execution_id": execution.execution_id}},
+        )
+        self.audit.append(
+            AuditAction.EXECUTION_SUCCEEDED if not error else AuditAction.EXECUTION_FAILED,
+            actor_type="system",
+            actor_id="system:executor",
+            subject_type="recommendation",
+            subject_id=recommendation_id,
+            run_id=rec.run_id,
+            details={
+                "execution_id": execution.execution_id,
+                "applied": len(applied),
+                "planned": len(writes),
+                "error": error,
+            },
+        )
+        TenantScopedRepo(self.db, "notifications", self.tenant_id).insert(
+            {
+                "kind": "execution_result",
+                "brand_id": rec.brand_id,
+                "recommendation_id": recommendation_id,
+                "audience": "account_manager",
+                "title": f"Change {status}",
+                "detail": error or "applied as approved",
+                "created_at": utcnow().isoformat(),
+            }
+        )
         if error:
             sev = Severity.P1 if applied else Severity.P2
-            raise_alert(sev, "Approved execution failed" + (" after a partial apply" if applied else ""),
-                        tenant_id=self.tenant_id, brand_id=rec.brand_id,
-                        details={"recommendation_id": recommendation_id, "error": error, "applied": len(applied)})
+            raise_alert(
+                sev,
+                "Approved execution failed" + (" after a partial apply" if applied else ""),
+                tenant_id=self.tenant_id,
+                brand_id=rec.brand_id,
+                details={"recommendation_id": recommendation_id, "error": error, "applied": len(applied)},
+            )
         return {"status": status, "execution_id": execution.execution_id, "error": error}

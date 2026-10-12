@@ -55,8 +55,9 @@ class AdmissionResult:
 
 def tenant_cost_today(db: Database, tenant_id: str) -> float:
     day = utcnow().date().isoformat()
-    return round(sum(float(r.get("cost_usd", 0)) for r in TenantScopedRepo(db, "cost_events", tenant_id)
-                     .find({"day": day})), 6)
+    return round(
+        sum(float(r.get("cost_usd", 0)) for r in TenantScopedRepo(db, "cost_events", tenant_id).find({"day": day})), 6
+    )
 
 
 def admit(db: Database, *, tenant_id: str, brand_id: str) -> None:
@@ -74,5 +75,6 @@ def admit(db: Database, *, tenant_id: str, brand_id: str) -> None:
     if spent >= cap:
         raise RateLimited(f"tenant {tenant_id} reached its daily cost cap (${spent:.2f} of ${cap:.2f})")
     if spent >= 0.8 * cap:
-        raise_alert(Severity.P3, "Tenant at 80% of daily AI cost cap", tenant_id=tenant_id,
-                    details={"spent": spent, "cap": cap})
+        raise_alert(
+            Severity.P3, "Tenant at 80% of daily AI cost cap", tenant_id=tenant_id, details={"spent": spent, "cap": cap}
+        )

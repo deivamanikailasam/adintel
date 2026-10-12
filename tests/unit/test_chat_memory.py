@@ -42,8 +42,11 @@ def test_semantic_cache_hits_near_duplicates_but_never_across_brands(seeded):
 
 
 def test_complex_question_uses_frontier_and_rag(seeded):
-    evs = collect(ChatService(seeded, "brightwave", "urban-roast", "u_jordan").ask(
-        "Why did retargeting costs go up after the budget increase and what should we do?", "s3"))
+    evs = collect(
+        ChatService(seeded, "brightwave", "urban-roast", "u_jordan").ask(
+            "Why did retargeting costs go up after the budget increase and what should we do?", "s3"
+        )
+    )
     assert evs[0]["route"] == "complex" and evs[0]["tier"] == "frontier"
     assert evs[-1]["sources"]
 
@@ -72,16 +75,22 @@ def test_cache_threshold():
 
 
 def test_three_dismissals_propose_a_rule_that_needs_human_approval(seeded):
-    s = RunEngine(seeded).run(tenant_id="brightwave", brand_id="urban-roast", period_start=PERIOD_START,
-                              period_end=PERIOD_END)
+    s = RunEngine(seeded).run(
+        tenant_id="brightwave", brand_id="urban-roast", period_start=PERIOD_START, period_end=PERIOD_END
+    )
     a = s.material_anomalies()[0]
     pm = ProceduralMemory(seeded, "brightwave")
     jordan = load_user(seeded, "brightwave", "u_jordan")
     coll = seeded.collection("anomalies")
     for i in range(2):  # two earlier, similar anomalies already dismissed
         doc = coll.find_one({"anomaly_id": a.anomaly_id})
-        doc.update({"anomaly_id": f"old{i}", "status": "dismissed",
-                    "dismissal": {"by": "u_jordan", "reason": "planned_promo", "at": "2026-10-01T00:00:00+00:00"}})
+        doc.update(
+            {
+                "anomaly_id": f"old{i}",
+                "status": "dismissed",
+                "dismissal": {"by": "u_jordan", "reason": "planned_promo", "at": "2026-10-01T00:00:00+00:00"},
+            }
+        )
         coll.insert_one(doc)
     out = pm.dismiss(a.anomaly_id, jordan, reason="planned_promo")
     prop = out["proposal"]

@@ -29,23 +29,37 @@ def cmd_demo(args: argparse.Namespace) -> None:
 
     db = get_database()
     seed(db)
-    end = date.fromisoformat(args.period_end) if args.period_end else date.today() - timedelta(days=date.today().weekday() + 1)
+    end = (
+        date.fromisoformat(args.period_end)
+        if args.period_end
+        else date.today() - timedelta(days=date.today().weekday() + 1)
+    )
     engine = RunEngine(db)
     for brand in args.brands.split(","):
-        s = engine.run(tenant_id="brightwave", brand_id=brand, period_start=end - timedelta(days=6), period_end=end,
-                       trigger="demo", schedule_date=date.today())
+        s = engine.run(
+            tenant_id="brightwave",
+            brand_id=brand,
+            period_start=end - timedelta(days=6),
+            period_end=end,
+            trigger="demo",
+            schedule_date=date.today(),
+        )
         if s is None:
             print(f"{brand}: already ran for this period (idempotent); use a different --period-end")
             continue
-        print(f"\n=== {s.brand_name}: {s.status}  ({s.usage.steps} steps, ${s.usage.cost_usd:.4f} notional, "
-              f"{s.usage.tokens} tokens)")
+        print(
+            f"\n=== {s.brand_name}: {s.status}  ({s.usage.steps} steps, ${s.usage.cost_usd:.4f} notional, "
+            f"{s.usage.tokens} tokens)"
+        )
         for t in s.traces:
             print(f"  {t.step:>2}. {t.agent:<13} {t.status:<8} {t.summary}")
         for d in s.degradations:
             print(f"  ! {d.code}: {d.detail}")
         for r in s.recommendations:
-            print(f"  → recommendation {r.recommendation_id}: {r.action_type} ${r.amount_usd_per_day:.2f}/day "
-                  f"(exposure ${r.daily_exposure_usd:.2f}, risk {r.risk}) — pending approval")
+            print(
+                f"  → recommendation {r.recommendation_id}: {r.action_type} ${r.amount_usd_per_day:.2f}/day "
+                f"(exposure ${r.daily_exposure_usd:.2f}, risk {r.risk}) — pending approval"
+            )
         if s.abort_reason:
             print(f"  ✋ {s.abort_reason}")
 
@@ -55,8 +69,9 @@ def cmd_run(args: argparse.Namespace) -> None:
     from adintel.storage import get_database
 
     end = date.fromisoformat(args.period_end)
-    s = RunEngine(get_database()).run(tenant_id=args.tenant, brand_id=args.brand, period_start=end - timedelta(days=6),
-                                      period_end=end, trigger="cli")
+    s = RunEngine(get_database()).run(
+        tenant_id=args.tenant, brand_id=args.brand, period_start=end - timedelta(days=6), period_end=end, trigger="cli"
+    )
     _print({"status": s.status if s else "already_ran", "run_id": s.run_id if s else None})
 
 
@@ -94,8 +109,13 @@ def cmd_models(args: argparse.Namespace) -> None:
     out = {}
     for name, tier in reg.tiers.items():
         h = OpenAICompatProvider.shared().health(tier)
-        out[name] = {"model_id": tier.model_id, "base_url": tier.base_url, "ok": h.get("ok"),
-                     "served": h.get("models"), "error": h.get("error")}
+        out[name] = {
+            "model_id": tier.model_id,
+            "base_url": tier.base_url,
+            "ok": h.get("ok"),
+            "served": h.get("models"),
+            "error": h.get("error"),
+        }
     _print(out)
 
 

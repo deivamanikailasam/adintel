@@ -23,8 +23,11 @@ def test_report_tier_writes_grounded_report(db, ready):
 
 
 def test_ungrounded_number_falls_back_to_frontier(db, ready, mock_llm):
-    bad = json.loads(__import__("adintel.llm.mock_handlers", fromlist=["x"])._report(
-        {"findings": report.build_facts(ready)}, [], None))
+    bad = json.loads(
+        __import__("adintel.llm.mock_handlers", fromlist=["x"])._report(
+            {"findings": report.build_facts(ready)}, [], None
+        )
+    )
     bad["sections"][1]["body"] = "Spend was $99,999.99 this week."
     mock_llm.script("report:ReportOutput", [bad])
     s = apply(ready, report.run(ready, make_ctx(db, ready)))
@@ -41,8 +44,9 @@ def test_all_models_failing_grounding_gives_template(db, ready, mock_llm):
 
 
 def test_caveats_cannot_be_dropped_by_the_model(db, ready):
-    s = ready.model_copy(update={"degradations": [degrade(DegradationCode.PLATFORM_UNAVAILABLE,
-                                                          AgentName.INGESTION, "tiktok")]})
+    s = ready.model_copy(
+        update={"degradations": [degrade(DegradationCode.PLATFORM_UNAVAILABLE, AgentName.INGESTION, "tiktok")]}
+    )
     s = apply(s, report.run(s, make_ctx(db, s)))
     caveats = next(x for x in s.report.sections if x.key == "caveats").body
     assert "Data from tiktok was unavailable tonight" in caveats

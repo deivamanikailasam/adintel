@@ -29,15 +29,19 @@ class SqsQueue(Queue):
         return str(self._sqs.send_message(**kwargs)["MessageId"])
 
     def receive(self, *, wait_seconds: float = 1.0) -> Message | None:
-        out = self._sqs.receive_message(QueueUrl=self._url, MaxNumberOfMessages=1,
-                                        WaitTimeSeconds=int(min(20, wait_seconds)),
-                                        AttributeNames=["ApproximateReceiveCount"])
+        out = self._sqs.receive_message(
+            QueueUrl=self._url,
+            MaxNumberOfMessages=1,
+            WaitTimeSeconds=int(min(20, wait_seconds)),
+            AttributeNames=["ApproximateReceiveCount"],
+        )
         msgs = out.get("Messages", [])
         if not msgs:
             return None
         m = msgs[0]
-        return Message(m["MessageId"], json.loads(m["Body"]), m["ReceiptHandle"],
-                       int(m["Attributes"]["ApproximateReceiveCount"]))
+        return Message(
+            m["MessageId"], json.loads(m["Body"]), m["ReceiptHandle"], int(m["Attributes"]["ApproximateReceiveCount"])
+        )
 
     def ack(self, msg: Message) -> None:
         self._sqs.delete_message(QueueUrl=self._url, ReceiptHandle=msg.receipt)

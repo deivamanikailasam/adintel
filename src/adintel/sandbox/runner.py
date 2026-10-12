@@ -18,7 +18,7 @@ from adintel.sandbox.policy import validate_expression
 MEMORY_BYTES = 1024 * 1024 * 1024
 MAX_OUTPUT_CHARS = 4000
 
-_CHILD = r'''
+_CHILD = r"""
 import json, sys, resource
 cpu, mem = int(sys.argv[1]), int(sys.argv[2])
 resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu))
@@ -47,7 +47,7 @@ try:
 except Exception as exc:
     out = {"ok": False, "error": f"{type(exc).__name__}: {exc}"[:400]}
 sys.stdout.write(json.dumps(out, default=str))
-'''
+"""
 
 
 @dataclass
@@ -73,11 +73,22 @@ class SubprocessSandbox:
             validate_expression(code)
         except SandboxViolation as exc:
             return SandboxResult(ok=False, code=code, error=f"policy: {exc}")
-        env = {"PATH": os.environ.get("PATH", ""), "PYTHONHASHSEED": "0", "OMP_NUM_THREADS": "1",
-               "HOME": "/nonexistent", "no_proxy": "*"}
+        env = {
+            "PATH": os.environ.get("PATH", ""),
+            "PYTHONHASHSEED": "0",
+            "OMP_NUM_THREADS": "1",
+            "HOME": "/nonexistent",
+            "no_proxy": "*",
+        }
         try:
-            proc = subprocess.run(self.command(), input=json.dumps({"code": code, "rows": rows}, default=str),  # noqa: S603
-                                  capture_output=True, text=True, timeout=SANDBOX_WALL_SECONDS, env=env)
+            proc = subprocess.run(  # noqa: S603 - fixed argv; code is passed on stdin after AST validation
+                self.command(),
+                input=json.dumps({"code": code, "rows": rows}, default=str),
+                capture_output=True,
+                text=True,
+                timeout=SANDBOX_WALL_SECONDS,
+                env=env,
+            )
         except subprocess.TimeoutExpired as exc:
             raise SandboxTimeout(f"sandbox exceeded {SANDBOX_WALL_SECONDS}s") from exc
         if proc.returncode != 0 or not proc.stdout:
@@ -92,9 +103,32 @@ class DockerSandbox(SubprocessSandbox):
     image = "adintel-sandbox:latest"
 
     def command(self) -> list[str]:
-        return ["docker", "run", "--rm", "-i", "--network", "none", "--memory", "1g", "--cpus", "1",
-                "--pids-limit", "64", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
-                self.image, "python", "-I", "-c", _CHILD, str(SANDBOX_CPU_SECONDS), str(MEMORY_BYTES)]
+        return [
+            "docker",
+            "run",
+            "--rm",
+            "-i",
+            "--network",
+            "none",
+            "--memory",
+            "1g",
+            "--cpus",
+            "1",
+            "--pids-limit",
+            "64",
+            "--read-only",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            self.image,
+            "python",
+            "-I",
+            "-c",
+            _CHILD,
+            str(SANDBOX_CPU_SECONDS),
+            str(MEMORY_BYTES),
+        ]
 
 
 def get_sandbox() -> SubprocessSandbox:

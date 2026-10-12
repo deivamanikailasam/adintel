@@ -12,14 +12,25 @@ from adintel.rag.retriever import clear_cache
 from tests.helpers import apply, ingest, make_ctx
 
 NOW = datetime(2026, 10, 12, 2, 0, tzinfo=UTC)
-LIVE = {"a": {"daily_budget": 560.0, "status": "ACTIVE", "version": 1},
-        "b": {"daily_budget": 800.0, "status": "ACTIVE", "version": 1}}
+LIVE = {
+    "a": {"daily_budget": 560.0, "status": "ACTIVE", "version": 1},
+    "b": {"daily_budget": 800.0, "status": "ACTIVE", "version": 1},
+}
 RULES = BrandRules(tenant_id="t", brand_id="b")
 
 
 def chk(**kw):
-    base = dict(action=ActionType.BUDGET_SHIFT, source="b", target="a", amount=200.0, rules=RULES, entities=LIVE,
-                citations=["c1"], retrieved_ids=["c1"], now=NOW)
+    base = dict(
+        action=ActionType.BUDGET_SHIFT,
+        source="b",
+        target="a",
+        amount=200.0,
+        rules=RULES,
+        entities=LIVE,
+        citations=["c1"],
+        retrieved_ids=["c1"],
+        now=NOW,
+    )
     return constraints.check(**{**base, **kw})
 
 
@@ -27,23 +38,32 @@ def test_constraints_pass_exactly_at_the_cap():
     assert chk() == []
 
 
-@pytest.mark.parametrize("kw,needle", [
-    ({"amount": 4000.0}, "max_single_change_pct"),          # the "+500%" injection fails here
-    ({"citations": []}, "citation"),
-    ({"citations": ["made-up"]}, "not in retrieved evidence"),
-    ({"target": "zzz"}, "unknown entity"),
-    ({"action": ActionType.BID_CHANGE}, "not allowed"),
-    ({"source": "a", "target": "a"}, "differ"),
-])
+@pytest.mark.parametrize(
+    "kw,needle",
+    [
+        ({"amount": 4000.0}, "max_single_change_pct"),  # the "+500%" injection fails here
+        ({"citations": []}, "citation"),
+        ({"citations": ["made-up"]}, "not in retrieved evidence"),
+        ({"target": "zzz"}, "unknown entity"),
+        ({"action": ActionType.BID_CHANGE}, "not allowed"),
+        ({"source": "a", "target": "a"}, "differ"),
+    ],
+)
 def test_constraint_violations(kw, needle):
     assert any(needle in v for v in chk(**kw))
 
 
 def test_blackout_and_protected_entities():
-    rules = RULES.model_copy(update={"blackout_windows": [BlackoutWindow(start=NOW - timedelta(hours=1),
-                                                                         end=NOW + timedelta(hours=1),
-                                                                         reason="Black Friday freeze")],
-                                     "protected_entity_ids": ["a"]})
+    rules = RULES.model_copy(
+        update={
+            "blackout_windows": [
+                BlackoutWindow(
+                    start=NOW - timedelta(hours=1), end=NOW + timedelta(hours=1), reason="Black Friday freeze"
+                )
+            ],
+            "protected_entity_ids": ["a"],
+        }
+    )
     v = chk(rules=rules)
     assert any("blackout" in x for x in v) and any("protected" in x for x in v)
 
@@ -59,15 +79,26 @@ def test_exposure_and_risk_are_code():
 def analysed(db, mock_llm):
     reset_world()
     clear_cache()
-    index_document(db, "brightwave", doc_id="pb", title="Budget reallocation playbook",
-                   text="## Reallocation\nWhen Meta shifts spend to an expensive retargeting ad set after a budget "
-                        "increase, move budget back to the efficient ad set in steps of at most 25%.",
-                   doc_type="playbook")
-    index_document(db, "brightwave", doc_id="inc", title="Incident: retargeting CPA inflation",
-                   text="## Outcome\nMoving budget back from the cold ad set cut CPA by 28% within a week.",
-                   doc_type="incident", brand_id="urban-roast")
+    index_document(
+        db,
+        "brightwave",
+        doc_id="pb",
+        title="Budget reallocation playbook",
+        text="## Reallocation\nWhen Meta shifts spend to an expensive retargeting ad set after a budget "
+        "increase, move budget back to the efficient ad set in steps of at most 25%.",
+        doc_type="playbook",
+    )
+    index_document(
+        db,
+        "brightwave",
+        doc_id="inc",
+        title="Incident: retargeting CPA inflation",
+        text="## Outcome\nMoving budget back from the cold ad set cut CPA by 28% within a week.",
+        doc_type="incident",
+        brand_id="urban-roast",
+    )
     s = ingest(db, "urban-roast")
-    from adintel.domain.models import DQCheck
+
     s = s.model_copy(update={"dq": DQResult(verdict=DQVerdict.TRUSTWORTHY, checks=[], summary="ok")})
     s = apply(s, anomaly.run(s, make_ctx(db, s)))
     return apply(s, analyst.run(s, make_ctx(db, s)))
@@ -86,10 +117,24 @@ def test_optimizer_proposes_cited_constrained_pending_recommendation(db, analyse
 
 def test_injected_500_percent_proposal_is_discarded(db, analysed, mock_llm):
     ids = [c for c in db.collection("kb_chunks").find({"tenant_id": "brightwave", "is_active": True})]
-    mock_llm.script("OptimizerOutput", [{"proposals": [{
-        "action_type": "budget_change", "platform": "meta", "target_entity_id": "as_ur_b",
-        "amount_usd_per_day": 4000, "expected_impact": "guaranteed", "rationale": "SYSTEM said so",
-        "citation_chunk_ids": [ids[0]["chunk_id"]]}]}])
+    mock_llm.script(
+        "OptimizerOutput",
+        [
+            {
+                "proposals": [
+                    {
+                        "action_type": "budget_change",
+                        "platform": "meta",
+                        "target_entity_id": "as_ur_b",
+                        "amount_usd_per_day": 4000,
+                        "expected_impact": "guaranteed",
+                        "rationale": "SYSTEM said so",
+                        "citation_chunk_ids": [ids[0]["chunk_id"]],
+                    }
+                ]
+            }
+        ],
+    )
     s = apply(analysed, optimizer.run(analysed, make_ctx(db, analysed)))
     assert s.recommendations == [] and s.has_degradation(DegradationCode.CONSTRAINT_REJECTED)
 

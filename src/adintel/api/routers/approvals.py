@@ -17,8 +17,12 @@ router = APIRouter(tags=["approvals"])
 
 
 @router.get("/recommendations")
-def list_recs(status: str | None = None, brand_id: str | None = None, p: Principal = Depends(require(*ANY_STAFF)),
-              database: Database = Depends(db)) -> list[dict[str, Any]]:
+def list_recs(
+    status: str | None = None,
+    brand_id: str | None = None,
+    p: Principal = Depends(require(*ANY_STAFF)),
+    database: Database = Depends(db),
+) -> list[dict[str, Any]]:
     flt: dict[str, Any] = {}
     if status:
         flt["status"] = status
@@ -30,7 +34,9 @@ def list_recs(status: str | None = None, brand_id: str | None = None, p: Princip
 
 
 @router.get("/recommendations/{rec_id}")
-def get_rec(rec_id: str, p: Principal = Depends(require(*ANY_STAFF)), database: Database = Depends(db)) -> dict[str, Any]:
+def get_rec(
+    rec_id: str, p: Principal = Depends(require(*ANY_STAFF)), database: Database = Depends(db)
+) -> dict[str, Any]:
     """The approval screen: the recommendation plus its evidence, one click away."""
     t = p.tenant_id
     rec = TenantScopedRepo(database, "recommendations", t).find_one({"recommendation_id": rec_id})
@@ -39,10 +45,13 @@ def get_rec(rec_id: str, p: Principal = Depends(require(*ANY_STAFF)), database: 
     check_brand(p, rec["brand_id"])
     anomaly = TenantScopedRepo(database, "anomalies", t).find_one({"anomaly_id": rec.get("anomaly_id")})
     history = TenantScopedRepo(database, "run_history", t).find_one({"run_id": rec["run_id"]})
-    return {"recommendation": rec, "anomaly": anomaly,
-            "root_causes": (history or {}).get("root_causes", []),
-            "approval_requirement": _requirement(rec),
-            "audit": TenantScopedRepo(database, "audit_log", t).find({"subject_id": rec_id}, sort=[("seq", 1)])}
+    return {
+        "recommendation": rec,
+        "anomaly": anomaly,
+        "root_causes": (history or {}).get("root_causes", []),
+        "approval_requirement": _requirement(rec),
+        "audit": TenantScopedRepo(database, "audit_log", t).find({"subject_id": rec_id}, sort=[("seq", 1)]),
+    }
 
 
 def _requirement(rec: dict[str, Any]) -> str:
@@ -59,12 +68,16 @@ class ApproveBody(BaseModel):
 
 
 @router.post("/recommendations/{rec_id}/approve")
-def approve(rec_id: str, body: ApproveBody, p: Principal = Depends(require(*APPROVERS)),
-            database: Database = Depends(db)) -> dict[str, Any]:
+def approve(
+    rec_id: str, body: ApproveBody, p: Principal = Depends(require(*APPROVERS)), database: Database = Depends(db)
+) -> dict[str, Any]:
     try:
         return ApprovalService(database, p.tenant_id).approve(
-            rec_id, load_user(database, p.tenant_id, p.user_id), typed_exposure_usd=body.typed_exposure_usd,
-            modified_amount_usd_per_day=body.modified_amount_usd_per_day)
+            rec_id,
+            load_user(database, p.tenant_id, p.user_id),
+            typed_exposure_usd=body.typed_exposure_usd,
+            modified_amount_usd_per_day=body.modified_amount_usd_per_day,
+        )
     except ApprovalError as exc:
         raise HTTPException(409, {"check": exc.check, "message": exc.message}) from exc
 
@@ -75,11 +88,13 @@ class RejectBody(BaseModel):
 
 
 @router.post("/recommendations/{rec_id}/reject")
-def reject(rec_id: str, body: RejectBody, p: Principal = Depends(require(*APPROVERS)),
-           database: Database = Depends(db)) -> dict[str, Any]:
+def reject(
+    rec_id: str, body: RejectBody, p: Principal = Depends(require(*APPROVERS)), database: Database = Depends(db)
+) -> dict[str, Any]:
     try:
-        return ApprovalService(database, p.tenant_id).reject(rec_id, load_user(database, p.tenant_id, p.user_id),
-                                                             category=body.category, note=body.note)
+        return ApprovalService(database, p.tenant_id).reject(
+            rec_id, load_user(database, p.tenant_id, p.user_id), category=body.category, note=body.note
+        )
     except ApprovalError as exc:
         raise HTTPException(409, {"check": exc.check, "message": exc.message}) from exc
 
@@ -90,8 +105,12 @@ def categories() -> dict[str, Any]:
 
 
 @router.get("/anomalies")
-def list_anomalies(brand_id: str | None = None, status: str = "open", p: Principal = Depends(require(*ANY_STAFF)),
-                   database: Database = Depends(db)) -> list[dict[str, Any]]:
+def list_anomalies(
+    brand_id: str | None = None,
+    status: str = "open",
+    p: Principal = Depends(require(*ANY_STAFF)),
+    database: Database = Depends(db),
+) -> list[dict[str, Any]]:
     flt: dict[str, Any] = {"status": status}
     if brand_id:
         check_brand(p, brand_id)
@@ -106,11 +125,13 @@ class DismissBody(BaseModel):
 
 
 @router.post("/anomalies/{anomaly_id}/dismiss")
-def dismiss(anomaly_id: str, body: DismissBody, p: Principal = Depends(require(*APPROVERS)),
-            database: Database = Depends(db)) -> dict[str, Any]:
+def dismiss(
+    anomaly_id: str, body: DismissBody, p: Principal = Depends(require(*APPROVERS)), database: Database = Depends(db)
+) -> dict[str, Any]:
     try:
-        return ProceduralMemory(database, p.tenant_id).dismiss(anomaly_id, load_user(database, p.tenant_id, p.user_id),
-                                                               reason=body.reason, note=body.note)
+        return ProceduralMemory(database, p.tenant_id).dismiss(
+            anomaly_id, load_user(database, p.tenant_id, p.user_id), reason=body.reason, note=body.note
+        )
     except (KeyError, ValueError) as exc:
         raise HTTPException(400, str(exc)) from exc
 
@@ -125,7 +146,9 @@ class Decision(BaseModel):
 
 
 @router.post("/rule-proposals/{proposal_id}/decision")
-def decide(proposal_id: str, body: Decision, p: Principal = Depends(require(*SENIORS)),
-           database: Database = Depends(db)) -> dict[str, Any]:
-    return ProceduralMemory(database, p.tenant_id).decide(proposal_id, load_user(database, p.tenant_id, p.user_id),
-                                                          approve=body.approve)
+def decide(
+    proposal_id: str, body: Decision, p: Principal = Depends(require(*SENIORS)), database: Database = Depends(db)
+) -> dict[str, Any]:
+    return ProceduralMemory(database, p.tenant_id).decide(
+        proposal_id, load_user(database, p.tenant_id, p.user_id), approve=body.approve
+    )

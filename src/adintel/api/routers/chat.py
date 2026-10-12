@@ -22,7 +22,9 @@ class ChatBody(BaseModel):
 
 
 @router.post("/chat")
-def chat(body: ChatBody, p: Principal = Depends(require(*ANY_STAFF)), database: Database = Depends(db)) -> StreamingResponse:
+def chat(
+    body: ChatBody, p: Principal = Depends(require(*ANY_STAFF)), database: Database = Depends(db)
+) -> StreamingResponse:
     check_brand(p, body.brand_id)
     svc = ChatService(database, p.tenant_id, body.brand_id, p.user_id)
     session = f"{p.user_id}:{body.session_id}"
@@ -31,5 +33,6 @@ def chat(body: ChatBody, p: Principal = Depends(require(*ANY_STAFF)), database: 
         for ev in svc.ask(body.question, session):
             yield sse(ev, event=str(ev["type"]))
 
-    return StreamingResponse(gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache",
-                                                                            "X-Accel-Buffering": "no"})
+    return StreamingResponse(
+        gen(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    )

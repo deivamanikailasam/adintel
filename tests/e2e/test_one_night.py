@@ -19,8 +19,14 @@ def engine(db, mock_llm):
 
 
 def run(engine, brand):
-    return engine.run(tenant_id="brightwave", brand_id=brand, period_start=PERIOD_START, period_end=PERIOD_END,
-                      trigger="schedule", schedule_date=PERIOD_END)
+    return engine.run(
+        tenant_id="brightwave",
+        brand_id=brand,
+        period_start=PERIOD_START,
+        period_end=PERIOD_END,
+        trigger="schedule",
+        schedule_date=PERIOD_END,
+    )
 
 
 def test_urban_roast_full_investigation(engine, db):
@@ -61,10 +67,20 @@ def test_clean_path_costs_a_fraction_of_the_full_path(engine):
 
 
 def test_duplicate_trigger_maps_to_the_existing_run(engine, db):
-    a, created_a = engine.start(tenant_id="brightwave", brand_id="fitely", period_start=PERIOD_START,
-                                period_end=PERIOD_END, schedule_date=PERIOD_END)
-    b, created_b = engine.start(tenant_id="brightwave", brand_id="fitely", period_start=PERIOD_START,
-                                period_end=PERIOD_END, schedule_date=PERIOD_END)
+    a, created_a = engine.start(
+        tenant_id="brightwave",
+        brand_id="fitely",
+        period_start=PERIOD_START,
+        period_end=PERIOD_END,
+        schedule_date=PERIOD_END,
+    )
+    b, created_b = engine.start(
+        tenant_id="brightwave",
+        brand_id="fitely",
+        period_start=PERIOD_START,
+        period_end=PERIOD_END,
+        schedule_date=PERIOD_END,
+    )
     assert created_a and not created_b and a["run_id"] == b["run_id"]
 
 

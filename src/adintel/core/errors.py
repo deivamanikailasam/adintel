@@ -15,7 +15,7 @@ class ConfigError(AdIntelError):
     """Configuration is missing, inconsistent or unsafe (e.g. a floating model version)."""
 
 
-class TenantIsolationViolation(AdIntelError):  # noqa: N818 - name is part of the documented contract
+class TenantIsolationViolation(AdIntelError):
     """A query or output tried to cross a tenant boundary. Always a P1 security incident."""
 
 

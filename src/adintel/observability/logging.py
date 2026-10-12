@@ -41,8 +41,9 @@ class ContextTextFormatter(logging.Formatter):
 
 def configure_logging(level: str = "INFO", json_output: bool = True) -> None:
     handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(JsonFormatter() if json_output else ContextTextFormatter(
-        "%(asctime)s %(levelname)-7s %(name)s: %(message)s"))
+    handler.setFormatter(
+        JsonFormatter() if json_output else ContextTextFormatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s")
+    )
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel(level.upper())

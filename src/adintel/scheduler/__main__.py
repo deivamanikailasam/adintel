@@ -36,14 +36,24 @@ def build(scheduler: BlockingScheduler) -> None:
         tz = (b.get("profile") or {}).get("timezone", "UTC")
         offset = jobs.stagger_minutes(b["tenant_id"], b["brand_id"], window)
         at = datetime(2000, 1, 1, 2, 0) + timedelta(minutes=offset)
-        scheduler.add_job(jobs.trigger_brand_run, CronTrigger(day_of_week="mon", hour=at.hour, minute=at.minute,
-                                                              timezone=tz),
-                          args=[db, b["tenant_id"], b["brand_id"]], id=f"run:{b['tenant_id']}:{b['brand_id']}",
-                          replace_existing=True, misfire_grace_time=3600, coalesce=True)
-        scheduler.add_job(jobs.trigger_brand_run, CronTrigger(day_of_week="mon", hour=6, minute=offset % 30,
-                                                              timezone=tz),
-                          args=[db, b["tenant_id"], b["brand_id"]], id=f"retry:{b['tenant_id']}:{b['brand_id']}",
-                          replace_existing=True, misfire_grace_time=3600, coalesce=True)
+        scheduler.add_job(
+            jobs.trigger_brand_run,
+            CronTrigger(day_of_week="mon", hour=at.hour, minute=at.minute, timezone=tz),
+            args=[db, b["tenant_id"], b["brand_id"]],
+            id=f"run:{b['tenant_id']}:{b['brand_id']}",
+            replace_existing=True,
+            misfire_grace_time=3600,
+            coalesce=True,
+        )
+        scheduler.add_job(
+            jobs.trigger_brand_run,
+            CronTrigger(day_of_week="mon", hour=6, minute=offset % 30, timezone=tz),
+            args=[db, b["tenant_id"], b["brand_id"]],
+            id=f"retry:{b['tenant_id']}:{b['brand_id']}",
+            replace_existing=True,
+            misfire_grace_time=3600,
+            coalesce=True,
+        )
     scheduler.add_job(jobs.verify_audit_job, CronTrigger(hour=3, minute=30, timezone="UTC"), args=[db], id="audit")
     scheduler.add_job(jobs.reconcile_job, CronTrigger(hour=4, minute=0, timezone="UTC"), args=[db], id="reconcile")
     scheduler.add_job(jobs.narratives_job, CronTrigger(hour=1, minute=0, timezone="UTC"), args=[db], id="narratives")

@@ -12,10 +12,11 @@ from typing import Any
 
 from adintel.core.errors import LLMTimeout, LLMUnavailable
 from adintel.core.resilience import CircuitOpen, breaker
+from adintel.llm.providers.base import LLMProvider
 from adintel.llm.types import CompletionRequest, CompletionResult, TierConfig
 
 
-class BedrockProvider:
+class BedrockProvider(LLMProvider):
     _shared: BedrockProvider | None = None
     _lock = threading.Lock()
 
@@ -47,7 +48,9 @@ class BedrockProvider:
         t0 = time.perf_counter()
         try:
             out = self._client.converse(
-                modelId=tier.model_id, system=system, messages=messages,
+                modelId=tier.model_id,
+                system=system,
+                messages=messages,
                 inferenceConfig={"temperature": req.temperature, "maxTokens": req.max_tokens},
                 **tier.extra_body,
             )
@@ -60,8 +63,12 @@ class BedrockProvider:
         cb.record_success()
         text = "".join(c.get("text", "") for c in out["output"]["message"]["content"])
         usage = out.get("usage", {})
-        return CompletionResult(text=text, tokens_in=usage.get("inputTokens", 0),
-                                tokens_out=usage.get("outputTokens", 0),
-                                cached_tokens=usage.get("cacheReadInputTokens", 0),
-                                latency_ms=(time.perf_counter() - t0) * 1000, model_id=tier.model_id,
-                                finish_reason=out.get("stopReason", "stop"))
+        return CompletionResult(
+            text=text,
+            tokens_in=usage.get("inputTokens", 0),
+            tokens_out=usage.get("outputTokens", 0),
+            cached_tokens=usage.get("cacheReadInputTokens", 0),
+            latency_ms=(time.perf_counter() - t0) * 1000,
+            model_id=tier.model_id,
+            finish_reason=out.get("stopReason", "stop"),
+        )

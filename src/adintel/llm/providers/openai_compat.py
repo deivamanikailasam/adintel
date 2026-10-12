@@ -16,10 +16,11 @@ import httpx
 
 from adintel.core.errors import LLMTimeout, LLMUnavailable
 from adintel.core.resilience import CircuitOpen, breaker
+from adintel.llm.providers.base import LLMProvider
 from adintel.llm.types import CompletionRequest, CompletionResult, TierConfig, estimate_tokens
 
 
-class OpenAICompatProvider:
+class OpenAICompatProvider(LLMProvider):
     _shared: OpenAICompatProvider | None = None
     _lock = threading.Lock()
 
@@ -111,8 +112,9 @@ class OpenAICompatProvider:
         parts: list[str] = []
         usage: dict[str, Any] = {}
         try:
-            with self._client(tier).stream("POST", "/chat/completions",
-                                           json=self._body(req, tier, stream=True)) as resp:
+            with self._client(tier).stream(
+                "POST", "/chat/completions", json=self._body(req, tier, stream=True)
+            ) as resp:
                 if resp.status_code >= 400:
                     cb.record_failure()
                     raise LLMUnavailable(f"{tier.name}: HTTP {resp.status_code}")
@@ -150,7 +152,10 @@ class OpenAICompatProvider:
     def health(self, tier: TierConfig) -> dict[str, Any]:
         try:
             r = self._client(tier).get("/models")
-            return {"ok": r.status_code == 200, "status": r.status_code,
-                    "models": [m.get("id") for m in r.json().get("data", [])] if r.status_code == 200 else []}
+            return {
+                "ok": r.status_code == 200,
+                "status": r.status_code,
+                "models": [m.get("id") for m in r.json().get("data", [])] if r.status_code == 200 else [],
+            }
         except httpx.HTTPError as exc:
             return {"ok": False, "error": str(exc)}

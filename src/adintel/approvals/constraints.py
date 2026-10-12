@@ -16,8 +16,13 @@ from adintel.domain.models import BrandRules
 
 def snapshot_hash(entities: dict[str, dict[str, Any]], ids: list[str]) -> str:
     """Hash of the live state of the entities a recommendation touches (budget, status, version)."""
-    return sha256_obj({i: {k: entities[i].get(k) for k in ("daily_budget", "status", "version")}
-                       for i in sorted(ids) if i in entities})
+    return sha256_obj(
+        {
+            i: {k: entities[i].get(k) for k in ("daily_budget", "status", "version")}
+            for i in sorted(ids)
+            if i in entities
+        }
+    )
 
 
 def exposure_usd(action: ActionType, amount: float, entities: dict[str, dict[str, Any]], target: str) -> float:
@@ -42,9 +47,18 @@ def in_blackout(rules: BrandRules, now: datetime) -> str | None:
     return None
 
 
-def check(*, action: ActionType, source: str | None, target: str, amount: float, rules: BrandRules,
-          entities: dict[str, dict[str, Any]], citations: list[str], retrieved_ids: list[str],
-          now: datetime) -> list[str]:
+def check(
+    *,
+    action: ActionType,
+    source: str | None,
+    target: str,
+    amount: float,
+    rules: BrandRules,
+    entities: dict[str, dict[str, Any]],
+    citations: list[str],
+    retrieved_ids: list[str],
+    now: datetime,
+) -> list[str]:
     """Return the list of violated constraints (empty = passes)."""
     v: list[str] = []
     if action not in rules.allowed_actions:
@@ -68,8 +82,10 @@ def check(*, action: ActionType, source: str | None, target: str, amount: float,
             if amount < 0:
                 v.append("shift amount must be positive")
             if amount > cap * src_budget + 0.005:
-                v.append(f"shift ${amount:.2f} exceeds max_single_change_pct "
-                         f"{rules.max_single_change_pct:.0f}% of source budget ${src_budget:.2f}")
+                v.append(
+                    f"shift ${amount:.2f} exceeds max_single_change_pct "
+                    f"{rules.max_single_change_pct:.0f}% of source budget ${src_budget:.2f}"
+                )
             if src_budget - amount < rules.min_daily_budget_usd:
                 v.append(f"source budget would fall below ${rules.min_daily_budget_usd:.2f}")
         if source == target:
@@ -77,8 +93,10 @@ def check(*, action: ActionType, source: str | None, target: str, amount: float,
     if action == ActionType.BUDGET_CHANGE and target in entities:
         b = float(entities[target].get("daily_budget") or 0)
         if abs(amount) > cap * b + 0.005:
-            v.append(f"change ${amount:.2f} exceeds max_single_change_pct {rules.max_single_change_pct:.0f}% "
-                     f"of budget ${b:.2f}")
+            v.append(
+                f"change ${amount:.2f} exceeds max_single_change_pct {rules.max_single_change_pct:.0f}% "
+                f"of budget ${b:.2f}"
+            )
         if b + amount < rules.min_daily_budget_usd:
             v.append(f"budget would fall below ${rules.min_daily_budget_usd:.2f}")
     if not citations:

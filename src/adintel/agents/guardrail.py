@@ -26,10 +26,23 @@ from adintel.storage.tenant_repo import SystemRepo
 
 log = logging.getLogger(__name__)
 
-BANNED_CLAIMS = ("guarantee", "guaranteed", "risk-free", "risk free", "100% certain", "no risk", "can't lose",
-                 "cannot lose", "sure-fire", "promise you")
-AUTONOMY_CLAIMS = re.compile(r"\b(we|adintel|the system)\s+(have|has|already)\s+(increased|decreased|paused|changed|"
-                             r"moved|reallocated|executed)\b|\bwill automatically\b", re.IGNORECASE)
+BANNED_CLAIMS = (
+    "guarantee",
+    "guaranteed",
+    "risk-free",
+    "risk free",
+    "100% certain",
+    "no risk",
+    "can't lose",
+    "cannot lose",
+    "sure-fire",
+    "promise you",
+)
+AUTONOMY_CLAIMS = re.compile(
+    r"\b(we|adintel|the system)\s+(have|has|already)\s+(increased|decreased|paused|changed|"
+    r"moved|reallocated|executed)\b|\bwill automatically\b",
+    re.IGNORECASE,
+)
 
 
 class SafetyVerdict(BaseModel):
@@ -47,8 +60,9 @@ def other_client_names(db: Any, tenant_id: str, brand_id: str) -> list[str]:
     return sorted({n for n in names if n and len(n) >= 3})
 
 
-def deterministic_checks(text: str, *, forbidden_names: list[str], facts: dict[str, Any] | None,
-                         require_grounding: bool) -> list[GuardrailFinding]:
+def deterministic_checks(
+    text: str, *, forbidden_names: list[str], facts: dict[str, Any] | None, require_grounding: bool
+) -> list[GuardrailFinding]:
     findings: list[GuardrailFinding] = []
     for p in find_pii(text):
         findings.append(GuardrailFinding(check="pii", severity="block", detail=f"{p.kind} at {p.start}"))
@@ -62,43 +76,68 @@ def deterministic_checks(text: str, *, forbidden_names: list[str], facts: dict[s
     for m in injection_markers(text):
         findings.append(GuardrailFinding(check="injection_echo", severity="block", detail=m))
     if AUTONOMY_CLAIMS.search(text):
-        findings.append(GuardrailFinding(check="autonomy_claim", severity="block",
-                                         detail="claims a change was made without approval"))
+        findings.append(
+            GuardrailFinding(
+                check="autonomy_claim", severity="block", detail="claims a change was made without approval"
+            )
+        )
     if require_grounding and facts is not None:
         g = check_grounding(text, facts)
         if not g.passed:
-            findings.append(GuardrailFinding(check="numeric_grounding", severity="block",
-                                             detail=f"ungrounded: {g.ungrounded[:5]}"))
+            findings.append(
+                GuardrailFinding(check="numeric_grounding", severity="block", detail=f"ungrounded: {g.ungrounded[:5]}")
+            )
     return findings
 
 
 def classify(ctx: AgentContext, text: str) -> tuple[SafetyVerdict | None, str | None]:
     try:
-        r = ctx.llm.structured(agent="guardrail", prompt_id="guardrail_classifier", schema=SafetyVerdict,
-                               context={"task": "classify the text in untrusted_content"},
-                               untrusted={"text_to_classify": text}, allow_fallback=False, max_repairs=0,
-                               transient_retries=0)
+        r = ctx.llm.structured(
+            agent="guardrail",
+            prompt_id="guardrail_classifier",
+            schema=SafetyVerdict,
+            context={"task": "classify the text in untrusted_content"},
+            untrusted={"text_to_classify": text},
+            allow_fallback=False,
+            max_repairs=0,
+            transient_retries=0,
+        )
         return r.value, None
     except AdIntelError as exc:  # timeout, outage, malformed output, budget: all fail closed
         return None, f"{type(exc).__name__}: {str(exc)[:160]}"
 
 
-def review_text(ctx: AgentContext, text: str, *, forbidden_names: list[str], facts: dict[str, Any] | None = None,
-                require_grounding: bool = False) -> GuardrailVerdict:
-    findings = deterministic_checks(text, forbidden_names=forbidden_names, facts=facts,
-                                    require_grounding=require_grounding)
+def review_text(
+    ctx: AgentContext,
+    text: str,
+    *,
+    forbidden_names: list[str],
+    facts: dict[str, Any] | None = None,
+    require_grounding: bool = False,
+) -> GuardrailVerdict:
+    findings = deterministic_checks(
+        text, forbidden_names=forbidden_names, facts=facts, require_grounding=require_grounding
+    )
     verdict, err = classify(ctx, text)
     if verdict is None:
-        findings.append(GuardrailFinding(check="classifier_unavailable", severity="block",
-                                         detail=f"fail closed: {err}"))
+        findings.append(
+            GuardrailFinding(check="classifier_unavailable", severity="block", detail=f"fail closed: {err}")
+        )
     elif not verdict.safe:
-        findings.append(GuardrailFinding(check="classifier", severity="block",
-                                         detail=f"{','.join(verdict.categories)}: {verdict.reason[:200]}"))
+        findings.append(
+            GuardrailFinding(
+                check="classifier", severity="block", detail=f"{','.join(verdict.categories)}: {verdict.reason[:200]}"
+            )
+        )
     blocks = [f for f in findings if f.severity == "block"]
     for f in blocks:
         GUARDRAIL_BLOCKS.labels(check=f.check).inc()
-    return GuardrailVerdict(passed=not blocks, findings=findings, classifier_used=verdict is not None,
-                            classifier_category=",".join(verdict.categories) if verdict and not verdict.safe else None)
+    return GuardrailVerdict(
+        passed=not blocks,
+        findings=findings,
+        classifier_used=verdict is not None,
+        classifier_category=",".join(verdict.categories) if verdict and not verdict.safe else None,
+    )
 
 
 def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
@@ -113,14 +152,21 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     text = "\n".join(parts)
     if not text.strip():
         return {"guardrail": GuardrailVerdict(passed=True, findings=[], classifier_used=False)}
-    verdict = review_text(ctx, text, forbidden_names=names, facts=facts, require_grounding=state.report is not None
-                          and not state.report.deterministic_template)
+    verdict = review_text(
+        ctx,
+        text,
+        forbidden_names=names,
+        facts=facts,
+        require_grounding=state.report is not None and not state.report.deterministic_template,
+    )
     for r in state.recommendations:
         if r.status != RecommendationStatus.PENDING_APPROVAL or not r.citations or not r.constraint_checks:
-            verdict.findings.append(GuardrailFinding(check="recommendation_integrity", severity="block",
-                                                     detail=r.recommendation_id))
+            verdict.findings.append(
+                GuardrailFinding(check="recommendation_integrity", severity="block", detail=r.recommendation_id)
+            )
             verdict.passed = False
     if not verdict.passed:
-        log.warning("guardrail_block", extra={"checks": sorted({f.check for f in verdict.findings
-                                                                if f.severity == "block"})})
+        log.warning(
+            "guardrail_block", extra={"checks": sorted({f.check for f in verdict.findings if f.severity == "block"})}
+        )
     return {"guardrail": verdict}

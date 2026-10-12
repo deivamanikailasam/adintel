@@ -144,6 +144,10 @@ def sort_docs(docs: list[dict[str, Any]], sort: Any) -> list[dict[str, Any]]:
     for key, direction in reversed(list(sort)):
         present = [d for d in out if get_path(d, key) not in (_MISSING, None)]
         absent = [d for d in out if get_path(d, key) in (_MISSING, None)]
-        present.sort(key=lambda d, k=key: get_path(d, k), reverse=direction < 0)
-        out = present + absent if direction > 0 else present + absent
+
+        def keyfn(d: dict[str, Any], k: str = key) -> Any:
+            return get_path(d, k)
+
+        present.sort(key=keyfn, reverse=direction < 0)
+        out = present + absent  # missing values sort last in both directions
     return out

@@ -5,8 +5,15 @@ from adintel.domain.enums import AuditAction
 def _fill(db, tenant="t1", n=5):
     log = AuditLog(db, tenant, system_version="test")
     for i in range(n):
-        log.append(AuditAction.AGENT_STEP, actor_type="agent", actor_id="agent:analyst@m1",
-                   subject_type="run", subject_id=f"run{i}", run_id="r1", details={"i": i})
+        log.append(
+            AuditAction.AGENT_STEP,
+            actor_type="agent",
+            actor_id="agent:analyst@m1",
+            subject_type="run",
+            subject_id=f"run{i}",
+            run_id="r1",
+            details={"i": i},
+        )
     return log
 
 

@@ -62,9 +62,16 @@ class SecretStore:
             from adintel.storage.tenant_repo import SystemRepo
 
             SystemRepo(get_database(), "secret_access_log", purpose="secret access audit").insert(
-                {"tenant_id": tenant_id, "secret_ref": ref, "scope": scope, "role": process_role(),
-                 "allowed": allowed, "at": utcnow().isoformat()})
-        except Exception:  # noqa: BLE001
+                {
+                    "tenant_id": tenant_id,
+                    "secret_ref": ref,
+                    "scope": scope,
+                    "role": process_role(),
+                    "allowed": allowed,
+                    "at": utcnow().isoformat(),
+                }
+            )
+        except Exception:
             log.exception("secret_access_log_failed")
 
     def get(self, tenant_id: str, platform: str, scope: str) -> Credential:

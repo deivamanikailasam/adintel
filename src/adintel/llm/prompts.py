@@ -39,8 +39,9 @@ class PromptRegistry:
             pinned = meta.get("sha256")
             if pinned and pinned != sha:
                 raise ConfigError(f"prompt {pid} v{meta['version']}: content changed without a version bump")
-            self.prompts[pid] = Prompt(pid, str(meta["version"]), text, sha, meta.get("owner", ""),
-                                       meta.get("eval_suite", ""))
+            self.prompts[pid] = Prompt(
+                pid, str(meta["version"]), text, sha, meta.get("owner", ""), meta.get("eval_suite", "")
+            )
 
     def get(self, prompt_id: str) -> Prompt:
         try:

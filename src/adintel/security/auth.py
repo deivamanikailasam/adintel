@@ -39,10 +39,17 @@ class Principal:
 def issue_token(user: User) -> str:
     s = get_settings()
     now = utcnow()
-    claims: dict[str, Any] = {"sub": user.user_id, "tenant_id": user.tenant_id, "email": user.email,
-                              "roles": [str(r) for r in user.roles], "brand_ids": user.brand_ids,
-                              "iss": s.jwt_issuer, "aud": s.jwt_audience, "iat": int(now.timestamp()),
-                              "exp": int((now + timedelta(minutes=s.jwt_ttl_minutes)).timestamp())}
+    claims: dict[str, Any] = {
+        "sub": user.user_id,
+        "tenant_id": user.tenant_id,
+        "email": user.email,
+        "roles": [str(r) for r in user.roles],
+        "brand_ids": user.brand_ids,
+        "iss": s.jwt_issuer,
+        "aud": s.jwt_audience,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=s.jwt_ttl_minutes)).timestamp()),
+    }
     return jwt.encode(claims, s.jwt_secret, algorithm="HS256")
 
 
@@ -52,5 +59,10 @@ def decode_token(token: str) -> Principal:
         c = jwt.decode(token, s.jwt_secret, algorithms=["HS256"], audience=s.jwt_audience, issuer=s.jwt_issuer)
     except jwt.PyJWTError as exc:
         raise AuthError(f"invalid token: {exc}") from exc
-    return Principal(user_id=c["sub"], tenant_id=c["tenant_id"], email=c.get("email", ""),
-                     roles=frozenset(Role(r) for r in c.get("roles", [])), brand_ids=tuple(c.get("brand_ids", [])))
+    return Principal(
+        user_id=c["sub"],
+        tenant_id=c["tenant_id"],
+        email=c.get("email", ""),
+        roles=frozenset(Role(r) for r in c.get("roles", [])),
+        brand_ids=tuple(c.get("brand_ids", [])),
+    )

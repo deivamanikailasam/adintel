@@ -14,10 +14,14 @@ from adintel.domain.models import GroundingResult
 
 _DATE_PATTERNS = [
     re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
-    re.compile(r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?"
-               r"(?:,?\s+\d{4})?\b", re.IGNORECASE),
-    re.compile(r"\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*(?:\s+\d{4})?\b",
-               re.IGNORECASE),
+    re.compile(
+        r"\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?"
+        r"(?:,?\s+\d{4})?\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*(?:\s+\d{4})?\b", re.IGNORECASE
+    ),
     re.compile(r"\b(?:19|20)\d{2}\b"),
     re.compile(r"\bQ[1-4]\b"),
 ]
@@ -79,15 +83,18 @@ def _matches(v: float, allowed: list[float]) -> bool:
     return False
 
 
-def check_grounding(text: str, facts: dict[str, Any], *, entity_names: list[str] | None = None,
-                    known_names: list[str] | None = None) -> GroundingResult:
+def check_grounding(
+    text: str, facts: dict[str, Any], *, entity_names: list[str] | None = None, known_names: list[str] | None = None
+) -> GroundingResult:
     allowed = _flatten(facts)
     nums = extract_numbers(text)
-    ungrounded = [tok for tok, v in nums if not (abs(v) <= SMALL_INT_OK and float(v).is_integer())
-                  and not _matches(v, allowed)]
+    ungrounded = [
+        tok for tok, v in nums if not (abs(v) <= SMALL_INT_OK and float(v).is_integer()) and not _matches(v, allowed)
+    ]
     unsupported: list[str] = []
     if entity_names is not None and known_names:
         mentioned = [n for n in known_names if n.lower() in text.lower()]
         unsupported = [n for n in mentioned if n not in entity_names]
-    return GroundingResult(passed=not ungrounded, numbers_checked=len(nums), ungrounded=ungrounded,
-                           unsupported_claims=unsupported)
+    return GroundingResult(
+        passed=not ungrounded, numbers_checked=len(nums), ungrounded=ungrounded, unsupported_claims=unsupported
+    )

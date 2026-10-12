@@ -27,9 +27,17 @@ class CheckpointStore:
         digest = sha256_text(payload)
         self._repo.update_one(
             {"run_id": state.run_id, "step": version},
-            {"$set": {"run_id": state.run_id, "step": version, "state": payload, "state_hash": digest,
-                      "status": str(state.status), "created_at": utcnow().isoformat(),
-                      "expire_at": utcnow() + RETENTION}},
+            {
+                "$set": {
+                    "run_id": state.run_id,
+                    "step": version,
+                    "state": payload,
+                    "state_hash": digest,
+                    "status": str(state.status),
+                    "created_at": utcnow().isoformat(),
+                    "expire_at": utcnow() + RETENTION,
+                }
+            },
             upsert=True,
         )
         return digest
@@ -46,5 +54,4 @@ class CheckpointStore:
             raise CheckpointCorrupted(f"run {run_id} checkpoint v{doc['step']} is not a valid RunState") from exc
 
     def versions(self, run_id: str) -> list[int]:
-        return [int(d["step"]) for d in self._repo.find({"run_id": run_id}, sort=[("step", 1)],
-                                                        projection={"step": 1})]
+        return [int(d["step"]) for d in self._repo.find({"run_id": run_id}, sort=[("step", 1)], projection={"step": 1})]

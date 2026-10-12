@@ -20,9 +20,16 @@ def _world():
     reset_world()
 
 
-@pytest.mark.parametrize("platform,brand", [(Platform.GOOGLE_ADS, "urban-roast"), (Platform.META, "urban-roast"),
-                                            (Platform.TIKTOK, "fitely"), (Platform.LINKEDIN, "cobalt-saas"),
-                                            (Platform.AMAZON_ADS, "northpeak")])
+@pytest.mark.parametrize(
+    "platform,brand",
+    [
+        (Platform.GOOGLE_ADS, "urban-roast"),
+        (Platform.META, "urban-roast"),
+        (Platform.TIKTOK, "fitely"),
+        (Platform.LINKEDIN, "cobalt-saas"),
+        (Platform.AMAZON_ADS, "northpeak"),
+    ],
+)
 def test_every_platform_normalises_to_usd_rows(platform, brand):
     raw = SyntheticConnector(platform).fetch(READ, brand, date(2026, 10, 1), END)
     rows, unmapped = normalise(raw, tenant_id="brightwave", brand_id=brand)
@@ -57,9 +64,11 @@ def test_broken_tracking_scenario_has_zero_conversions_with_normal_clicks():
 def test_spend_shift_scenario_moves_spend_to_cold_ad_set():
     raw = SyntheticConnector(Platform.META).fetch(READ, "urban-roast", date(2026, 9, 20), END)
     rows, _ = normalise(raw, tenant_id="t", brand_id="urban-roast")
+
     def share(days):
         sel = [r for r in rows if r.campaign_id == "cmp_ur_meta_rt" and days(r)]
         return sum(r.spend for r in sel if r.entity_id == "as_ur_b") / sum(r.spend for r in sel)
+
     assert share(lambda r: (END - r.date).days >= 4) == pytest.approx(0.30, abs=0.03)
     assert share(lambda r: (END - r.date).days < 4) == pytest.approx(0.75, abs=0.03)
 
@@ -91,6 +100,10 @@ def test_secret_scopes_follow_process_role(monkeypatch):
         store.get("t", "meta", "write")
     monkeypatch.setenv("ADINTEL_PROCESS_ROLE", "executor")
     assert store.get("t", "meta", "write").scope == "write"
-    monkeypatch.setenv("ADINTEL_PROCESS_ROLE", "api")
+    monkeypatch.setenv("ADINTEL_PROCESS_ROLE", "api")  # read-only, for the approval-time live check
+    assert store.get("t", "meta", "read").scope == "read"
+    with pytest.raises(AuthError):
+        store.get("t", "meta", "write")
+    monkeypatch.setenv("ADINTEL_PROCESS_ROLE", "scheduler")
     with pytest.raises(AuthError):
         store.get("t", "meta", "read")

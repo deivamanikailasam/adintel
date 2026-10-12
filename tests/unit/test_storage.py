@@ -48,11 +48,14 @@ def test_tenant_repo_injects_tenant_filter(db):
     assert repo.count() == 1
 
 
-@pytest.mark.parametrize("flt", [
-    {"tenant_id": "agency-b"},
-    {"$or": [{"brand_id": "x"}, {"tenant_id": "agency-b"}]},
-    {"$and": [{"tenant_id": {"$in": ["agency-a", "agency-b"]}}]},
-])
+@pytest.mark.parametrize(
+    "flt",
+    [
+        {"tenant_id": "agency-b"},
+        {"$or": [{"brand_id": "x"}, {"tenant_id": "agency-b"}]},
+        {"$and": [{"tenant_id": {"$in": ["agency-a", "agency-b"]}}]},
+    ],
+)
 def test_querying_another_tenant_raises_and_pages(db, flt):
     paged = []
     register_violation_hook(lambda t, c, d: paged.append((t, c)))

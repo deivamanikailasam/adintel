@@ -73,13 +73,16 @@ omit = [
 ]
 
 [tool.ruff]
-line-length = 110
+line-length = 120
 target-version = "py312"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF"]
 ignore = [
+  "E501",   # line length is owned by `ruff format`
+  "RUF001", "RUF002", "RUF003",  # en dashes and arrows in docs/strings are intentional
+  "UP046", "UP047",  # keep Generic[T] syntax readable for reviewers new to PEP 695
   "S101",   # assert is fine in tests
   "RUF012", # pydantic class vars
   "B008",   # FastAPI Depends() in defaults is idiomatic

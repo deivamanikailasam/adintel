@@ -3,6 +3,7 @@ the 25 fused candidates."""
 
 from __future__ import annotations
 
+import itertools
 import threading
 from abc import ABC, abstractmethod
 
@@ -24,11 +25,11 @@ class LexicalReranker(Reranker):
 
     def scores(self, query: str, docs: list[str]) -> list[float]:
         q = tokenize(query)
-        qs, qb = set(q), set(zip(q, q[1:], strict=False))
+        qs, qb = set(q), set(itertools.pairwise(q))
         out = []
         for d in docs:
             t = tokenize(d)
-            ts, tb = set(t), set(zip(t, t[1:], strict=False))
+            ts, tb = set(t), set(itertools.pairwise(t))
             cov = len(qs & ts) / (len(qs) or 1)
             big = len(qb & tb) / (len(qb) or 1)
             out.append(round(0.7 * cov + 0.3 * big, 6))

@@ -28,7 +28,8 @@ class Chunk:
 
 def _sections(text: str) -> list[tuple[str, list[str]]]:
     out: list[tuple[str, list[str]]] = []
-    heading, paras = "", []
+    heading: str = ""
+    paras: list[str] = []
     for block in re.split(r"\n\s*\n", text.strip()):
         block = block.strip()
         if not block:
@@ -47,8 +48,9 @@ def _sections(text: str) -> list[tuple[str, list[str]]]:
     return out
 
 
-def chunk_prose(text: str, *, min_tokens: int = MIN_TOKENS, max_tokens: int = MAX_TOKENS,
-                overlap: float = OVERLAP) -> list[Chunk]:
+def chunk_prose(
+    text: str, *, min_tokens: int = MIN_TOKENS, max_tokens: int = MAX_TOKENS, overlap: float = OVERLAP
+) -> list[Chunk]:
     chunks: list[Chunk] = []
     for heading, paras in _sections(text):
         cur: list[str] = []

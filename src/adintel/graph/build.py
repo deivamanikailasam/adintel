@@ -10,7 +10,7 @@ Specialists never call each other; each one returns to the Orchestrator.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from langgraph.graph import END, START, StateGraph
 
@@ -47,15 +47,23 @@ def _route(state: RunState) -> str:
 
 def build_graph(db: Database, ctx_factory: Callable[[], AgentContext]) -> Any:
     g: StateGraph[RunState] = StateGraph(RunState)
-    for agent in (AgentName.INGESTION, AgentName.DATA_QUALITY, AgentName.ORCHESTRATOR, *SPECIALISTS,
-                  AgentName.GUARDRAIL):
-        g.add_node(str(agent), make_node(agent, ctx_factory))
-    g.add_node("finalize", lambda s: finalize(db, s))
+    for agent in (
+        AgentName.INGESTION,
+        AgentName.DATA_QUALITY,
+        AgentName.ORCHESTRATOR,
+        *SPECIALISTS,
+        AgentName.GUARDRAIL,
+    ):
+        g.add_node(str(agent), cast(Any, make_node(agent, ctx_factory)))
+    g.add_node("finalize", cast(Any, lambda s: finalize(db, s)))
     g.add_conditional_edges(START, _entry, {"ingestion": "ingestion", "orchestrator": "orchestrator"})
     g.add_conditional_edges("ingestion", _after_ingestion, {"data_quality": "data_quality", "finalize": "finalize"})
     g.add_conditional_edges("data_quality", _after_dq, {"orchestrator": "orchestrator", "finalize": "finalize"})
-    g.add_conditional_edges("orchestrator", _route, {**{str(a): str(a) for a in SPECIALISTS},
-                                                     "guardrail": "guardrail", "finalize": "finalize"})
+    g.add_conditional_edges(
+        "orchestrator",
+        _route,
+        {**{str(a): str(a) for a in SPECIALISTS}, "guardrail": "guardrail", "finalize": "finalize"},
+    )
     for a in SPECIALISTS:
         g.add_edge(str(a), "orchestrator")
     g.add_edge("guardrail", "finalize")

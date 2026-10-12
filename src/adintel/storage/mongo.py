@@ -115,7 +115,7 @@ class MongoCollection(Collection):
                     out.append((d, 2 * score - 1))
                 out.sort(key=lambda t: (-t[1], str(t[0].get("chunk_id", ""))))
                 return out
-            except Exception as exc:  # noqa: BLE001 - any server-side failure falls back below
+            except Exception as exc:
                 if self._vector_mode == "atlas":
                     raise
                 log.warning("vector_search_fallback", extra={"reason": str(exc)[:200]})
@@ -140,7 +140,7 @@ class MongoDatabase(Database):
         try:
             self._client.admin.command("ping")
             return True
-        except Exception:  # noqa: BLE001
+        except Exception:
             return False
 
     def ensure_vector_index(self, collection: str, dimensions: int, filter_paths: Sequence[str]) -> None:
@@ -161,7 +161,7 @@ class MongoDatabase(Database):
                 SearchIndexModel(definition={"fields": fields}, name=VECTOR_INDEX_NAME, type="vectorSearch")
             )
             log.info("vector_index_created", extra={"collection": collection, "dims": dimensions})
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             if self._vector_mode == "atlas":
                 raise
             log.warning("vector_index_unavailable", extra={"reason": str(exc)[:200]})

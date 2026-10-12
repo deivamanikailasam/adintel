@@ -110,12 +110,21 @@ def test_kill_switch_stops_the_next_dispatch(engine, db, monkeypatch):
     orig = anomaly.run
 
     def flip(state, ctx):
-        KillSwitches(db).set("brand", "brightwave/urban-roast", True, actor_id="u_admin", reason="client call",
-                             tenant_id_for_audit="brightwave")
+        KillSwitches(db).set(
+            "brand",
+            "brightwave/urban-roast",
+            True,
+            actor_id="u_admin",
+            reason="client call",
+            tenant_id_for_audit="brightwave",
+        )
         return orig(state, ctx)
 
-    monkeypatch.setitem(__import__("adintel.graph.nodes", fromlist=["AGENTS"]).AGENTS,
-                        __import__("adintel.domain.enums", fromlist=["AgentName"]).AgentName.ANOMALY, flip)
+    monkeypatch.setitem(
+        __import__("adintel.graph.nodes", fromlist=["AGENTS"]).AGENTS,
+        __import__("adintel.domain.enums", fromlist=["AgentName"]).AgentName.ANOMALY,
+        flip,
+    )
     s = engine.execute("brightwave", run_id)
     assert s.status == RunStatus.KILLED and "analyst" not in {str(t.agent) for t in s.traces}
 

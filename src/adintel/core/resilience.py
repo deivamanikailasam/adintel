@@ -16,13 +16,20 @@ from typing import TypeVar
 T = TypeVar("T")
 
 
-class CircuitOpen(Exception):  # noqa: N818
+class CircuitOpen(Exception):
     pass
 
 
 class CircuitBreaker:
-    def __init__(self, name: str, *, failure_threshold: int = 5, window_seconds: float = 60.0,
-                 reset_seconds: float = 30.0, clock: Callable[[], float] = time.monotonic) -> None:
+    def __init__(
+        self,
+        name: str,
+        *,
+        failure_threshold: int = 5,
+        window_seconds: float = 60.0,
+        reset_seconds: float = 30.0,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
         self.name = name
         self.failure_threshold = failure_threshold
         self.window_seconds = window_seconds
@@ -91,10 +98,16 @@ def reset_breakers() -> None:
         _breakers.clear()
 
 
-def retry_call(fn: Callable[[], T], *, retries: int, transient: tuple[type[BaseException], ...],
-               base_delay: float = 0.25, max_delay: float = 4.0,
-               sleep: Callable[[float], None] = time.sleep,
-               on_retry: Callable[[int, BaseException], None] | None = None) -> T:
+def retry_call(
+    fn: Callable[[], T],
+    *,
+    retries: int,
+    transient: tuple[type[BaseException], ...],
+    base_delay: float = 0.25,
+    max_delay: float = 4.0,
+    sleep: Callable[[float], None] = time.sleep,
+    on_retry: Callable[[int, BaseException], None] | None = None,
+) -> T:
     """Call ``fn``; on a transient error wait ``uniform(0, min(max, base*2**n))`` and retry."""
     attempt = 0
     while True:

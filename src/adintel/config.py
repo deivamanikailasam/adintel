@@ -20,7 +20,7 @@ from adintel.core.errors import ConfigError
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 _DEV_JWT_SECRET = "dev-only-jwt-secret-change-me-0123456789"  # noqa: S105 - local default, rejected outside local
-_DEV_APPROVAL_KEY = "dev-only-approval-signing-key-0123456789"  # noqa: S105 - local default, rejected outside local
+_DEV_APPROVAL_KEY = "dev-only-approval-signing-key-0123456789"
 
 
 class Settings(BaseSettings):
@@ -109,7 +109,7 @@ class Settings(BaseSettings):
             if self.llm_provider == "mock":
                 problems.append("ADINTEL_LLM_PROVIDER=mock is for tests only")
             if problems:
-                raise ConfigError("unsafe configuration for %s: %s" % (self.env, "; ".join(problems)))
+                raise ConfigError(f"unsafe configuration for {self.env}: " + "; ".join(problems))
 
 
 @lru_cache(maxsize=1)

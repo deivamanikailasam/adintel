@@ -19,6 +19,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable, Iterator
 from typing import Any
 
+from adintel.llm.providers.base import LLMProvider
 from adintel.llm.types import CompletionRequest, CompletionResult, Message, TierConfig, estimate_tokens
 
 Handler = Callable[[dict[str, Any], list[Message], TierConfig], str]
@@ -47,7 +48,7 @@ def parse_context(messages: list[Message]) -> dict[str, Any]:
     return {}
 
 
-class MockProvider:
+class MockProvider(LLMProvider):
     _shared: MockProvider | None = None
     _lock = threading.Lock()
 
@@ -84,8 +85,15 @@ class MockProvider:
 
         if tier.name in self._tier_down:
             raise LLMUnavailable(f"mock: tier {tier.name} is down")
-        keys = [k for k in (f"{tier.name}:{req.metadata.get('schema')}", req.metadata.get("schema"),
-                            req.metadata.get("prompt_id")) if k]
+        keys = [
+            k
+            for k in (
+                f"{tier.name}:{req.metadata.get('schema')}",
+                req.metadata.get("schema"),
+                req.metadata.get("prompt_id"),
+            )
+            if k
+        ]
         with self._mu:
             self.requests.append((tier.name, req))
             for k in keys:
@@ -103,11 +111,15 @@ class MockProvider:
 
     def complete(self, req: CompletionRequest, tier: TierConfig) -> CompletionResult:
         text = self._respond(req, tier)
-        return CompletionResult(text=text, tokens_in=estimate_tokens("".join(m.content for m in req.messages)),
-                                tokens_out=estimate_tokens(text), latency_ms=1.0, model_id=tier.model_id)
+        return CompletionResult(
+            text=text,
+            tokens_in=estimate_tokens("".join(m.content for m in req.messages)),
+            tokens_out=estimate_tokens(text),
+            latency_ms=1.0,
+            model_id=tier.model_id,
+        )
 
     def stream(self, req: CompletionRequest, tier: TierConfig) -> Iterator[str | CompletionResult]:
         result = self.complete(req, tier)
-        for word in re.findall(r"\S+\s*", result.text):
-            yield word
+        yield from re.findall(r"\S+\s*", result.text)
         yield result
