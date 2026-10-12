@@ -62,6 +62,15 @@ class Settings(BaseSettings):
     secrets: Literal["file", "aws"] = "file"
     secrets_dir: Path = REPO_ROOT / "secrets"
 
+    # --- audit archive (write-once copy of the hash chain) ----------------------------------------
+    # Always written to a local directory (files made read-only); additionally uploaded to an
+    # S3-compatible bucket with Object Lock when a bucket is set (MinIO locally, S3 in production).
+    audit_archive_dir: Path = REPO_ROOT / "var" / "audit-archive"
+    audit_archive_s3_bucket: str | None = None
+    audit_archive_s3_endpoint: str | None = None  # e.g. http://localhost:9000 for MinIO; None = AWS
+    audit_archive_lock_mode: Literal["GOVERNANCE", "COMPLIANCE"] = "GOVERNANCE"
+    audit_archive_lock_days: int = 2557  # 7 years
+
     # --- auth & approvals -------------------------------------------------------------------------
     jwt_secret: str = _DEV_JWT_SECRET
     jwt_issuer: str = "adintel-local"

@@ -53,7 +53,10 @@ implementation through configuration (`docs/01-architecture/aws-to-local-mapping
    Consider a time-series collection for `metrics_daily` (4–6× smaller, faster range scans).
 3. Grant the services a database role with **insert + find only on `audit_log`** (no update/delete).
 4. **S3:** artefacts bucket (prompt archive 13 months, reports, KB sources; Glacier IR after 90 days) and
-   the **audit bucket with Object Lock (compliance, 7 years)**; schedule the daily audit export.
+   the **audit bucket with Object Lock (compliance, 7 years)**. The archive job is the same code as locally: set
+   `ADINTEL_AUDIT_ARCHIVE_S3_BUCKET=<bucket>`, leave `ADINTEL_AUDIT_ARCHIVE_S3_ENDPOINT` unset,
+   `ADINTEL_AUDIT_ARCHIVE_LOCK_MODE=COMPLIANCE`, `ADINTEL_AUDIT_ARCHIVE_LOCK_DAYS=2557`; the scheduler's task role needs
+   `s3:PutObject` + `s3:PutObjectRetention` on that bucket only.
 5. **SQS:** `agent-runs` (visibility 900 s) and `executions.fifo`, each with a DLQ (maxReceiveCount 5) —
    created by Terraform. Set `ADINTEL_QUEUE=sqs`.
 6. **ElastiCache Redis** (multi-AZ, TLS) for the semantic cache, rate-limit buckets and SSE reconnect
@@ -117,7 +120,8 @@ models; cost per run path within ±15% of the accepted baseline.
 2. Langfuse **self-hosted inside the VPC** (traces contain client ad data, ADR D-09).
 3. Alarms (Terraform `observability.tf` + `deploy/prometheus/alerts.yml` translated): P1 → PagerDuty 24/7,
    P2 → PagerDuty business hours, P3 → Slack.
-4. Schedule the daily jobs (reconciliation, audit verification, DLQ, cost, expiry, narratives) — the
+4. Schedule the daily jobs (reconciliation, audit verification, audit archive, retention purge, outcome tracking,
+   DLQ, cost, expiry, narratives, weekly triage) — the
    scheduler service, or EventBridge → ECS RunTask.
 5. **DR test with a real restore** before go-live (`docs/12-operations/disaster-recovery.md`).
 6. Walk every P1 runbook once in staging (`docs/12-operations/runbooks.md`).
@@ -184,7 +188,8 @@ are canaried separately at 5% for 48 hours.**
 - [ ] Approval signing key in Secrets Manager (prefer KMS asymmetric signing — ADR L-11 revisit)
 - [ ] Executor task role: write secrets allowed, **all model APIs explicitly denied**; worker/api: write secrets denied
 - [ ] Atlas PrivateLink only; KMS; PITR; audit role insert/find only; vector index at the production dimension
-- [ ] S3 Object Lock audit export running daily; `adintel verify-audit` green
+- [ ] S3 Object Lock audit archive running nightly; `adintel verify-audit` and `adintel audit-archive --verify` green
+- [ ] Retention purge running (`adintel purge --dry-run` reviewed by the privacy officer first)
 - [ ] Every tier pinned to an exact model ID; adapters signed and hash-pinned; eval report attached
 - [ ] All hard eval thresholds at 100% / 0 on production models; baseline accepted and committed
 - [ ] k6 Monday-peak p95 within SLO; chat p95 first token < 2.5 s

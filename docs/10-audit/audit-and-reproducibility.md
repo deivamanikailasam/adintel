@@ -56,5 +56,20 @@ incidents. The `actor_id` always names a person (`user_id`) or an agent **and it
 | Control | Local | Production |
 |---------|-------|-----------|
 | Append-only | No update/delete in code | + Mongo role with `insert`/`find` only on `audit_log` |
-| Tamper evidence | Hash chain + daily verify | + daily export to S3 with Object Lock (compliance mode, 7 years) |
-| Retention | 7 years (catalogue) | Same; legal hold supported by Object Lock |
+| Tamper evidence | Hash chain + daily verify + nightly write-once archive (read-only files, and MinIO with Object Lock in Compose) | Same code → S3 with Object Lock (compliance mode, 7 years) |
+| Retention | 7 years (catalogue); the purge job never deletes audit entries | Same; legal hold supported by Object Lock |
+
+## The write-once archive (`src/adintel/audit/archive.py`)
+
+A hash chain proves entries weren't edited *one at a time*. Someone with database write access could
+still rewrite an entry and recompute every hash after it — the chain would verify. The archive closes that
+gap: every night at 03:45 UTC new entries are copied as a segment (`<tenant>/000144-000150.jsonl` +
+`.sha256`) that is made read-only and, when `ADINTEL_AUDIT_ARCHIVE_S3_BUCKET` is set, uploaded with Object
+Lock retention. The same job then compares database and archive and pages security (P1) on any
+difference. Test: `tests/unit/test_archive_backup.py::test_archive_detects_a_consistently_rewritten_database`.
+
+| | Local (bare) | Local (Compose) | Production |
+|-|--------------|-----------------|-----------|
+| Where | `var/audit-archive/` (0444 files) | + MinIO bucket `adintel-audit`, Object Lock GOVERNANCE 30 days | S3 bucket from `infra/terraform/modules/adintel/data.tf`, COMPLIANCE, 2,557 days |
+| Commands | `adintel audit-archive` · `adintel audit-archive --verify` | same | same (scheduler) |
+| Settings | `ADINTEL_AUDIT_ARCHIVE_DIR` | `ADINTEL_AUDIT_ARCHIVE_S3_BUCKET`, `_S3_ENDPOINT`, `_LOCK_MODE`, `_LOCK_DAYS` | endpoint unset (AWS), `LOCK_MODE=COMPLIANCE`, `LOCK_DAYS=2557`, task-role IAM instead of keys |

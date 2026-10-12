@@ -46,3 +46,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0034 | Enterprise single sign-on: OIDC token verification against JWKS, Keycloak as the local identity provider, PKCE login in the UI | [0034](docs/changelog/0034-oidc-sso.md) |
 | 0035 | Feedback loop: 14-day outcome tracking (actual vs predicted), per-tenant/brand feature flags, weekly triage report | [0035](docs/changelog/0035-feedback-loop.md) |
 | 0036 | Privacy and data lifecycle: retention purge with legal hold, data-subject export and erasure, tenant offboarding with verifiable export bundles | [0036](docs/changelog/0036-privacy-lifecycle.md) |
+| 0037 | Write-once audit archive (local files + MinIO Object Lock, S3 in prod) with database comparison; backup, restore and restore-drill tooling | [0037](docs/changelog/0037-audit-archive-backup.md) |

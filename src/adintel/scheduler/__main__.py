@@ -12,6 +12,7 @@
 | Cost anomaly | daily 23:30 UTC | P3 on > 2× day-over-day |
 | Outcome tracking | daily 05:00 UTC | Actual vs predicted impact, 14 days after execution |
 | Weekly triage | Mon 09:00 UTC | What humans should look at next week |
+| Audit archive | daily 03:45 UTC | Write-once copy of the chain; P1 if database and archive disagree |
 | Retention purge | daily 02:30 UTC | Delete what the catalogue says we no longer need (legal hold respected) |
 """
 
@@ -24,6 +25,7 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 
+from adintel.audit.archive import archive_job
 from adintel.config import get_settings
 from adintel.feedback.outcomes import outcomes_job
 from adintel.feedback.triage import triage_job
@@ -66,6 +68,7 @@ def build(scheduler: BlockingScheduler) -> None:
     scheduler.add_job(jobs.expire_recommendations_job, CronTrigger(minute=5), args=[db], id="expire")
     scheduler.add_job(jobs.dlq_check_job, CronTrigger(minute="*/5"), id="dlq")
     scheduler.add_job(jobs.cost_anomaly_job, CronTrigger(hour=23, minute=30, timezone="UTC"), args=[db], id="cost")
+    scheduler.add_job(archive_job, CronTrigger(hour=3, minute=45, timezone="UTC"), args=[db], id="audit-archive")
     scheduler.add_job(retention_job, CronTrigger(hour=2, minute=30, timezone="UTC"), args=[db], id="retention")
     scheduler.add_job(outcomes_job, CronTrigger(hour=5, minute=0, timezone="UTC"), args=[db], id="outcomes")
     scheduler.add_job(

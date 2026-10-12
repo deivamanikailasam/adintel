@@ -7,7 +7,7 @@ RUN groupadd -r adintel && useradd -r -g adintel -d /app adintel
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
-RUN pip install --upgrade pip && pip install ".[ml]"
+RUN pip install --upgrade pip && pip install ".[ml,aws]"   # aws: boto3 for the Object Lock audit archive (MinIO locally)
 COPY config ./config
 COPY prompts ./prompts
 COPY evals ./evals

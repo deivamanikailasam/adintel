@@ -47,3 +47,7 @@ frontend/.angular/
 .DS_Store
 .idea/
 .vscode/
+
+# Operator output
+backups/
+offboarding/

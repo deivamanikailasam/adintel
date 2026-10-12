@@ -97,6 +97,7 @@ docker compose -f deploy/docker-compose.yml ps     # all services "healthy"/"run
 | Alertmanager | http://localhost:9093 | — |
 | Grafana (4 dashboards in folder "AdIntel") | http://localhost:3001 | `admin` / `adintel-local` |
 | Keycloak (enterprise SSO stand-in for Cognito, realm `adintel`) | http://localhost:8180 | `admin` / `adintel-local` |
+| MinIO (write-once audit archive, stand-in for S3 Object Lock) | http://localhost:9001 | `adintel` / `adintel-local` |
 
 Switch AdIntel to the real services in `.env`:
 
@@ -190,6 +191,17 @@ make gate           # promotion gate vs evals/baseline.json
 ```
 
 Use `--sample 3` for a quick pass. See `docs/07-evaluation/evaluation.md`.
+
+## 8b. Back up, archive, and practise a restore
+
+```bash
+.venv/bin/adintel audit-archive            # copy new audit entries to write-once storage
+.venv/bin/adintel audit-archive --verify   # does the database still match the archive?
+scripts/backup.sh                          # native Mongo/Redis/secrets backup → backups/<timestamp>/
+.venv/bin/adintel backup --out backups     # portable backup + automatic restore drill
+```
+
+See [disaster recovery](../12-operations/disaster-recovery.md) for restores.
 
 ## 9. Everyday commands
 

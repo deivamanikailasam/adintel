@@ -65,7 +65,8 @@ throughput fallback. No manual action is needed for safety.
 ## Audit hash chain break (P1)
 
 1. Identify the first broken `seq` (`GET /admin/audit/verify`).
-2. Compare against the S3 Object Lock export (production) to find what changed.
+2. Compare against the write-once archive to find what changed: `adintel audit-archive --verify` lists every
+   `seq` whose database entry differs from (or is missing versus) the archive.
 3. Treat as a security incident; preserve evidence; rotate credentials of anyone with DB write access.
 
 ## Privacy request or agency offboarding

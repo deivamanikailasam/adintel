@@ -1,5 +1,6 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
-privacy-export, privacy-erase, offboard."""
+privacy-export, privacy-erase, offboard,
+audit-archive, backup, restore, restore-drill."""
 
 from __future__ import annotations
 
@@ -200,6 +201,56 @@ def cmd_offboard(args: argparse.Namespace) -> None:
     )
 
 
+def cmd_audit_archive(args: argparse.Namespace) -> None:
+    from adintel.audit.archive import archive_job, compare_with_database
+    from adintel.storage import get_database
+    from adintel.storage.tenant_repo import SystemRepo
+
+    db = get_database()
+    if not args.verify:
+        out = archive_job(db)
+        _print(out)
+        sys.exit(1 if out["mismatched"] else 0)
+    tenants = sorted({r["tenant_id"] for r in SystemRepo(db, "audit_log", purpose="audit archive").find({})})
+    checks = [compare_with_database(db, t).__dict__ for t in tenants]
+    _print(checks)
+    sys.exit(0 if all(c["ok"] for c in checks) else 1)
+
+
+def cmd_backup(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from adintel.ops.backup import backup, restore_drill
+    from adintel.storage import get_database
+
+    out = backup(get_database(), Path(args.out))
+    if not args.no_drill:
+        out["drill"] = restore_drill(Path(out["path"]))
+    _print(out)
+    sys.exit(0 if out.get("drill", {"passed": True})["passed"] else 1)
+
+
+def cmd_restore(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from adintel.ops.backup import restore
+    from adintel.storage import get_database
+
+    out = restore(get_database(), Path(args.source), force=args.force)
+    _print(out)
+    sys.exit(0 if out["audit_chains_ok"] else 1)
+
+
+def cmd_restore_drill(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from adintel.ops.backup import restore_drill
+
+    out = restore_drill(Path(args.source))
+    _print(out)
+    sys.exit(0 if out["passed"] else 1)
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -263,6 +314,20 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--actor", default="cli:operator")
     sp.add_argument("--delete-legal-records", action="store_true", help="also delete approvals/executions/audit")
     sp.set_defaults(fn=cmd_offboard)
+    sp = sub.add_parser("audit-archive", help="copy new audit entries to write-once storage, or --verify")
+    sp.add_argument("--verify", action="store_true", help="compare the database with the archive")
+    sp.set_defaults(fn=cmd_audit_archive)
+    sp = sub.add_parser("backup", help="logical backup of every collection (+ automatic restore drill)")
+    sp.add_argument("--out", default="backups")
+    sp.add_argument("--no-drill", action="store_true")
+    sp.set_defaults(fn=cmd_backup)
+    sp = sub.add_parser("restore", help="restore a logical backup (refuses a non-empty database without --force)")
+    sp.add_argument("source")
+    sp.add_argument("--force", action="store_true")
+    sp.set_defaults(fn=cmd_restore)
+    sp = sub.add_parser("restore-drill", help="prove a backup restores cleanly, without touching live data")
+    sp.add_argument("source")
+    sp.set_defaults(fn=cmd_restore_drill)
     args = p.parse_args(argv)
     args.fn(args)
 

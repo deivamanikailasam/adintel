@@ -44,7 +44,7 @@ abuse is structurally impossible rather than prompt-prevented. Tests:
 | Model calls | PII redaction before any call; untrusted fencing; schema output; hashed archive | `llm/gateway.py`, `security/pii.py`, `security/fencing.py` |
 | Code execution | AST allow-list, separate process, CPU/memory/file limits, no network (Docker mode), read-only tenant-scoped data | `sandbox/` |
 | Approvals | Signed (HMAC) records, typed exposure, four-eyes, snapshot hash, expiry, replay protection | `approvals/`, `executor/` |
-| Audit | Append-only hash chain, daily verification, S3 Object Lock in prod | `audit/chain.py` |
+| Audit | Append-only hash chain, daily verification, nightly write-once archive compared with the database (MinIO Object Lock locally, S3 Object Lock in prod) | `audit/chain.py`, `audit/archive.py` |
 | Supply chain | Pinned model IDs and adapter hashes; signed adapters; SHA-tagged images; dependency + image scanning | `config/models.yaml`, `finetune/sign_adapter.py`, CI |
 | Web | Strict CSP, no `innerHTML` for model output (Angular interpolation only), security headers, CORS allow-list, WAF + rate limits in prod | `api/app.py`, `frontend/src/index.html` |
 | Abuse / cost | Per-tenant rate limits and daily cost caps, per-run budget, kill switches | `harness/admission.py`, `harness/budget.py` |
