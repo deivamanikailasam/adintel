@@ -128,3 +128,16 @@ def _report(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> s
         {"key": "next_steps", "title": "Next steps", "body": "We'll review progress together next week."},
     ]
     return json.dumps({"title": f"{f.get('brand')} weekly report", "sections": sections})
+
+
+@register("SafetyVerdict")
+def _safety(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
+    text = messages[-1].content.lower()
+    cats = []
+    if any(w in text for w in ("kill", "hate", "illegal")):
+        cats.append("S5")
+    if "without approval" in text or "skip approval" in text:
+        cats.append("S6")
+    if "competitor's strategy" in text or "other client" in text:
+        cats.append("S1")
+    return json.dumps({"safe": not cats, "categories": cats, "reason": "mock classifier"})

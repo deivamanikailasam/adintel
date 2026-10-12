@@ -233,7 +233,8 @@ class LLMGateway:
                                 start=now - timedelta(milliseconds=rec["latency_ms"] or 0), end=now)
         return call_id
 
-    def _call(self, agent: str, tier: TierConfig, req: CompletionRequest) -> CompletionResult:
+    def _call(self, agent: str, tier: TierConfig, req: CompletionRequest,
+              retries: int = TRANSIENT_RETRIES) -> CompletionResult:
         provider = get_provider(tier.provider)
 
         def on_retry(n: int, exc: BaseException) -> None:
@@ -243,14 +244,15 @@ class LLMGateway:
             c = cost_of(tier, est, 0)
             self.meter.charge(est, 0, c)
 
-        return retry_call(lambda: provider.complete(req, tier), retries=TRANSIENT_RETRIES,
+        return retry_call(lambda: provider.complete(req, tier), retries=retries,
                           transient=(LLMTimeout, LLMUnavailable), on_retry=on_retry)
 
     # ------------------------------------------------------------------------------------------------
     def structured(self, *, agent: str, prompt_id: str, schema: type[T], context: Any,
                    untrusted: dict[str, Any] | None = None, task: str | None = None,
                    retrieved_doc_ids: list[str] | None = None, tier_override: str | None = None,
-                   allow_fallback: bool = True) -> StructuredResult[T]:
+                   allow_fallback: bool = True, max_repairs: int = MAX_REPAIRS,
+                   transient_retries: int = TRANSIENT_RETRIES) -> StructuredResult[T]:
         cfg = self.registry.agents[agent]
         prompt = get_prompts().get(prompt_id)
         chain = self.registry.chain(tier_override or cfg.tier)
@@ -269,7 +271,7 @@ class LLMGateway:
                 metrics.LLM_FALLBACKS.labels(from_tier=chain[idx - 1].name, to_tier=tier.name).inc()
                 log.warning("llm_fallback", extra={"agent": agent, "from": chain[idx - 1].name, "to": tier.name})
             convo = list(messages)
-            for attempt in range(1, MAX_REPAIRS + 2):
+            for attempt in range(1, max_repairs + 2):
                 est = estimate_tokens("".join(m.content for m in convo))
                 self.meter.precheck(tokens=est + cfg.max_output_tokens, cost=cost_of(tier, est, cfg.max_output_tokens))
                 req = CompletionRequest(messages=convo, temperature=cfg.temperature,
@@ -277,7 +279,7 @@ class LLMGateway:
                                         seed=self._seed(agent),
                                         metadata={"schema": schema.__name__, "agent": agent, "prompt_id": prompt_id})
                 try:
-                    result = self._call(agent, tier, req)
+                    result = self._call(agent, tier, req, retries=transient_retries)
                 except (LLMTimeout, LLMUnavailable) as exc:
                     metrics.LLM_ERRORS.labels(tier=tier.name, kind=type(exc).__name__).inc()
                     est_cost = cost_of(tier, est, 0)
@@ -305,7 +307,7 @@ class LLMGateway:
                                                  temperature=cfg.temperature, schema_name=schema.__name__,
                                                  retrieved=retrieved_doc_ids or [], cost=cost))
                     last_error = LLMValidationError(err)
-                    if attempt <= MAX_REPAIRS:
+                    if attempt <= max_repairs:
                         metrics.LLM_REPAIRS.labels(schema=schema.__name__, attempt=str(attempt)).inc()
                         convo = [*convo, Message("assistant", result.text[:4000]), Message(
                             "user", "Your previous output failed validation with these errors:\n" + err
