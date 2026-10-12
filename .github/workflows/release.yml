@@ -1,0 +1,62 @@
+# On merge to main: SHA-tagged images to ECR (never :latest) → staging via Terraform → 40-scenario E2E
+# golden runs + full eval suite on staging models (gate) → k6 Monday-peak load test (gate on p95) →
+# smoke tests. Promotion to production is a MANUAL approval (GitHub environment protection), then
+# blue/green on ECS with the ALB shifting 10% → 50% → 100% and automatic rollback.
+name: release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  id-token: write   # OIDC to AWS — no long-lived keys in GitHub
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs: { image: "${{ steps.meta.outputs.image }}" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ secrets.AWS_SHARED_SERVICES_ROLE }}", aws-region: us-east-1 }
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+      - id: meta
+        run: echo "image=${{ steps.ecr.outputs.registry }}/adintel:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+      - run: docker build -t ${{ steps.meta.outputs.image }} . && docker push ${{ steps.meta.outputs.image }}
+
+  staging:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ secrets.AWS_STAGING_DEPLOY_ROLE }}", aws-region: us-east-1 }
+      - uses: hashicorp/setup-terraform@v3
+      - working-directory: infra/terraform/envs/staging
+        run: terraform init && terraform apply -auto-approve -var "image=${{ needs.build.outputs.image }}"
+      - name: golden E2E + full evals against staging models (gate)
+        run: |
+          pip install -e ".[dev,aws]"
+          ADINTEL_ENV=staging python -m adintel.evals.runner --provider mlx --out evals/reports
+          python -m adintel.evals.gate
+        env: { ADINTEL_LLM_PROVIDER: bedrock }
+      - name: k6 Monday-peak load test (gate on p95)
+        uses: grafana/k6-action@v0.3.1
+        with: { filename: tests/load/monday_peak.js, flags: "-e BASE=${{ vars.STAGING_API_URL }}" }
+      - name: smoke
+        run: curl -sf ${{ vars.STAGING_API_URL }}/ready
+
+  production:
+    needs: [build, staging]
+    runs-on: ubuntu-latest
+    environment: production        # required reviewers = the named human sign-off
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with: { role-to-assume: "${{ secrets.AWS_PROD_DEPLOY_ROLE }}", aws-region: us-east-1 }
+      - uses: hashicorp/setup-terraform@v3
+      - name: blue/green deploy (CodeDeploy shifts 10% → 50% → 100%, auto-rollback alarms attached)
+        working-directory: infra/terraform/envs/prod
+        run: terraform init && terraform apply -auto-approve -var "image=${{ needs.build.outputs.image }}"
