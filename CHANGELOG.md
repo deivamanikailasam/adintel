@@ -35,3 +35,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0023 | Angular 18 frontend: live run timeline, explainability trace, approval screen, chat, governance | [0023](docs/changelog/0023-frontend.md) |
 | 0024 | Local infrastructure: Docker image, Compose stack (Atlas Local, Redis, Langfuse, Jaeger, Prometheus, Alertmanager, Grafana), alert rules, dashboards | [0024](docs/changelog/0024-local-infrastructure.md) |
 | 0025 | mlx-lm serving scripts for the two Qwen models and the step-by-step local setup guide | [0025](docs/changelog/0025-mlx-and-local-setup.md) |
+| 0026 | LoRA fine-tuning pipeline for the Report model (mlx_lm.lora), adapter signing, base-vs-adapter-vs-frontier evaluation | [0026](docs/changelog/0026-finetuning.md) |

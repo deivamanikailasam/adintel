@@ -19,7 +19,7 @@ _FLOATING = ("latest", "*", "main", "head")
 def adapter_digest(path: Path) -> str:
     """SHA-256 over every file in an adapter directory (sorted, name + content)."""
     h = hashlib.sha256()
-    files = sorted(p for p in path.rglob("*") if p.is_file()) if path.is_dir() else [path]
+    files = sorted(p for p in path.rglob("*") if p.is_file() and p.name != "manifest.json") if path.is_dir() else [path]
     for p in files:
         h.update(str(p.relative_to(path) if path.is_dir() else p.name).encode())
         h.update(p.read_bytes())
@@ -64,16 +64,25 @@ class ModelRegistry:
                     raise ConfigError(f"tier {name}: adapter {a_path} hash mismatch — refusing to start")
             pricing = t.get("pricing", {})
             self.tiers[name] = TierConfig(
-                name=name, provider=settings.llm_provider if settings.llm_provider != "openai_compat"
+                name=name,
+                provider=settings.llm_provider
+                if settings.llm_provider != "openai_compat"
                 else t.get("provider", "openai_compat"),
-                base_url=base_url, model_id=model_id, context_window=int(t.get("context_window", 32768)),
+                base_url=base_url,
+                model_id=model_id,
+                context_window=int(t.get("context_window", 32768)),
                 timeout_seconds=float(t.get("timeout_seconds", 60)),
                 connect_timeout_seconds=float(t.get("connect_timeout_seconds", 5)),
-                max_output_tokens=int(t.get("max_output_tokens", 1024)), fallback=t.get("fallback"),
-                price_input=float(pricing.get("input", 0)), price_output=float(pricing.get("output", 0)),
-                price_cached_input=float(pricing.get("cached_input", 0)), adapter_path=a_path,
-                adapter_sha256=a_sha, supports_seed=bool(t.get("supports_seed", False)),
-                extra_body=dict(t.get("extra_body") or {}), owner=str(t.get("owner", "")),
+                max_output_tokens=int(t.get("max_output_tokens", 1024)),
+                fallback=t.get("fallback"),
+                price_input=float(pricing.get("input", 0)),
+                price_output=float(pricing.get("output", 0)),
+                price_cached_input=float(pricing.get("cached_input", 0)),
+                adapter_path=a_path,
+                adapter_sha256=a_sha,
+                supports_seed=bool(t.get("supports_seed", False)),
+                extra_body=dict(t.get("extra_body") or {}),
+                owner=str(t.get("owner", "")),
                 production_equivalent=str(t.get("production_equivalent", "")),
             )
         for name, t in self.tiers.items():
@@ -85,9 +94,13 @@ class ModelRegistry:
         for agent, a in raw["agents"].items():
             if a["tier"] not in self.tiers:
                 raise ConfigError(f"agent {agent}: unknown tier {a['tier']}")
-            self.agents[agent] = AgentModelConfig(agent=agent, tier=a["tier"], temperature=float(a["temperature"]),
-                                                  max_input_tokens=int(a["max_input_tokens"]),
-                                                  max_output_tokens=int(a["max_output_tokens"]))
+            self.agents[agent] = AgentModelConfig(
+                agent=agent,
+                tier=a["tier"],
+                temperature=float(a["temperature"]),
+                max_input_tokens=int(a["max_input_tokens"]),
+                max_output_tokens=int(a["max_output_tokens"]),
+            )
 
     def chain(self, tier: str) -> list[TierConfig]:
         """Tier plus its fallbacks, without cycles."""
@@ -99,11 +112,21 @@ class ModelRegistry:
         return out
 
     def describe(self) -> dict[str, Any]:
-        return {"registry_version": self.version,
-                "tiers": {n: {"model_id": t.model_id, "base_url": t.base_url, "adapter_sha256": t.adapter_sha256,
-                              "fallback": t.fallback, "owner": t.owner,
-                              "production_equivalent": t.production_equivalent} for n, t in self.tiers.items()},
-                "agents": {n: vars(a) for n, a in self.agents.items()}}
+        return {
+            "registry_version": self.version,
+            "tiers": {
+                n: {
+                    "model_id": t.model_id,
+                    "base_url": t.base_url,
+                    "adapter_sha256": t.adapter_sha256,
+                    "fallback": t.fallback,
+                    "owner": t.owner,
+                    "production_equivalent": t.production_equivalent,
+                }
+                for n, t in self.tiers.items()
+            },
+            "agents": {n: vars(a) for n, a in self.agents.items()},
+        }
 
 
 _registry: ModelRegistry | None = None
