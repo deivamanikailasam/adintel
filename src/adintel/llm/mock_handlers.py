@@ -151,3 +151,21 @@ def _orchestrator(ctx: dict[str, Any], messages: list[Message], tier: TierConfig
             f"High severity {high[0]['metric']} anomaly with ${high[0]['spend_at_risk_weekly']:,.0f}/week at risk, "
             "trustworthy data and no root cause yet: investigate.")})
     return json.dumps({"next_action": "report", "reasoning": "Remaining anomalies are immaterial."})
+
+
+@register("Route")
+def _route(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
+    q = messages[-1].content.lower()
+    complex_words = ("why", "compare", "strategy", "should we", "explain", "diagnos")
+    return json.dumps({"route": "complex" if any(w in q for w in complex_words) else "simple"})
+
+
+@register("chat")
+def _chat(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
+    facts = ctx.get("facts", {}).get("last_7_days", {}).get("current", {})
+    spend = facts.get("spend")
+    cpa = facts.get("cpa")
+    base = f"Over the last 7 days {ctx.get('brand')} spent ${spend:,.2f}" if spend is not None else "I have no data"
+    if cpa is not None:
+        base += f" at a CPA of ${cpa:,.2f}"
+    return base + ". Proposed changes are reviewed in the Approvals screen."

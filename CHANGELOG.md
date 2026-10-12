@@ -28,3 +28,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0016 | Guardrail agent: deterministic checks + fail-closed safety classifier | [0016](docs/changelog/0016-guardrail.md) |
 | 0017 | Orchestrator, LangGraph supervisor graph, run engine, finalize, seed data; e2e + chaos tests | [0017](docs/changelog/0017-orchestrator-graph-engine.md) |
 | 0018 | Approval gate (matrix + 7 checks + signing), queues, executor (no LLM), reconciliation | [0018](docs/changelog/0018-approvals-executor.md) |
+| 0019 | Chat agent (routing, semantic cache, streaming output guard) and conversational + procedural memory | [0019](docs/changelog/0019-chat-and-memory.md) |
