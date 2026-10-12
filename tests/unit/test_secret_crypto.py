@@ -69,3 +69,14 @@ def test_key_file_must_be_private(store):
     os.chmod(store.root / ".keys" / "read.key", 0o644)
     with pytest.raises(AuthError, match="chmod 600"):
         store.put("brightwave", "meta", "read", {"token": "r"})
+
+
+def test_systemd_credentials_directory_supplies_the_key(store, tmp_path, monkeypatch):
+    path = store.put("brightwave", "meta", "write", {"token": "w"})
+    key = (store.root / ".keys" / "write.key").read_text()
+    (store.root / ".keys" / "write.key").unlink()
+    creds = tmp_path / "creds"
+    creds.mkdir()
+    (creds / "write.key").write_text(key)
+    monkeypatch.setenv("CREDENTIALS_DIRECTORY", str(creds))
+    assert path.exists() and store.get("brightwave", "meta", "write").values == {"token": "w"}

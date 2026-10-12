@@ -5,7 +5,7 @@ UV    ?= uv
 
 .PHONY: help venv install lint format typecheck test test-cov security evals gate \
         seed run-api run-worker run-executor run-scheduler up down mlx-small mlx-frontier \
-        frontend-install frontend-build load-test verify-audit reconcile dast pre-commit sbom clean
+        frontend-install frontend-build load-test verify-audit reconcile services-install edge dast pre-commit sbom clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -85,6 +85,12 @@ verify-audit: ## Verify the audit log hash chain
 
 reconcile: ## Compare every executed change with what was approved
 	$(PY) -m adintel.cli reconcile
+
+services-install: ## Install AdIntel as supervised services (launchd on macOS, systemd on Linux)
+	./scripts/install_services.sh
+
+edge: ## HTTPS edge (Caddy) for colleagues on the office network
+	docker compose -f deploy/docker-compose.yml --profile edge up -d
 
 dast: ## OWASP ZAP API scan against a running API on :8000 (needs Docker)
 	docker run --rm --network host -v $(CURDIR)/.zap:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \

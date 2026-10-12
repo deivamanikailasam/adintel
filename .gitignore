@@ -54,3 +54,4 @@ offboarding/
 data/import/*
 !data/import/README.md
 sbom-*.json
+deploy/services/out/

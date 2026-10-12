@@ -1,0 +1,53 @@
+# HTTPS edge for a team using AdIntel on one machine over the office network.
+#   docker compose -f deploy/docker-compose.yml --profile edge up -d
+# ADINTEL_HOST=adintel.localhost uses Caddy's internal CA (trust it once: see docs/13-setup/team-access.md);
+# set a real hostname + ADINTEL_ACME_EMAIL to get a public certificate instead.
+{
+	email {$ADINTEL_ACME_EMAIL:admin@adintel.localhost}
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$ADINTEL_HOST:adintel.localhost} {
+	tls {$ADINTEL_TLS:internal}
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		X-Frame-Options DENY
+		-Server
+	}
+
+	# Never exposed to the network: metrics, the alert webhook and interactive docs stay on localhost.
+	@internal path /api/metrics /api/internal/* /api/docs* /api/redoc* /api/openapi.json
+	respond @internal 404
+
+	# SCIM for the identity provider (token-protected by the API).
+	handle /scim/* {
+		reverse_proxy host.docker.internal:8000
+	}
+
+	handle_path /api/* {
+		reverse_proxy host.docker.internal:8000 {
+			flush_interval -1   # server-sent events: stream run progress and chat tokens immediately
+		}
+	}
+
+	# The Angular app (production build: make frontend-build).
+	handle {
+		root * /srv/adintel
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output file /data/access.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+		format json
+	}
+}

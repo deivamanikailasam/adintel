@@ -89,6 +89,22 @@ services:
         mc retention set --default GOVERNANCE 30d local/adintel-audit
     restart: "no"
 
+  # HTTPS for colleagues on the office network (profile "edge"). Serves the built Angular app and proxies
+  # /api and /scim to the API on the host. Internal endpoints (/metrics, alert webhook, docs) are blocked.
+  caddy:
+    image: caddy:2.8.4
+    profiles: [edge]
+    ports: ["443:443", "80:80"]
+    environment:
+      ADINTEL_HOST: ${ADINTEL_HOST:-adintel.localhost}
+      ADINTEL_TLS: ${ADINTEL_TLS:-internal}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../frontend/dist/frontend/browser:/srv/adintel:ro
+      - caddy-data:/data
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    restart: unless-stopped
+
   langfuse-db:
     image: postgres:16-alpine
     environment: { POSTGRES_USER: langfuse, POSTGRES_PASSWORD: langfuse, POSTGRES_DB: langfuse }
@@ -169,4 +185,5 @@ volumes:
   mongo-config: {}
   redis-data: {}
   minio-data: {}
+  caddy-data: {}
   langfuse-db: {}

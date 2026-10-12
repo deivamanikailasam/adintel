@@ -7,7 +7,8 @@
   executor is given the write key (its own key file or env var), which turns the process-role policy into
   a cryptographic boundary: a compromised agent worker that can read the disk still cannot decrypt a
   credential that spends money.
-* Keys: ``ADINTEL_SECRETS_KEY_READ`` / ``ADINTEL_SECRETS_KEY_WRITE`` (base64url, 32 bytes) or files
+* Keys, first match wins: ``ADINTEL_SECRETS_KEY_READ`` / ``_WRITE`` (base64url, 32 bytes); systemd
+  credentials (``$CREDENTIALS_DIRECTORY/<scope>.key``, see ``deploy/services``); or files
   ``<secrets_dir>/.keys/<scope>.key`` that must be private to the user (mode 0600).
 """
 
@@ -34,8 +35,11 @@ def generate_key() -> str:
 
 def load_key(root: Path, scope: str) -> bytes | None:
     env = os.environ.get(f"ADINTEL_SECRETS_KEY_{scope.upper()}")
+    creds = os.environ.get("CREDENTIALS_DIRECTORY")  # systemd LoadCredential= (deploy/services)
     if env:
         raw = env
+    elif creds and (Path(creds) / f"{scope}.key").exists():
+        raw = (Path(creds) / f"{scope}.key").read_text().strip()
     else:
         path = root / ".keys" / f"{scope}.key"
         if not path.exists():

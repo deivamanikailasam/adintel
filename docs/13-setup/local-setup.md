@@ -247,6 +247,10 @@ echo 'ADINTEL_OFFLINE=true' >> .env       # only local/LAN destinations; no down
 
 Details: [egress-and-offline.md](../04-security/egress-and-offline.md).
 
+## 8d. Serve a team from this machine
+
+Supervised services (launchd/systemd) and HTTPS on the office network: [team-access.md](team-access.md).
+
 ## 9. Everyday commands
 
 | Command | What it does |

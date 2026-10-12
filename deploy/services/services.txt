@@ -1,0 +1,7 @@
+# name            command (relative to the repo root)                                                       process role
+mlx-small         scripts/mlx/serve_small.sh                                                                -
+mlx-frontier      scripts/mlx/serve_frontier.sh                                                             -
+api               .venv/bin/python -m uvicorn adintel.api.app:create_app --factory --host 127.0.0.1 --port 8000 --no-server-header   api
+worker            .venv/bin/python -m adintel.workers.agent_worker                                          worker
+executor          .venv/bin/python -m adintel.executor                                                      executor
+scheduler         .venv/bin/python -m adintel.scheduler                                                     scheduler
