@@ -112,6 +112,8 @@ models; cost per run path within ±15% of the accepted baseline.
    read-only sandbox accounts to catch API schema drift before it breaks a run. Until a platform's API access
    is approved, a brand can go live on `ADINTEL_CONNECTORS=csv` (scheduled exports into the CSV directory,
    manual execution from the outbox) — same agents, gates and audit, no platform write access at all.
+   Platforms switch to live one at a time with `ADINTEL_CONNECTOR_MODES`; plan and checklist in
+   [ad-platform-access.md](ad-platform-access.md).
 6. Frontend: `ng build --configuration production` → S3 + CloudFront; WAF on the ALB; CSP headers at the CDN.
 
 **Exit criterion:** staging smoke (`/ready`), the 40-scenario E2E golden runs and the k6 Monday-peak test

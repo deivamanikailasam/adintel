@@ -74,3 +74,24 @@ def test_full_run_from_csv_then_manual_execution_via_outbox(db, csv_world):
     with pytest.raises(Exception, match="write-scope"):
         conn.apply_change(READ, "urban-roast", {"op": "pause", "entity_id": rec.target_entity_id})
     assert conn.apply_change(WRITE, "urban-roast", {"op": "pause", "entity_id": rec.target_entity_id})["manual"]
+
+
+def test_platforms_can_change_mode_one_at_a_time(monkeypatch):
+    from adintel.connectors import get_connector
+    from adintel.connectors.live import LiveConnector
+    from adintel.connectors.synthetic import SyntheticConnector
+
+    monkeypatch.setenv("ADINTEL_CONNECTORS", "synthetic")
+    monkeypatch.setenv("ADINTEL_CONNECTOR_MODES", '{"meta": "csv", "google_ads": "live"}')
+    reset_settings_cache()
+    assert isinstance(get_connector(Platform.META), CsvConnector)
+    assert isinstance(get_connector(Platform.GOOGLE_ADS), LiveConnector)
+    assert isinstance(get_connector(Platform.TIKTOK), SyntheticConnector)
+
+
+def test_production_refuses_synthetic_platform_data():
+    from adintel.config import Settings
+    from adintel.core.errors import ConfigError
+
+    with pytest.raises(ConfigError, match="synthetic ad data"):
+        Settings(env="production", connectors="live", connector_modes={"meta": "synthetic"}).validate_for_environment()

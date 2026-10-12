@@ -85,6 +85,7 @@ class SecretStore:
         self._log(tenant_id, ref, scope, True)
         if path.exists():
             return Credential(tenant_id, platform, scope, ref, json.loads(path.read_text()))
-        if get_settings().connectors in ("synthetic", "csv"):  # no platform API behind these
+        s = get_settings()
+        if s.connector_modes.get(platform, s.connectors) in ("synthetic", "csv"):  # no platform API behind these
             return Credential(tenant_id, platform, scope, ref, {"token": f"synthetic-{scope}"}, synthetic=True)
         raise AuthError(f"no {scope} credential for {tenant_id}/{platform}")

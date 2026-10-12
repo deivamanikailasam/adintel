@@ -37,11 +37,13 @@ class PlatformConnector(ABC):
 def get_connector(platform: Platform) -> PlatformConnector:
     from adintel.config import get_settings
 
-    if get_settings().connectors == "csv":
+    s = get_settings()
+    mode = s.connector_modes.get(str(platform), s.connectors)
+    if mode == "csv":
         from adintel.connectors.csv_files import CsvConnector
 
         return CsvConnector(platform)
-    if get_settings().connectors == "live":
+    if mode == "live":
         from adintel.connectors.live import LiveConnector
 
         return LiveConnector(platform)

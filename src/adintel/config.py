@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     # --- tools ------------------------------------------------------------------------------------
     sandbox: Literal["subprocess", "docker"] = "subprocess"
     connectors: Literal["synthetic", "csv", "live"] = "synthetic"
+    # Per-platform override, e.g. {"google_ads": "live", "meta": "csv"}: platforms go live one at a time
+    # as each API approval arrives (docs/14-production/ad-platform-access.md).
+    connector_modes: dict[str, Literal["synthetic", "csv", "live"]] = Field(default_factory=dict)
     csv_dir: Path = REPO_ROOT / "data" / "import"  # bring-your-own-data: <tenant>/<brand>/<platform>.csv
     secrets: Literal["file", "aws"] = "file"
     secrets_dir: Path = REPO_ROOT / "secrets"
@@ -139,6 +142,8 @@ class Settings(BaseSettings):
                 problems.append("ADINTEL_STORAGE=memory loses data on restart")
             if self.queue == "memory":
                 problems.append("ADINTEL_QUEUE=memory loses jobs on restart")
+            if self.env == "production" and "synthetic" in {self.connectors, *self.connector_modes.values()}:
+                problems.append("synthetic ad data in production: use csv or live per platform")
             if self.llm_provider == "mock":
                 problems.append("ADINTEL_LLM_PROVIDER=mock is for tests only")
             if problems:
