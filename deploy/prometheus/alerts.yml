@@ -1,0 +1,80 @@
+# Alert routing by severity (docs/09-observability/alerting.md). Labels: severity = P1..P4.
+groups:
+  - name: adintel-p1
+    rules:
+      - alert: CrossTenantViolation
+        expr: increase(adintel_tenant_isolation_violations_total[5m]) > 0
+        labels: { severity: P1 }
+        annotations: { summary: "Cross-tenant access attempt — follow the P1 runbook (global kill switch)" }
+      - alert: AuditChainBroken
+        expr: max(adintel_audit_chain_broken) > 0
+        labels: { severity: P1 }
+        annotations: { summary: "Audit hash chain verification failed" }
+      - alert: ExecutionReconciliationMismatch
+        expr: increase(adintel_execution_reconciliation_mismatches_total[1h]) > 0
+        labels: { severity: P1 }
+        annotations: { summary: "An executed change does not match its approval" }
+      - alert: GuardrailModelDown
+        expr: increase(adintel_guardrail_blocks_total{check="classifier_unavailable"}[15m]) > 3
+        labels: { severity: P1 }
+        annotations: { summary: "Safety classifier unavailable — outputs are being held (failing closed)" }
+      - alert: AllPlatformsFailing
+        expr: increase(adintel_degradations_total{code="all_platforms_unavailable"}[30m]) > 2
+        labels: { severity: P1 }
+        annotations: { summary: "Multiple runs could not reach any ad platform" }
+      - alert: PromptInjectionSuspected
+        expr: increase(adintel_injection_suspected_total[15m]) > 0
+        labels: { severity: P1 }
+        annotations: { summary: "A model flagged prompt injection; output quarantined" }
+  - name: adintel-p2
+    rules:
+      - alert: FrontierOutage
+        expr: increase(adintel_llm_errors_total{tier="frontier"}[10m]) > 5
+        labels: { severity: P2 }
+        annotations: { summary: "Frontier tier (Qwen3.8-27B) failing — runs degrade to data summaries" }
+      - alert: StepLimitHits
+        expr: increase(adintel_budget_exhausted_total{limit="steps"}[1h]) > 3
+        labels: { severity: P2 }
+        annotations: { summary: "> 3 step-limit hits/hour — possible orchestration loop" }
+      - alert: DeadLetters
+        expr: max(adintel_dlq_depth) > 0
+        for: 5m
+        labels: { severity: P2 }
+        annotations: { summary: "Dead-letter queue depth > 0" }
+      - alert: ApiErrorRate
+        expr: sum(rate(adintel_http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(adintel_http_requests_total[5m])), 1) > 0.01
+        for: 10m
+        labels: { severity: P2 }
+        annotations: { summary: "API 5xx rate above 1%" }
+  - name: adintel-p3
+    rules:
+      - alert: PlatformDegraded
+        expr: increase(adintel_degradations_total{code="platform_unavailable"}[1h]) > 0
+        labels: { severity: P3 }
+        annotations: { summary: "An ad platform was unavailable for at least one run" }
+      - alert: RunFailed
+        expr: increase(adintel_runs_total{status="failed"}[1h]) > 0
+        labels: { severity: P3 }
+        annotations: { summary: "A run failed" }
+      - alert: CacheHitDrop
+        expr: |
+          (sum(rate(adintel_cache_lookups_total{result="hit"}[1h])) / clamp_min(sum(rate(adintel_cache_lookups_total[1h])), 1))
+          < 0.8 * (sum(rate(adintel_cache_lookups_total{result="hit"}[1d] offset 1d)) / clamp_min(sum(rate(adintel_cache_lookups_total[1d] offset 1d)), 1))
+        for: 30m
+        labels: { severity: P3 }
+        annotations: { summary: "Cache hit rate dropped > 20% — a silent cost increase" }
+      - alert: CostSpike
+        expr: sum(increase(adintel_llm_cost_usd_total[1d])) > 2 * sum(increase(adintel_llm_cost_usd_total[1d] offset 1d))
+        labels: { severity: P3 }
+        annotations: { summary: "AI cost more than 2x yesterday — see the cost-spike runbook" }
+      - alert: ChatFirstTokenSLO
+        expr: histogram_quantile(0.95, sum(rate(adintel_llm_first_token_seconds_bucket[15m])) by (le)) > 2.5
+        for: 15m
+        labels: { severity: P3 }
+        annotations: { summary: "Chat p95 first token above 2.5 s" }
+  - name: adintel-p4
+    rules:
+      - alert: ValidationFailures
+        expr: increase(adintel_llm_validation_failures_total[1h]) > 0
+        labels: { severity: P4 }
+        annotations: { summary: "Model output failed schema validation (repaired or fell back)" }

@@ -1,0 +1,126 @@
+# Local infrastructure for AdIntel. Models run on the HOST with mlx-lm (Metal GPU is not available in
+# Docker on macOS); containers reach them at host.docker.internal:8080/8081.
+#
+#   make up                         # infrastructure only (run app processes natively: make run-api ...)
+#   docker compose -f deploy/docker-compose.yml --profile app up -d   # + api, worker, executor, scheduler
+name: adintel
+
+x-app: &app
+  build: { context: .., dockerfile: Dockerfile }
+  image: adintel:local
+  env_file: [../.env]
+  environment: &app-env
+    ADINTEL_STORAGE: mongo
+    ADINTEL_MONGO_URI: mongodb://mongo:27017/?directConnection=true
+    ADINTEL_QUEUE: redis
+    ADINTEL_REDIS_URL: redis://redis:6379/0
+    ADINTEL_MODEL_SMALL_BASE_URL: http://host.docker.internal:8080/v1
+    ADINTEL_MODEL_FRONTIER_BASE_URL: http://host.docker.internal:8081/v1
+    ADINTEL_MODEL_REPORT_BASE_URL: http://host.docker.internal:8080/v1
+    ADINTEL_OTEL_ENDPOINT: http://jaeger:4318
+    ADINTEL_SECRETS_DIR: /run/adintel-secrets
+  extra_hosts: ["host.docker.internal:host-gateway"]
+  depends_on:
+    mongo: { condition: service_healthy }
+    redis: { condition: service_healthy }
+  restart: unless-stopped
+  profiles: [app]
+
+services:
+  mongo:
+    image: mongodb/mongodb-atlas-local:8.0
+    hostname: mongo
+    ports: ["27017:27017"]
+    volumes: [mongo-data:/data/db, mongo-config:/data/configdb]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ping:1}).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]  # durable queues
+    ports: ["6379:6379"]
+    volumes: [redis-data:/data]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 10 }
+
+  langfuse-db:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: langfuse, POSTGRES_PASSWORD: langfuse, POSTGRES_DB: langfuse }
+    volumes: [langfuse-db:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "langfuse"], interval: 5s, timeout: 3s, retries: 10 }
+
+  langfuse:
+    image: langfuse/langfuse:2
+    depends_on: { langfuse-db: { condition: service_healthy } }
+    ports: ["3000:3000"]
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: local-dev-only-change-me
+      SALT: local-dev-only-change-me
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_INIT_ORG_ID: adintel
+      LANGFUSE_INIT_PROJECT_ID: adintel-local
+      LANGFUSE_INIT_PROJECT_PUBLIC_KEY: pk-lf-local
+      LANGFUSE_INIT_PROJECT_SECRET_KEY: sk-lf-local
+      LANGFUSE_INIT_USER_EMAIL: admin@adintel.local
+      LANGFUSE_INIT_USER_PASSWORD: adintel-local
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    environment: { COLLECTOR_OTLP_ENABLED: "true" }
+    ports: ["16686:16686", "4318:4318"]
+
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=15d"]
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    ports: ["9090:9090"]
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes: [./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro]
+    ports: ["9093:9093"]
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: adintel-local
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports: ["3001:3000"]
+
+  api:
+    <<: *app
+    environment: { <<: *app-env, ADINTEL_PROCESS_ROLE: api }
+    ports: ["8000:8000"]
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "adintel.workers.agent_worker"]
+    environment: { <<: *app-env, ADINTEL_PROCESS_ROLE: worker }
+    stop_grace_period: 120s   # checkpoint and hand the run back within 120 s
+
+  executor:
+    <<: *app
+    command: ["python", "-m", "adintel.executor"]
+    environment: { <<: *app-env, ADINTEL_PROCESS_ROLE: executor }
+    volumes: [../secrets:/run/adintel-secrets:ro]   # the ONLY service that mounts write credentials
+
+  scheduler:
+    <<: *app
+    command: ["python", "-m", "adintel.scheduler"]
+    environment: { <<: *app-env, ADINTEL_PROCESS_ROLE: scheduler }
+
+volumes:
+  mongo-data: {}
+  mongo-config: {}
+  redis-data: {}
+  langfuse-db: {}

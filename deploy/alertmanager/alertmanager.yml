@@ -1,0 +1,20 @@
+# Local routing. In production, P1 → PagerDuty 24/7, P2 → PagerDuty business hours, P3 → Slack, P4 → none.
+route:
+  receiver: slack-or-log
+  group_by: [alertname, severity]
+  routes:
+    - matchers: ['severity="P1"']
+      receiver: page-now
+      repeat_interval: 15m
+    - matchers: ['severity="P2"']
+      receiver: page-business-hours
+    - matchers: ['severity="P4"']
+      receiver: dashboard-only
+receivers:
+  - name: page-now
+    webhook_configs: [{ url: "http://host.docker.internal:8000/health", send_resolved: true }]  # replace with PagerDuty
+  - name: page-business-hours
+    webhook_configs: [{ url: "http://host.docker.internal:8000/health" }]
+  - name: slack-or-log
+    webhook_configs: [{ url: "http://host.docker.internal:8000/health" }]   # replace with a Slack webhook
+  - name: dashboard-only
