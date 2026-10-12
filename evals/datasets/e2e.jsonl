@@ -1,0 +1,40 @@
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-000", "world": {"days": 4, "kind": "spend_shift", "share": 0.8}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-001", "world": {"days": 5, "kind": "spend_shift", "share": 0.77}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-002", "world": {"days": 5, "kind": "spend_shift", "share": 0.82}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-003", "world": {"days": 4, "kind": "spend_shift", "share": 0.76}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-004", "world": {"days": 4, "kind": "spend_shift", "share": 0.74}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-005", "world": {"days": 4, "kind": "spend_shift", "share": 0.77}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-006", "world": {"days": 4, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-007", "world": {"days": 4, "kind": "spend_shift", "share": 0.71}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-008", "world": {"days": 5, "kind": "spend_shift", "share": 0.72}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-009", "world": {"days": 5, "kind": "spend_shift", "share": 0.79}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-010", "world": {"days": 5, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"action_type": "budget_shift", "path": "investigation", "source": "as_x_b", "status": "awaiting_approval", "target": "as_x_a"}, "id": "e2e-011", "world": {"days": 4, "kind": "spend_shift", "share": 0.74}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-012", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-013", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-014", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-015", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-016", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-017", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-018", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-019", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-020", "world": {"kind": "clean"}}
+{"expected": {"path": "clean", "status": "completed"}, "id": "e2e-021", "world": {"kind": "clean"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-022", "world": {"days": 5, "kind": "zero_conversions"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-023", "world": {"days": 7, "kind": "zero_conversions"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-024", "world": {"days": 4, "kind": "zero_conversions"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-025", "world": {"days": 7, "kind": "zero_conversions"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-026", "world": {"days": 4, "kind": "zero_conversions"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-027", "world": {"days": 6, "kind": "zero_conversions"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-028", "world": {"days": 4, "kind": "zero_conversions"}}
+{"expected": {"path": "abort", "status": "aborted_data_quality"}, "id": "e2e-029", "world": {"days": 5, "kind": "zero_conversions"}}
+{"expected": {"degradation": "platform_unavailable", "path": "clean", "status": "degraded"}, "id": "e2e-030", "world": {"kind": "clean", "outage": "tiktok"}}
+{"expected": {"degradation": "platform_unavailable", "path": "clean", "status": "degraded"}, "id": "e2e-031", "world": {"kind": "clean", "outage": "tiktok"}}
+{"expected": {"degradation": "platform_unavailable", "path": "clean", "status": "degraded"}, "id": "e2e-032", "world": {"kind": "clean", "outage": "tiktok"}}
+{"expected": {"degradation": "platform_unavailable", "path": "clean", "status": "degraded"}, "id": "e2e-033", "world": {"kind": "clean", "outage": "tiktok"}}
+{"expected": {"degradation": "frontier_unavailable", "status": "degraded"}, "id": "e2e-034", "world": {"days": 4, "frontier_down": true, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"degradation": "frontier_unavailable", "status": "degraded"}, "id": "e2e-035", "world": {"days": 4, "frontier_down": true, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"degradation": "frontier_unavailable", "status": "degraded"}, "id": "e2e-036", "world": {"days": 4, "frontier_down": true, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"degradation": "budget_exhausted", "status_in": ["degraded", "awaiting_approval"]}, "id": "e2e-037", "world": {"budget_usd": 0.003, "days": 4, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"degradation": "budget_exhausted", "status_in": ["degraded", "awaiting_approval"]}, "id": "e2e-038", "world": {"budget_usd": 0.003, "days": 4, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"degradation": "budget_exhausted", "status_in": ["degraded", "awaiting_approval"]}, "id": "e2e-039", "world": {"budget_usd": 0.003, "days": 4, "kind": "spend_shift", "share": 0.78}}

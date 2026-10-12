@@ -22,8 +22,10 @@ def _dq_summary(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) 
     failed = [c["name"] for c in ctx.get("checks", []) if not c.get("passed")]
     if not failed:
         return "All data-quality checks passed, so tonight's analysis can rely on this data."
-    return (f"The data is {ctx.get('verdict')}: the {', '.join(failed)} check(s) failed. "
-            "Findings that depend on it are flagged accordingly.")
+    return (
+        f"The data is {ctx.get('verdict')}: the {', '.join(failed)} check(s) failed. "
+        "Findings that depend on it are flagged accordingly."
+    )
 
 
 @register("MappingProposal")
@@ -40,37 +42,95 @@ def _analyst(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> 
     """Behaves like a careful analyst: first round asks for queries, second round concludes."""
     user = messages[-1].content
     if "ignore prior instructions" in user.lower() or "ignore previous instructions" in user.lower():
-        return json.dumps({"hypotheses": [], "queries": [], "root_cause_summary": "", "confidence": 0.0,
-                           "injection_suspected": True,
-                           "injection_detail": "entity name contains instructions addressed to the model"})
+        return json.dumps(
+            {
+                "hypotheses": [],
+                "queries": [],
+                "root_cause_summary": "",
+                "confidence": 0.0,
+                "injection_suspected": True,
+                "injection_detail": "entity name contains instructions addressed to the model",
+            }
+        )
     facts = ctx.get("facts", {})
     dec = facts.get("decomposition", {})
     if ctx.get("round", 1) == 1:
-        return json.dumps({"hypotheses": [], "queries": [
-            "df.groupby('entity_id')['spend'].sum().round(2)",
-            "(df.groupby('entity_id')['spend'].sum() / df.groupby('entity_id')['conversions'].sum()).round(2)",
-            "df.groupby('date')['spend'].sum().tail(7).round(2)"], "confidence": 0.0})
+        return json.dumps(
+            {
+                "hypotheses": [],
+                "queries": [
+                    "df.groupby('entity_id')['spend'].sum().round(2)",
+                    "(df.groupby('entity_id')['spend'].sum() / df.groupby('entity_id')['conversions'].sum()).round(2)",
+                    "df.groupby('date')['spend'].sum().tail(7).round(2)",
+                ],
+                "confidence": 0.0,
+            }
+        )
     mix_share = dec.get("mix_share_pct") or 0
     before, after = facts.get("entities_before", {}), facts.get("entities_after", {})
-    gainer = max(after, key=lambda e: after[e]["spend_share_pct"] - before.get(e, {}).get("spend_share_pct", 0),
-                 default=None)
+    gainer = max(
+        after, key=lambda e: after[e]["spend_share_pct"] - before.get(e, {}).get("spend_share_pct", 0), default=None
+    )
     if mix_share and mix_share >= 50 and gainer:
         name = after[gainer]["entity_name"]
-        return json.dumps({
+        return json.dumps(
+            {
+                "hypotheses": [
+                    {
+                        "name": "budget reallocation",
+                        "verdict": "confirmed",
+                        "evidence": f"{mix_share}% of the CPA change is explained by spend moving to {name}",
+                    },
+                    {
+                        "name": "audience fatigue",
+                        "verdict": "ruled_out",
+                        "evidence": "per-ad-set CTR is within its normal range",
+                    },
+                    {
+                        "name": "creative decay",
+                        "verdict": "ruled_out",
+                        "evidence": "per-ad-set CPA is stable; the blend changed, not the ad sets",
+                    },
+                ],
+                "queries": [],
+                "confidence": 0.81,
+                "root_cause_summary": (
+                    f"A budget increase made the platform shift spend to {name}, an expensive "
+                    "ad set. The ad sets themselves are fine; the allocation is wrong."
+                ),
+            }
+        )
+    cpc_up = [e for e in after if (after[e].get("cpc") or 0) > 1.2 * (before.get(e, {}).get("cpc") or 1e9)]
+    if cpc_up:
+        return json.dumps(
+            {
+                "hypotheses": [
+                    {
+                        "name": "auction pressure",
+                        "verdict": "confirmed",
+                        "evidence": f"CPC rose by more than 20% on {len(cpc_up)} ad set(s) with a stable spend mix",
+                    },
+                    {"name": "budget reallocation", "verdict": "ruled_out", "evidence": f"mix explains {mix_share}%"},
+                ],
+                "queries": [],
+                "confidence": 0.72,
+                "root_cause_summary": "Auction pressure: CPCs rose across ad sets while the spend mix was stable.",
+            }
+        )
+    return json.dumps(
+        {
             "hypotheses": [
-                {"name": "budget reallocation", "verdict": "confirmed",
-                 "evidence": f"{mix_share}% of the CPA change is explained by spend moving to {name}"},
-                {"name": "audience fatigue", "verdict": "ruled_out",
-                 "evidence": "per-ad-set CTR is within its normal range"},
-                {"name": "creative decay", "verdict": "ruled_out",
-                 "evidence": "per-ad-set CPA is stable; the blend changed, not the ad sets"}],
-            "queries": [], "confidence": 0.81,
-            "root_cause_summary": (f"A budget increase made the platform shift spend to {name}, an expensive "
-                                   "ad set. The ad sets themselves are fine; the allocation is wrong.")})
-    return json.dumps({"hypotheses": [{"name": "auction pressure", "verdict": "inconclusive",
-                                       "evidence": "per-ad-set CPA rose without a mix shift"}],
-                       "queries": [], "confidence": 0.45,
-                       "root_cause_summary": "Per-ad-set efficiency declined; cause not isolated."})
+                {
+                    "name": "auction pressure",
+                    "verdict": "inconclusive",
+                    "evidence": "per-ad-set CPA rose without a mix shift",
+                }
+            ],
+            "queries": [],
+            "confidence": 0.45,
+            "root_cause_summary": "Per-ad-set efficiency declined; cause not isolated.",
+        }
+    )
 
 
 @register("OptimizerOutput")
@@ -83,20 +143,32 @@ def _optimizer(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -
     if not after or not live or not ids:
         return json.dumps({"proposals": []})
     source = max(after, key=lambda e: after[e]["spend_share_pct"] - before.get(e, {}).get("spend_share_pct", 0))
-    target = min((e for e in after if e != source and after[e].get("cpa")), key=lambda e: after[e]["cpa"],
-                 default=None)
+    target = min((e for e in after if e != source and after[e].get("cpa")), key=lambda e: after[e]["cpa"], default=None)
     if target is None or source not in live:
         return json.dumps({"proposals": []})
     amount = round(float(live[source]["daily_budget"]) * cap, 2)
-    return json.dumps({"proposals": [{
-        "action_type": "budget_shift", "platform": ctx["anomaly"]["platform"], "source_entity_id": source,
-        "target_entity_id": target, "amount_usd_per_day": amount,
-        "expected_impact": "CPA expected to fall back towards its normal range within 5-7 days",
-        "expected_cpa_change_pct_low": -34.0, "expected_cpa_change_pct_high": -22.0,
-        "rationale": (f"Move ${amount:.0f}/day from {after[source]['entity_name']} back to "
-                      f"{after[target]['entity_name']}, reversing the platform's reallocation, as in the cited "
-                      "incident and playbook."),
-        "citation_chunk_ids": ids[:2]}]})
+    return json.dumps(
+        {
+            "proposals": [
+                {
+                    "action_type": "budget_shift",
+                    "platform": ctx["anomaly"]["platform"],
+                    "source_entity_id": source,
+                    "target_entity_id": target,
+                    "amount_usd_per_day": amount,
+                    "expected_impact": "CPA expected to fall back towards its normal range within 5-7 days",
+                    "expected_cpa_change_pct_low": -34.0,
+                    "expected_cpa_change_pct_high": -22.0,
+                    "rationale": (
+                        f"Move ${amount:.0f}/day from {after[source]['entity_name']} back to "
+                        f"{after[target]['entity_name']}, reversing the platform's reallocation, as in the cited "
+                        "incident and playbook."
+                    ),
+                    "citation_chunk_ids": ids[:2],
+                }
+            ]
+        }
+    )
 
 
 @register("ReportOutput")
@@ -108,20 +180,40 @@ def _report(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> s
         return "n/a" if v is None else f"${v:,.2f}"
 
     an = f.get("anomalies", [])
-    anomaly_text = " ".join(
-        f"On {a['platform']}, {a['campaign']} saw {a['metric'].upper()} at {a['observed']} against an expected "
-        f"{a['expected']} for {a['days']} days." for a in an) or "Nothing unusual stood out this week."
+    anomaly_text = (
+        " ".join(
+            f"On {a['platform']}, {a['campaign']} saw {a['metric'].upper()} at {a['observed']} against an expected "
+            f"{a['expected']} for {a['days']} days."
+            for a in an
+        )
+        or "Nothing unusual stood out this week."
+    )
     rc = " ".join(r["summary"] for r in f.get("root_causes", []))
-    recs = " ".join(f"We propose moving {money(r['amount_usd_per_day'])} per day, pending your account team's "
-                    "approval." for r in f.get("recommendations", [])) or "No changes are proposed."
+    recs = (
+        " ".join(
+            f"We propose moving {money(r['amount_usd_per_day'])} per day, pending your account team's approval."
+            for r in f.get("recommendations", [])
+        )
+        or "No changes are proposed."
+    )
     sc = ch.get("spend_change_pct")
     spend_move = f" ({abs(sc):.1f}% {'up' if sc > 0 else 'down'} on the prior period)" if sc is not None else ""
     sections = [
-        {"key": "summary", "title": "Summary", "body": f"A steady week for {f.get('brand')}." if not an else
-         f"One area needs attention this week for {f.get('brand')}."},
-        {"key": "performance", "title": "Performance", "body": (
-            f"You invested {money(cur.get('spend'))}{spend_move}, driving {cur.get('conversions')} conversions at a "
-            f"CPA of {money(cur.get('cpa'))}.")},
+        {
+            "key": "summary",
+            "title": "Summary",
+            "body": f"A steady week for {f.get('brand')}."
+            if not an
+            else f"One area needs attention this week for {f.get('brand')}.",
+        },
+        {
+            "key": "performance",
+            "title": "Performance",
+            "body": (
+                f"You invested {money(cur.get('spend'))}{spend_move}, driving {cur.get('conversions')} conversions at a "
+                f"CPA of {money(cur.get('cpa'))}."
+            ),
+        },
         {"key": "anomalies", "title": "What changed", "body": f"{anomaly_text} {rc}".strip()},
         {"key": "recommendations", "title": "Proposed actions", "body": recs},
         {"key": "caveats", "title": "Caveats", "body": " ".join(f.get("caveats", [])) or "None."},
@@ -147,9 +239,15 @@ def _safety(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> s
 def _orchestrator(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
     high = [a for a in ctx.get("anomalies", []) if a.get("severity") in ("high", "critical")]
     if high and not ctx.get("root_cause_exists"):
-        return json.dumps({"next_action": "analyst", "reasoning": (
-            f"High severity {high[0]['metric']} anomaly with ${high[0]['spend_at_risk_weekly']:,.0f}/week at risk, "
-            "trustworthy data and no root cause yet: investigate.")})
+        return json.dumps(
+            {
+                "next_action": "analyst",
+                "reasoning": (
+                    f"High severity {high[0]['metric']} anomaly with ${high[0]['spend_at_risk_weekly']:,.0f}/week at risk, "
+                    "trustworthy data and no root cause yet: investigate."
+                ),
+            }
+        )
     return json.dumps({"next_action": "report", "reasoning": "Remaining anomalies are immaterial."})
 
 
@@ -169,3 +267,16 @@ def _chat(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str
     if cpa is not None:
         base += f" at a CPA of ${cpa:,.2f}"
     return base + ". Proposed changes are reviewed in the Approvals screen."
+
+
+@register("JudgeScore")
+def _judge(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
+    """Heuristic stand-in for the LLM judge: rewards structure, plain language and no hype."""
+    text = messages[-1].content.lower()
+    score = 4.5
+    for bad in ("guarantee", "risk-free", "!!!", "synergy"):
+        if bad in text:
+            score -= 1.0
+    if len(text) < 200:
+        score -= 0.5
+    return json.dumps({"score": max(1.0, min(5.0, score)), "justification": "mock judge heuristic"})

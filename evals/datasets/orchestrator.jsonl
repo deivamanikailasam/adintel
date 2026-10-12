@@ -1,0 +1,60 @@
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-000", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-001", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-002", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-003", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-004", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-005", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-006", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "anomaly", "id": "orchestrator-007", "state": {"anomaly_pass_done": false}}
+{"category": "rule", "expected": "report", "id": "orchestrator-008", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-009", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-010", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-011", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-012", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-013", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-014", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-015", "state": {"anomalies": [], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "guardrail", "id": "orchestrator-016", "state": {"anomaly_pass_done": true, "report": true}}
+{"category": "rule", "expected": "guardrail", "id": "orchestrator-017", "state": {"anomaly_pass_done": true, "report": true}}
+{"category": "rule", "expected": "guardrail", "id": "orchestrator-018", "state": {"anomaly_pass_done": true, "report": true}}
+{"category": "rule", "expected": "guardrail", "id": "orchestrator-019", "state": {"anomaly_pass_done": true, "report": true}}
+{"category": "rule", "expected": "guardrail", "id": "orchestrator-020", "state": {"anomaly_pass_done": true, "report": true}}
+{"category": "rule", "expected": "guardrail", "id": "orchestrator-021", "state": {"anomaly_pass_done": true, "report": true}}
+{"category": "rule", "expected": "optimizer", "id": "orchestrator-022", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "trustworthy", "root_cause": 0.85}}
+{"category": "rule", "expected": "optimizer", "id": "orchestrator-023", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "trustworthy", "root_cause": 0.85}}
+{"category": "rule", "expected": "optimizer", "id": "orchestrator-024", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "trustworthy", "root_cause": 0.85}}
+{"category": "rule", "expected": "optimizer", "id": "orchestrator-025", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "trustworthy", "root_cause": 0.85}}
+{"category": "rule", "expected": "optimizer", "id": "orchestrator-026", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "trustworthy", "root_cause": 0.85}}
+{"category": "rule", "expected": "optimizer", "id": "orchestrator-027", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "trustworthy", "root_cause": 0.85}}
+{"category": "rule", "expected": "report", "id": "orchestrator-028", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "degraded", "root_cause": 0.85}}
+{"category": "rule", "expected": "report", "id": "orchestrator-029", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "degraded", "root_cause": 0.85}}
+{"category": "rule", "expected": "report", "id": "orchestrator-030", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "degraded", "root_cause": 0.85}}
+{"category": "rule", "expected": "report", "id": "orchestrator-031", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "dq": "degraded", "root_cause": 0.85}}
+{"category": "rule", "expected": "report", "id": "orchestrator-032", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "frontier_available": false}}
+{"category": "rule", "expected": "report", "id": "orchestrator-033", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "frontier_available": false}}
+{"category": "rule", "expected": "report", "id": "orchestrator-034", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "frontier_available": false}}
+{"category": "rule", "expected": "report", "id": "orchestrator-035", "state": {"anomalies": [["high", 2500.0]], "anomaly_pass_done": true, "frontier_available": false}}
+{"category": "rule", "expected": "report", "id": "orchestrator-036", "state": {"anomalies": [["medium", 120.0]], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-037", "state": {"anomalies": [["medium", 120.0]], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-038", "state": {"anomalies": [["medium", 120.0]], "anomaly_pass_done": true}}
+{"category": "rule", "expected": "report", "id": "orchestrator-039", "state": {"anomalies": [["medium", 120.0]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-040", "state": {"anomalies": [["critical", 642.67]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-041", "state": {"anomalies": [["high", 607.68]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-042", "state": {"anomalies": [["high", 3634.2]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-043", "state": {"anomalies": [["high", 5688.76]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-044", "state": {"anomalies": [["critical", 871.22]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-045", "state": {"anomalies": [["high", 3604.02]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-046", "state": {"anomalies": [["high", 1003.27]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-047", "state": {"anomalies": [["critical", 2962.18]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-048", "state": {"anomalies": [["high", 1049.19]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-049", "state": {"anomalies": [["critical", 5198.13]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-050", "state": {"anomalies": [["critical", 3946.54]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "analyst", "id": "orchestrator-051", "state": {"anomalies": [["critical", 4393.33]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-052", "state": {"anomalies": [["medium", 356.93]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-053", "state": {"anomalies": [["medium", 534.54]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-054", "state": {"anomalies": [["medium", 574.65]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-055", "state": {"anomalies": [["medium", 820.76]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-056", "state": {"anomalies": [["medium", 502.06]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-057", "state": {"anomalies": [["medium", 475.47]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-058", "state": {"anomalies": [["medium", 320.34]], "anomaly_pass_done": true}}
+{"category": "model", "expected": "report", "id": "orchestrator-059", "state": {"anomalies": [["medium", 475.43]], "anomaly_pass_done": true}}

@@ -1,0 +1,80 @@
+{"critical": false, "expected": "trustworthy", "id": "data_quality-000", "scenario": {"kind": "clean", "seed": 132678}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-001", "scenario": {"kind": "clean", "seed": 425045}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-002", "scenario": {"kind": "clean", "seed": 336828}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-003", "scenario": {"kind": "clean", "seed": 596929}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-004", "scenario": {"kind": "clean", "seed": 554136}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-005", "scenario": {"kind": "clean", "seed": 161111}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-006", "scenario": {"kind": "clean", "seed": 430553}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-007", "scenario": {"kind": "clean", "seed": 490088}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-008", "scenario": {"kind": "clean", "seed": 742034}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-009", "scenario": {"kind": "clean", "seed": 944728}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-010", "scenario": {"kind": "clean", "seed": 77984}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-011", "scenario": {"kind": "clean", "seed": 308153}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-012", "scenario": {"kind": "clean", "seed": 871740}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-013", "scenario": {"kind": "clean", "seed": 526079}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-014", "scenario": {"kind": "clean", "seed": 42333}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-015", "scenario": {"kind": "clean", "seed": 926571}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-016", "scenario": {"kind": "clean", "seed": 420095}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-017", "scenario": {"kind": "clean", "seed": 545504}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-018", "scenario": {"kind": "clean", "seed": 983745}}
+{"critical": false, "expected": "trustworthy", "id": "data_quality-019", "scenario": {"kind": "clean", "seed": 267736}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-020", "scenario": {"days": 3, "kind": "zero_conversions", "seed": 236239}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-021", "scenario": {"days": 5, "kind": "zero_conversions", "seed": 202794}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-022", "scenario": {"days": 3, "kind": "zero_conversions", "seed": 111585}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-023", "scenario": {"days": 5, "kind": "zero_conversions", "seed": 452337}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-024", "scenario": {"days": 7, "kind": "zero_conversions", "seed": 42800}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-025", "scenario": {"days": 6, "kind": "zero_conversions", "seed": 194023}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-026", "scenario": {"days": 5, "kind": "zero_conversions", "seed": 910649}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-027", "scenario": {"days": 6, "kind": "zero_conversions", "seed": 176663}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-028", "scenario": {"days": 6, "kind": "zero_conversions", "seed": 506472}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-029", "scenario": {"days": 4, "kind": "zero_conversions", "seed": 633732}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-030", "scenario": {"days": 3, "kind": "zero_conversions", "seed": 402993}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-031", "scenario": {"days": 3, "kind": "zero_conversions", "seed": 607010}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-032", "scenario": {"days": 7, "kind": "zero_conversions", "seed": 95191}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-033", "scenario": {"days": 3, "kind": "zero_conversions", "seed": 336693}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-034", "scenario": {"days": 4, "kind": "zero_conversions", "seed": 241993}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-035", "scenario": {"days": 4, "kind": "zero_conversions", "seed": 277692}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-036", "scenario": {"days": 6, "kind": "zero_conversions", "seed": 475708}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-037", "scenario": {"days": 5, "kind": "zero_conversions", "seed": 24932}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-038", "scenario": {"days": 4, "kind": "zero_conversions", "seed": 233111}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-039", "scenario": {"days": 6, "kind": "zero_conversions", "seed": 32761}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-040", "scenario": {"days": 4, "kind": "missing_days", "seed": 607455}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-041", "scenario": {"days": 3, "kind": "missing_days", "seed": 241722}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-042", "scenario": {"days": 5, "kind": "missing_days", "seed": 819112}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-043", "scenario": {"days": 3, "kind": "missing_days", "seed": 838081}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-044", "scenario": {"days": 3, "kind": "missing_days", "seed": 174487}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-045", "scenario": {"days": 3, "kind": "missing_days", "seed": 143075}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-046", "scenario": {"days": 3, "kind": "missing_days", "seed": 790806}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-047", "scenario": {"days": 4, "kind": "missing_days", "seed": 944594}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-048", "scenario": {"days": 3, "kind": "missing_days", "seed": 521039}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-049", "scenario": {"days": 3, "kind": "missing_days", "seed": 960353}}
+{"critical": false, "expected": "degraded", "id": "data_quality-050", "scenario": {"days": 1, "kind": "missing_days", "seed": 208617}}
+{"critical": false, "expected": "degraded", "id": "data_quality-051", "scenario": {"days": 1, "kind": "missing_days", "seed": 646575}}
+{"critical": false, "expected": "degraded", "id": "data_quality-052", "scenario": {"days": 1, "kind": "missing_days", "seed": 576676}}
+{"critical": false, "expected": "degraded", "id": "data_quality-053", "scenario": {"days": 1, "kind": "missing_days", "seed": 621309}}
+{"critical": false, "expected": "degraded", "id": "data_quality-054", "scenario": {"days": 1, "kind": "missing_days", "seed": 325541}}
+{"critical": false, "expected": "degraded", "id": "data_quality-055", "scenario": {"days": 1, "kind": "missing_days", "seed": 181343}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-056", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 770645}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-057", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 696579}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-058", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 237788}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-059", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 635985}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-060", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 747929}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-061", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 858562}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-062", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 877582}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-063", "scenario": {"fraction": 0.05, "kind": "impossible_values", "seed": 550546}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-064", "scenario": {"days": 3, "kind": "stale", "seed": 447275}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-065", "scenario": {"days": 3, "kind": "stale", "seed": 264825}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-066", "scenario": {"days": 3, "kind": "stale", "seed": 385056}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-067", "scenario": {"days": 3, "kind": "stale", "seed": 928042}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-068", "scenario": {"days": 3, "kind": "stale", "seed": 470472}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-069", "scenario": {"days": 3, "kind": "stale", "seed": 155626}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-070", "scenario": {"kind": "reconciliation_mismatch", "seed": 588225}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-071", "scenario": {"kind": "reconciliation_mismatch", "seed": 360436}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-072", "scenario": {"kind": "reconciliation_mismatch", "seed": 1323}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-073", "scenario": {"kind": "reconciliation_mismatch", "seed": 101906}}
+{"critical": true, "expected": "untrustworthy", "id": "data_quality-074", "scenario": {"kind": "reconciliation_mismatch", "seed": 209272}}
+{"critical": false, "expected": "degraded", "id": "data_quality-075", "scenario": {"kind": "mixed_currency", "seed": 830320}}
+{"critical": false, "expected": "degraded", "id": "data_quality-076", "scenario": {"kind": "mixed_currency", "seed": 16623}}
+{"critical": false, "expected": "degraded", "id": "data_quality-077", "scenario": {"kind": "mixed_currency", "seed": 606427}}
+{"critical": false, "expected": "degraded", "id": "data_quality-078", "scenario": {"kind": "mixed_currency", "seed": 218833}}
+{"critical": false, "expected": "degraded", "id": "data_quality-079", "scenario": {"kind": "mixed_currency", "seed": 837391}}

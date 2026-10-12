@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import itertools
 import math
 import re
 import threading
@@ -48,8 +49,10 @@ class HashingEmbedder(Embedder):
     dimensions = 384
 
     def _vec(self, text: str) -> list[float]:
-        words = _WORD.findall(text.lower())
-        feats = words + [f"{a}_{b}" for a, b in zip(words, words[1:], strict=False)]
+        from adintel.rag.bm25 import tokenize
+
+        words = tokenize(text)
+        feats = words + [f"{a}_{b}" for a, b in itertools.pairwise(words)]
         v = [0.0] * self.dimensions
         for f in feats:
             h = int(hashlib.md5(f.encode(), usedforsecurity=False).hexdigest(), 16)

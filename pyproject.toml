@@ -63,12 +63,21 @@ markers = [
 
 [tool.coverage.run]
 source = ["src/adintel"]
-# LLM-facing provider adapters and service entrypoints are exercised by evals and
-# integration tests; the 85% gate applies to deterministic (non-LLM) code.
+# The 85% gate applies to code the unit/API/e2e/chaos suites can reach. Excluded here and covered by
+# their own CI jobs instead: the eval harness (`evals` job), the MongoDB and Redis backends
+# (`integration` job), AWS adapters (staging), the live-connector placeholder, and process entrypoints.
 omit = [
   "src/adintel/llm/providers/bedrock.py",
   "src/adintel/queueing/sqs.py",
+  "src/adintel/queueing/redis_queue.py",
+  "src/adintel/storage/mongo.py",
   "src/adintel/security/secrets_aws.py",
+  "src/adintel/connectors/live.py",
+  "src/adintel/evals/runner.py",
+  "src/adintel/evals/generate.py",
+  "src/adintel/evals/worlds.py",
+  "src/adintel/evals/judge.py",
+  "src/adintel/__main__.py",
   "src/adintel/*/__main__.py",
 ]
 

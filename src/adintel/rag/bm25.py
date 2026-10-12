@@ -9,8 +9,58 @@ from collections import Counter
 _TOKEN = re.compile(r"[a-z0-9]+(?:[-_][a-z0-9]+)*")
 
 
+_SUFFIXES = ("ations", "ation", "ings", "ing", "ies", "ed", "es", "s")
+_STOP = frozenset(
+    [
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "by",
+        "can",
+        "do",
+        "does",
+        "for",
+        "from",
+        "how",
+        "i",
+        "if",
+        "in",
+        "is",
+        "it",
+        "me",
+        "of",
+        "on",
+        "or",
+        "our",
+        "the",
+        "this",
+        "to",
+        "was",
+        "we",
+        "what",
+        "when",
+        "why",
+        "with",
+        "you",
+        "your",
+    ]
+)
+
+
+def stem(word: str) -> str:
+    """A deliberately light suffix stripper: 'diagnosing' and 'diagnose' meet at 'diagnos'."""
+    for suf in _SUFFIXES:
+        if len(word) > len(suf) + 3 and word.endswith(suf):
+            return word[: -len(suf)]
+    return word.rstrip("e") if len(word) > 4 else word
+
+
 def tokenize(text: str) -> list[str]:
-    return _TOKEN.findall(text.lower())
+    return [stem(t) for t in _TOKEN.findall(text.lower()) if t not in _STOP]
 
 
 def bm25_scores(query: str, docs: list[str], *, k1: float = 1.5, b: float = 0.75) -> list[float]:

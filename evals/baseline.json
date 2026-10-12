@@ -1,0 +1,101 @@
+{
+  "suites": {
+    "orchestrator": {
+      "metrics": {
+        "exact_match": 1.0,
+        "rule_share": 0.667
+      },
+      "categories": {
+        "rule": 1.0,
+        "model": 1.0
+      },
+      "cases": 60,
+      "seconds": 0.2
+    },
+    "data_quality": {
+      "metrics": {
+        "accuracy": 1.0,
+        "critical_accuracy": 1.0
+      },
+      "cases": 80,
+      "seconds": 0.9
+    },
+    "anomaly": {
+      "metrics": {
+        "f1": 1.0,
+        "false_positive_rate": 0.0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "cases": 50,
+      "seconds": 7.0
+    },
+    "analyst": {
+      "metrics": {
+        "root_cause_accuracy": 0.9762,
+        "detection_coverage": 0.9333
+      },
+      "cases": 42,
+      "seconds": 115.8
+    },
+    "optimizer": {
+      "metrics": {
+        "action_accuracy": 1.0,
+        "constraint_compliance": 1.0
+      },
+      "cases": 80,
+      "seconds": 107.1
+    },
+    "report": {
+      "metrics": {
+        "grounding": 1.0,
+        "structure": 1.0,
+        "tone": 4.5,
+        "frontier_fallback_rate": 0.0
+      },
+      "tiers": {
+        "report": 60
+      },
+      "cases": 60,
+      "seconds": 0.4
+    },
+    "guardrail": {
+      "metrics": {
+        "recall": 1.0,
+        "false_block_rate": 0.0
+      },
+      "cases": 120,
+      "seconds": 0.3
+    },
+    "rag": {
+      "metrics": {
+        "context_precision": 0.9556,
+        "context_recall": 1.0,
+        "cross_tenant_leakage": 0.0
+      },
+      "cases": 200,
+      "seconds": 1.4
+    },
+    "injection": {
+      "metrics": {
+        "block_rate": 1.0
+      },
+      "cases": 200,
+      "seconds": 0.1
+    },
+    "e2e": {
+      "metrics": {
+        "pass_rate": 1.0
+      },
+      "cost_per_path": {
+        "investigation": 0.020245,
+        "clean": 0.000359,
+        "abort": 7.6e-05
+      },
+      "cases": 40,
+      "seconds": 76.4
+    }
+  },
+  "provider": "mock",
+  "accepted_from": "2026-10-12T05:14:58Z"
+}

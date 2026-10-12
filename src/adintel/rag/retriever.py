@@ -46,8 +46,13 @@ class RetrievedChunk:
     anonymised: bool = False
 
     def as_evidence(self) -> dict[str, Any]:
-        return {"chunk_id": self.chunk_id, "title": self.doc_title, "type": self.doc_type,
-                "section": self.heading, "text": self.text}
+        return {
+            "chunk_id": self.chunk_id,
+            "title": self.doc_title,
+            "type": self.doc_type,
+            "section": self.heading,
+            "text": self.text,
+        }
 
 
 @dataclass
@@ -71,8 +76,14 @@ class Retriever:
         self._repo = TenantScopedRepo(db, "kb_chunks", tenant_id)
 
     @staticmethod
-    def build_filter(*, brand_id: str, vertical: str | None, doc_types: list[str] | None,
-                     date_from: str | None = None, cross_brand_incidents: bool = True) -> dict[str, Any]:
+    def build_filter(
+        *,
+        brand_id: str,
+        vertical: str | None,
+        doc_types: list[str] | None,
+        date_from: str | None = None,
+        cross_brand_incidents: bool = True,
+    ) -> dict[str, Any]:
         scope: list[dict[str, Any]] = [{"brand_id": {"$in": [brand_id, "*"]}}]
         if cross_brand_incidents and vertical:
             scope.append({"doc_type": "incident", "vertical": vertical, "anonymised": True})
@@ -83,8 +94,17 @@ class Retriever:
             flt["date"] = {"$gte": date_from}
         return flt
 
-    def search(self, query: str, *, brand_id: str, vertical: str | None = None, doc_types: list[str] | None = None,
-               date_from: str | None = None, k: int = TOP_K, use_cache: bool = True) -> RetrievalResult:
+    def search(
+        self,
+        query: str,
+        *,
+        brand_id: str,
+        vertical: str | None = None,
+        doc_types: list[str] | None = None,
+        date_from: str | None = None,
+        k: int = TOP_K,
+        use_cache: bool = True,
+    ) -> RetrievalResult:
         flt = self.build_filter(brand_id=brand_id, vertical=vertical, doc_types=doc_types, date_from=date_from)
         key = sha256_obj({"t": self.tenant_id, "b": brand_id, "q": query, "f": flt, "k": k})
         if use_cache:
@@ -116,20 +136,34 @@ class Retriever:
         degraded: list[str] = []
         reranked = True
         try:
-            scores = get_reranker().scores(query, [d["text"] for d in docs])
+            scores = get_reranker().scores(
+                query, [f"{d['doc_title']}. {d.get('heading', '')}. {d['text']}" for d in docs]
+            )
             order = sorted(zip(docs, scores, strict=True), key=lambda t: (-t[1], t[0]["chunk_id"]))
-        except Exception as exc:  # noqa: BLE001 - reranker down → raw fused order (degraded)
+        except Exception as exc:
             log.warning("reranker_unavailable", extra={"reason": str(exc)[:200]})
             TOOL_FAILURES.labels(tool="reranker").inc()
             order = [(d, fused[d["chunk_id"]]) for d in docs]
             reranked = False
             degraded.append("reranker_unavailable")
         result = RetrievalResult(
-            chunks=[RetrievedChunk(chunk_id=d["chunk_id"], doc_id=d["doc_id"], doc_title=d["doc_title"],
-                                   doc_type=d["doc_type"], heading=d.get("heading", ""), text=d["text"],
-                                   content_hash=d["content_hash"], score=round(float(s), 6),
-                                   anonymised=bool(d.get("anonymised"))) for d, s in order[:k]],
-            reranked=reranked, degraded=degraded)
+            chunks=[
+                RetrievedChunk(
+                    chunk_id=d["chunk_id"],
+                    doc_id=d["doc_id"],
+                    doc_title=d["doc_title"],
+                    doc_type=d["doc_type"],
+                    heading=d.get("heading", ""),
+                    text=d["text"],
+                    content_hash=d["content_hash"],
+                    score=round(float(s), 6),
+                    anonymised=bool(d.get("anonymised")),
+                )
+                for d, s in order[:k]
+            ],
+            reranked=reranked,
+            degraded=degraded,
+        )
         if use_cache:
             with _cache_lock:
                 _cache[key] = (time.monotonic(), result)

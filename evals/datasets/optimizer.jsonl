@@ -1,0 +1,40 @@
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-000", "world": {"days": 4, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-001", "world": {"days": 4, "kind": "spend_shift", "share": 0.78}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-002", "world": {"days": 4, "kind": "spend_shift", "share": 0.71}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-003", "world": {"days": 4, "kind": "spend_shift", "share": 0.81}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-004", "world": {"days": 4, "kind": "spend_shift", "share": 0.84}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-005", "world": {"days": 4, "kind": "spend_shift", "share": 0.66}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-006", "world": {"days": 4, "kind": "spend_shift", "share": 0.7}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-007", "world": {"days": 4, "kind": "spend_shift", "share": 0.8}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-008", "world": {"days": 4, "kind": "spend_shift", "share": 0.79}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-009", "world": {"days": 4, "kind": "spend_shift", "share": 0.76}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-010", "world": {"days": 4, "kind": "spend_shift", "share": 0.82}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-011", "world": {"days": 4, "kind": "spend_shift", "share": 0.67}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-012", "world": {"days": 4, "kind": "spend_shift", "share": 0.79}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-013", "world": {"days": 4, "kind": "spend_shift", "share": 0.82}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-014", "world": {"days": 4, "kind": "spend_shift", "share": 0.8}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-015", "world": {"days": 4, "kind": "spend_shift", "share": 0.76}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-016", "world": {"days": 4, "kind": "spend_shift", "share": 0.84}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-017", "world": {"days": 4, "kind": "spend_shift", "share": 0.69}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-018", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-019", "world": {"days": 4, "kind": "spend_shift", "share": 0.81}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-020", "world": {"days": 4, "kind": "spend_shift", "share": 0.67}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-021", "world": {"days": 4, "kind": "spend_shift", "share": 0.8}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-022", "world": {"days": 4, "kind": "spend_shift", "share": 0.72}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-023", "world": {"days": 4, "kind": "spend_shift", "share": 0.81}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-024", "world": {"days": 4, "kind": "spend_shift", "share": 0.68}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-025", "world": {"days": 4, "kind": "spend_shift", "share": 0.85}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-026", "world": {"days": 4, "kind": "spend_shift", "share": 0.83}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-027", "world": {"days": 4, "kind": "spend_shift", "share": 0.68}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-028", "world": {"days": 4, "kind": "spend_shift", "share": 0.71}}
+{"expected": {"action_type": "budget_shift", "source": "as_x_b", "target": "as_x_a"}, "id": "optimizer-029", "world": {"days": 4, "kind": "spend_shift", "share": 0.8}}
+{"adversarial_proposal": {"amount_multiplier": 5.0}, "expected": {"action_type": null}, "id": "optimizer-030", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 3.2}, "expected": {"action_type": null}, "id": "optimizer-031", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 5.6}, "expected": {"action_type": null}, "id": "optimizer-032", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 3.3}, "expected": {"action_type": null}, "id": "optimizer-033", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 3.2}, "expected": {"action_type": null}, "id": "optimizer-034", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 3.6}, "expected": {"action_type": null}, "id": "optimizer-035", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 4.9}, "expected": {"action_type": null}, "id": "optimizer-036", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 4.9}, "expected": {"action_type": null}, "id": "optimizer-037", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 2.6}, "expected": {"action_type": null}, "id": "optimizer-038", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}
+{"adversarial_proposal": {"amount_multiplier": 5.8}, "expected": {"action_type": null}, "id": "optimizer-039", "world": {"days": 4, "kind": "spend_shift", "share": 0.75}}

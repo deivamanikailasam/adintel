@@ -6,8 +6,8 @@ For every campaign × metric series over 180 days:
    cannot contaminate its own baseline.
 2. Expected value for each recent day = last trend level + that weekday's seasonal component.
 3. Prediction band = expected ± 3 × robust sigma (1.4826 × MAD of residuals), at least ±5%.
-4. An anomaly is ≥ 3 consecutive most-recent days outside the band in the harmful direction
-   (2 days if the deviation is ≥ 50%). Ratio metrics use 3-day rolling sums for the band and the raw
+4. An anomaly is ≥ 3 of the last 4 days outside the band in the harmful direction, still visible in
+   the last 2 days (2 days suffice if the deviation is ≥ 50%). Ratio metrics use 3-day rolling sums for the band and the raw
    ratio over the anomalous days for the reported value.
 5. An Isolation Forest (fixed seed) on residual z-scores confirms or questions the finding.
 6. Severity combines deviation and money at risk (materiality); brand suppressions (procedural memory,
@@ -40,11 +40,13 @@ from adintel.harness.degradation import degrade
 log = logging.getLogger(__name__)
 
 MIN_HISTORY_DAYS = 28
-RATIO_WINDOW = 3  # ratio metrics use 3-day rolling sums: daily CPA on 4 conversions is noise, not signal
+TREND_WINDOW = 35  # odd; a long trend window keeps the expected level stable
 MIN_DAILY_CONVERSIONS = 5.0
 EVAL_WINDOW = 7
 MIN_CONSECUTIVE = 2
 SUSTAINED_DAYS = 3
+LOOKBACK_DAYS = 4  # look at the last 4 days ...
+ONGOING_DAYS = 2  # ... and require the deviation to still be visible in the last 2
 SHORT_SPIKE_MIN_DEV_PCT = 50.0
 BAND_SIGMAS = 3.0
 MIN_BAND_REL = 0.05
@@ -58,13 +60,26 @@ METRICS: dict[Metric, tuple[str, float]] = {
     Metric.CTR: ("down", 0.2),
     Metric.SPEND: ("both", 0.5),
 }
-_COLUMN = {Metric.CPA: "cpa", Metric.ROAS: "roas", Metric.CONVERSIONS: "conversions", Metric.CTR: "ctr",
-           Metric.SPEND: "spend"}
+_COLUMN = {
+    Metric.CPA: "cpa",
+    Metric.ROAS: "roas",
+    Metric.CONVERSIONS: "conversions",
+    Metric.CTR: "ctr",
+    Metric.SPEND: "spend",
+}
 
 
 def _robust_sigma(x: np.ndarray) -> float:
     med = float(np.median(x))
     return 1.4826 * float(np.median(np.abs(x - med)))
+
+
+def ratio_window(median_daily_conversions: float) -> int:
+    """Ratio metrics (CPA, ROAS, CTR) are summed over a short window when volume is low:
+    daily CPA on 4 conversions is noise, not signal; at 15+ conversions a day two days are enough."""
+    if median_daily_conversions >= 15:
+        return 2
+    return 3
 
 
 def severity_for(deviation_pct: float, spend_at_risk: float) -> Severity:
@@ -85,13 +100,15 @@ def detect_series(dates: list[date], values: np.ndarray, end: date) -> dict[str,
     if len(s) < MIN_HISTORY_DAYS + EVAL_WINDOW:
         return None
     hist, recent = s.iloc[:-EVAL_WINDOW], s.iloc[-EVAL_WINDOW:]
-    res = STL(hist, period=7, robust=True).fit()
-    resid = np.asarray(res.resid)
-    sigma = max(_robust_sigma(resid), 1e-9)
-    trend_level = float(np.mean(np.asarray(res.trend)[-7:]))
+    res = STL(hist, period=7, trend=TREND_WINDOW, robust=True).fit()
     seasonal = pd.Series(np.asarray(res.seasonal), index=hist.index)
+    deseason = hist - seasonal
+    # robust level: median of the deseasonalised last 4 weeks (a wiggly trend end-point causes false alarms)
+    level = float(np.median(deseason.iloc[-28:]))
+    resid = np.asarray(deseason.iloc[-90:] - deseason.iloc[-90:].rolling(28, min_periods=7).median().bfill())
+    sigma = max(_robust_sigma(resid), 1e-9)
     by_weekday = seasonal.iloc[-28:].groupby(seasonal.iloc[-28:].index.weekday).mean()
-    expected = np.array([trend_level + float(by_weekday.get(d.weekday(), 0.0)) for d in recent.index])
+    expected = np.array([level + float(by_weekday.get(d.weekday(), 0.0)) for d in recent.index])
     half = np.maximum(BAND_SIGMAS * sigma, MIN_BAND_REL * np.abs(expected))
     lower, upper = expected - half, expected + half
     obs = recent.to_numpy()
@@ -100,25 +117,60 @@ def detect_series(dates: list[date], values: np.ndarray, end: date) -> dict[str,
     z_hist = (resid / sigma).reshape(-1, 1)
     forest.fit(z_hist)
     iso = forest.predict(z_recent.reshape(-1, 1))
-    return {"dates": list(recent.index.date), "observed": obs, "expected": expected, "lower": lower, "upper": upper,
-            "iso": iso}
+    return {
+        "dates": list(recent.index.date),
+        "observed": obs,
+        "expected": expected,
+        "lower": lower,
+        "upper": upper,
+        "iso": iso,
+    }
 
 
-def _trailing_run(flags: list[bool]) -> int:
-    n = 0
-    for f in reversed(flags):
-        if not f:
-            break
-        n += 1
-    return n
+def _recent_flags(flags: list[bool]) -> list[int]:
+    """Indices of out-of-band days within the last LOOKBACK days, provided the deviation is still
+    ongoing (one of the last ONGOING days is flagged). One noisy in-band day doesn't reset detection."""
+    n = len(flags)
+    if not any(flags[n - ONGOING_DAYS :]):
+        return []
+    return [i for i in range(max(0, n - LOOKBACK_DAYS), n) if flags[i]]
+
+
+def _pick(above: list[bool], below: list[bool], direction: str) -> tuple[list[int], str]:
+    up, down = _recent_flags(above), _recent_flags(below)
+    if direction == "up":
+        return up, "up"
+    if direction == "down":
+        return down, "down"
+    return (up, "up") if len(up) >= len(down) else (down, "down")
+
+
+def flag_series(dates: list[date], values: np.ndarray, end: date) -> tuple[bool, str | None, float]:
+    """Single-series decision used by the anomaly eval: (detected, direction, deviation_pct)."""
+    band = detect_series(dates, values, end)
+    if band is None:
+        return False, None, 0.0
+    obs, lo, hi = band["observed"], band["lower"], band["upper"]
+    idx, d = _pick(
+        [bool(o > h) for o, h in zip(obs, hi, strict=True)],
+        [bool(o < low) for o, low in zip(obs, lo, strict=True)],
+        "both",
+    )
+    k = len(idx)
+    if k < MIN_CONSECUTIVE:
+        return False, None, 0.0
+    e = float(np.mean(band["expected"][idx]))
+    dev = 100 * (float(np.mean(obs[idx])) - e) / abs(e) if e else 0.0
+    if k < SUSTAINED_DAYS and abs(dev) < SHORT_SPIKE_MIN_DEV_PCT:
+        return False, None, dev
+    return True, d, dev
 
 
 def _suppressed(rules: BrandRules | None, metric: Metric, entity_id: str, month: int) -> str | None:
     if not rules:
         return None
     for sup in rules.suppressions:
-        if (sup.metric in (None, metric) and sup.entity_id in (None, entity_id)
-                and sup.month in (None, month)):
+        if sup.metric in (None, metric) and sup.entity_id in (None, entity_id) and sup.month in (None, month):
             return sup.rule_id
     return None
 
@@ -133,8 +185,8 @@ def detect(df: pd.DataFrame, end: date, rules: BrandRules | None = None) -> tupl
         return out, 0, suppressed
     for (platform, campaign_id, campaign_name), g in daily.groupby(["platform", "campaign_id", "campaign_name"]):
         g = g[g["date"] <= end].sort_values("date").reset_index(drop=True)
-        roll = g[["spend", "conversions", "revenue", "clicks", "impressions"]].rolling(RATIO_WINDOW,
-                                                                                       min_periods=RATIO_WINDOW).sum()
+        window = ratio_window(float(g["conversions"].median()))
+        roll = g[["spend", "conversions", "revenue", "clicks", "impressions"]].rolling(window, min_periods=window).sum()
         with np.errstate(divide="ignore", invalid="ignore"):
             g["cpa"] = np.where(roll["conversions"] > 0, roll["spend"] / roll["conversions"], np.nan)
             g["roas"] = np.where(roll["spend"] > 0, roll["revenue"] / roll["spend"], np.nan)
@@ -154,24 +206,23 @@ def detect(df: pd.DataFrame, end: date, rules: BrandRules | None = None) -> tupl
             obs, lo, hi = band["observed"], band["lower"], band["upper"]
             above = [bool(o > h) for o, h in zip(obs, hi, strict=True)]
             below = [bool(o < lw) for o, lw in zip(obs, lo, strict=True)]
-            k_up, k_down = _trailing_run(above), _trailing_run(below)
-            if direction == "up":
-                k, d = k_up, "up"
-            elif direction == "down":
-                k, d = k_down, "down"
-            else:
-                k, d = (k_up, "up") if k_up >= k_down else (k_down, "down")
+            idx, d = _pick(above, below, direction)
+            k = len(idx)
             if k < MIN_CONSECUTIVE:
                 continue
-            o = float(np.mean(obs[-k:]))
+            o = float(np.mean(obs[idx]))
             if metric in (Metric.CPA, Metric.ROAS, Metric.CTR):
                 # report the ratio over the anomalous days themselves (un-smoothed), e.g. CPA = spend / conversions
-                tail = g.tail(k)
-                num, den = {Metric.CPA: ("spend", "conversions"), Metric.ROAS: ("revenue", "spend"),
-                            Metric.CTR: ("clicks", "impressions")}[metric]
+                flagged_dates = {band["dates"][i] for i in idx}
+                tail = g[g["date"].isin(flagged_dates)]
+                num, den = {
+                    Metric.CPA: ("spend", "conversions"),
+                    Metric.ROAS: ("revenue", "spend"),
+                    Metric.CTR: ("clicks", "impressions"),
+                }[metric]
                 if float(tail[den].sum()) > 0:
                     o = float(tail[num].sum()) / float(tail[den].sum())
-            e = float(np.mean(band["expected"][-k:]))
+            e = float(np.mean(band["expected"][idx]))
             if e == 0 or not math.isfinite(e):
                 continue
             dev = 100 * (o - e) / abs(e)
@@ -183,23 +234,40 @@ def detect(df: pd.DataFrame, end: date, rules: BrandRules | None = None) -> tupl
             if rule:
                 suppressed.append(rule)
                 continue
-            out.append(Anomaly(
-                anomaly_id=f"anom_{sha256_obj([platform, campaign_id, metric, end])[:16]}",
-                platform=Platform(platform), entity_id=str(campaign_id), entity_name=str(campaign_name),
-                campaign_id=str(campaign_id), metric=metric, direction=d, observed=round(o, 4), expected=round(e, 4),
-                lower=round(float(np.mean(lo[-k:])), 4), upper=round(float(np.mean(hi[-k:])), 4),
-                deviation_pct=round(dev, 1), days=k, severity=sev, spend_at_risk_weekly=at_risk,
-                iforest_confirmed=bool(np.sum(band["iso"][-k:] == -1) * 2 >= k),
-                series_hash=sha256_obj([float(x) for x in series[_COLUMN[metric]].tolist()]),
-            ))
+            out.append(
+                Anomaly(
+                    anomaly_id=f"anom_{sha256_obj([platform, campaign_id, metric, end])[:16]}",
+                    platform=Platform(platform),
+                    entity_id=str(campaign_id),
+                    entity_name=str(campaign_name),
+                    campaign_id=str(campaign_id),
+                    metric=metric,
+                    direction=d,
+                    observed=round(o, 4),
+                    expected=round(e, 4),
+                    lower=round(float(np.mean(lo[idx])), 4),
+                    upper=round(float(np.mean(hi[idx])), 4),
+                    deviation_pct=round(dev, 1),
+                    days=k,
+                    severity=sev,
+                    spend_at_risk_weekly=at_risk,
+                    iforest_confirmed=bool(np.sum(band["iso"][idx] == -1) * 2 >= k),
+                    series_hash=sha256_obj([float(x) for x in series[_COLUMN[metric]].tolist()]),
+                )
+            )
     out.sort(key=lambda a: (-a.severity.rank, -a.spend_at_risk_weekly, a.anomaly_id))
     return out, evaluated, suppressed
 
 
 def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     ref = state.metrics_ref or {}
-    df = load_frame(ctx.repo("metrics_daily"), ctx.brand_id, date.fromisoformat(ref["start"]), state.period_end,
-                    ref.get("platforms"))
+    df = load_frame(
+        ctx.repo("metrics_daily"),
+        ctx.brand_id,
+        date.fromisoformat(ref["start"]),
+        state.period_end,
+        ref.get("platforms"),
+    )
     days = df["date"].nunique() if not df.empty else 0
     update: dict[str, Any] = {"anomaly_pass_done": True}
     if days < MIN_HISTORY_DAYS + EVAL_WINDOW:
@@ -208,7 +276,14 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     rules_doc = ctx.repo("brand_rules").find_one({"brand_id": ctx.brand_id})
     rules = BrandRules.from_doc(rules_doc) if rules_doc else None
     anomalies, evaluated, suppressed = detect(df, state.period_end, rules)
-    log.info("anomaly_pass", extra={"series": evaluated, "found": len(anomalies), "suppressed": len(suppressed),
-                                    "material": sum(1 for a in anomalies if a.severity.rank >= 1)})
+    log.info(
+        "anomaly_pass",
+        extra={
+            "series": evaluated,
+            "found": len(anomalies),
+            "suppressed": len(suppressed),
+            "material": sum(1 for a in anomalies if a.severity.rank >= 1),
+        },
+    )
     update["anomalies"] = anomalies
     return update
