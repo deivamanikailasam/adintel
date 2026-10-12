@@ -26,6 +26,8 @@ class TierConfig:
     extra_body: dict[str, Any] = field(default_factory=dict)
     owner: str = ""
     production_equivalent: str = ""
+    max_concurrency: int = 4  # bulkhead: requests in flight per process to this server+model
+    queue_timeout_seconds: float = 30.0  # wait this long for a slot, then fail fast (fallback chain)
 
 
 @dataclass(frozen=True)

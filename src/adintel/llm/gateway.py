@@ -33,6 +33,7 @@ from adintel.core.hashing import canonical_json, sha256_obj, sha256_text
 from adintel.core.ids import new_id
 from adintel.core.resilience import retry_call
 from adintel.harness.budget import UnlimitedMeter, UsageMeter
+from adintel.llm import bulkhead
 from adintel.llm.prompts import Prompt, get_prompts
 from adintel.llm.providers import get_provider
 from adintel.llm.registry import ModelRegistry, get_registry
@@ -312,8 +313,12 @@ class LLMGateway:
             c = cost_of(tier, est, 0)
             self.meter.charge(est, 0, c)
 
+        def attempt() -> CompletionResult:
+            with bulkhead.slot(tier):
+                return provider.complete(req, tier)
+
         return retry_call(
-            lambda: provider.complete(req, tier),
+            attempt,
             retries=retries,
             transient=(LLMTimeout, LLMUnavailable),
             on_retry=on_retry,

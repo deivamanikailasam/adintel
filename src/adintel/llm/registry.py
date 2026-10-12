@@ -110,6 +110,8 @@ class ModelRegistry:
                 timeout_seconds=float(t.get("timeout_seconds", 60)),
                 connect_timeout_seconds=float(t.get("connect_timeout_seconds", 5)),
                 max_output_tokens=int(t.get("max_output_tokens", 1024)),
+                max_concurrency=max(1, int(t.get("max_concurrency", 4))),
+                queue_timeout_seconds=float(t.get("queue_timeout_seconds", 30)),
                 fallback=t.get("fallback"),
                 price_input=float(pricing.get("input", 0)),
                 price_output=float(pricing.get("output", 0)),

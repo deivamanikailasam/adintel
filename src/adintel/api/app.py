@@ -62,6 +62,17 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
     )
 
     @app.middleware("http")
+    async def limit_body(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        """Refuse oversized bodies before they are read (memory exhaustion, giant prompts)."""
+        declared = request.headers.get("content-length")
+        if request.method in ("POST", "PUT", "PATCH"):
+            if declared is None and "chunked" in request.headers.get("transfer-encoding", ""):
+                return JSONResponse({"detail": "chunked request bodies are not accepted"}, status_code=411)
+            if declared is not None and (not declared.isdigit() or int(declared) > s.max_request_bytes):
+                return JSONResponse({"detail": f"request body exceeds {s.max_request_bytes} bytes"}, status_code=413)
+        return await call_next(request)
+
+    @app.middleware("http")
     async def observe(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         rid = request.headers.get("x-request-id") or uuid.uuid4().hex
         t0 = time.perf_counter()

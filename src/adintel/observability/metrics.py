@@ -70,6 +70,13 @@ LLM_REPAIRS = Counter("adintel_llm_repairs_total", "Repair turns", ["schema", "a
 LLM_FALLBACKS = Counter(
     "adintel_llm_fallbacks_total", "Fallback-chain hops", ["from_tier", "to_tier"], registry=REGISTRY
 )
+LLM_IN_FLIGHT = Gauge("adintel_llm_in_flight", "Model requests in flight per tier", ["tier"], registry=REGISTRY)
+LLM_BULKHEAD_REJECTIONS = Counter(
+    "adintel_llm_bulkhead_rejections_total",
+    "Requests refused because a tier was saturated",
+    ["tier"],
+    registry=REGISTRY,
+)
 LLM_ERRORS = Counter("adintel_llm_errors_total", "Model call errors", ["tier", "kind"], registry=REGISTRY)
 CACHE = Counter("adintel_cache_lookups_total", "Cache lookups", ["cache", "result"], registry=REGISTRY)
 
