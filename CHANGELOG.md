@@ -15,3 +15,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0003 | Core building blocks, configuration and the domain model (RunState) | [0003](docs/changelog/0003-core-config-domain.md) |
 | 0004 | Storage layer with tenant isolation built in (memory + MongoDB backends) | [0004](docs/changelog/0004-storage-and-tenant-isolation.md) |
 | 0005 | Immutable hash-chained audit log with tamper detection | [0005](docs/changelog/0005-audit-log.md) |
+| 0006 | Observability foundation: JSON logs, metrics, traces, Langfuse, alert routing | [0006](docs/changelog/0006-observability-foundation.md) |
