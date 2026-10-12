@@ -63,6 +63,7 @@ export class ApiService {
   cost(): Observable<any> { return this.http.get('/api/admin/cost'); }
   models(): Observable<any> { return this.http.get('/api/admin/models'); }
   notifications(): Observable<any[]> { return this.http.get<any[]>('/api/admin/notifications'); }
+  platformAlerts(): Observable<any[]> { return this.http.get<any[]>('/api/admin/platform-alerts'); }
   flags(brand_id?: string): Observable<any> {
     const params = brand_id ? new HttpParams().set('brand_id', brand_id) : undefined;
     return this.http.get('/api/admin/flags', { params });

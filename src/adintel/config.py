@@ -114,6 +114,7 @@ class Settings(BaseSettings):
     langfuse_secret_key: str | None = None
     metrics_port: int = 9464
     alert_webhook_url: str | None = None
+    alert_webhook_token: str | None = None  # bearer token Alertmanager uses for /internal/alerts/alertmanager
 
     # --- local data -------------------------------------------------------------------------------
     var_dir: Path = REPO_ROOT / "var"
@@ -126,6 +127,10 @@ class Settings(BaseSettings):
                 problems.append("ADINTEL_JWT_SECRET is the development default")
             if self.approval_signing_key == _DEV_APPROVAL_KEY:
                 problems.append("ADINTEL_APPROVAL_SIGNING_KEY is the development default")
+            if self.alert_webhook_token and (
+                self.alert_webhook_token == "adintel-local-alerts" or len(self.alert_webhook_token) < 32  # noqa: S105
+            ):
+                problems.append("ADINTEL_ALERT_WEBHOOK_TOKEN must be a random secret of at least 32 characters")
             if self.auth_mode != "oidc":
                 problems.append("ADINTEL_AUTH_MODE must be oidc")
             if self.dev_login_enabled:

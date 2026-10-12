@@ -190,3 +190,42 @@ def test_hardened_headers_and_docs_hidden_in_production(monkeypatch, db, mock_ll
     monkeypatch.setenv("ADINTEL_ENV", "local")
     reset_settings_cache()
     assert "/openapi.json" in {getattr(r, "path", "") for r in create_app(start_inline_worker=False).routes}
+
+
+def test_alertmanager_webhook_stores_dedupes_and_resolves(client, monkeypatch):
+    from adintel.config import reset_settings_cache
+
+    body = {
+        "alerts": [
+            {
+                "status": "firing",
+                "labels": {"alertname": "DLQNotEmpty", "severity": "P2"},
+                "annotations": {"summary": "Dead-letter queue has messages"},
+                "fingerprint": "fp1",
+            }
+        ]
+    }
+    assert client.post("/internal/alerts/alertmanager", json=body).status_code == 404  # off without a token
+    monkeypatch.setenv("ADINTEL_ALERT_WEBHOOK_TOKEN", "t" * 40)
+    reset_settings_cache()
+    assert client.post("/internal/alerts/alertmanager", json=body).status_code == 401
+    auth = {"Authorization": "Bearer " + "t" * 40}
+    assert client.post("/internal/alerts/alertmanager", json=body, headers=auth).json() == {"stored": 1, "resolved": 0}
+    assert client.post("/internal/alerts/alertmanager", json=body, headers=auth).json()["stored"] == 0  # repeat
+    admin = login(client, "admin@brightwave.example")
+    [a] = client.get("/admin/platform-alerts", headers=admin).json()
+    assert a["severity"] == "P2" and a["status"] == "firing" and a["title"].startswith("Dead-letter")
+    body["alerts"][0]["status"] = "resolved"
+    assert client.post("/internal/alerts/alertmanager", json=body, headers=auth).json()["resolved"] == 1
+    assert client.get("/admin/platform-alerts", headers=admin).json()[0]["status"] == "resolved"
+    assert client.get("/admin/platform-alerts", headers=login(client, "jordan@brightwave.example")).status_code == 403
+
+
+def test_weak_alert_token_refused_in_production():
+    import pytest as _pytest
+
+    from adintel.config import Settings
+    from adintel.core.errors import ConfigError
+
+    with _pytest.raises(ConfigError, match="ALERT_WEBHOOK_TOKEN"):
+        Settings(env="production", alert_webhook_token="adintel-local-alerts").validate_for_environment()

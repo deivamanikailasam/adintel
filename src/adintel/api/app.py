@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from prometheus_client import generate_latest
 
 from adintel import __version__
-from adintel.api.routers import admin, approvals, auth, brands, chat, kb, runs
+from adintel.api.routers import admin, approvals, auth, brands, chat, kb, ops, runs
 from adintel.config import get_settings
 from adintel.observability import context
 from adintel.observability.alerts import install_security_hooks
@@ -98,7 +98,16 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
     def metrics() -> PlainTextResponse:
         return PlainTextResponse(generate_latest(REGISTRY).decode(), media_type="text/plain; version=0.0.4")
 
-    for r in (auth.router, brands.router, runs.router, approvals.router, chat.router, kb.router, admin.router):
+    for r in (
+        auth.router,
+        brands.router,
+        runs.router,
+        approvals.router,
+        chat.router,
+        kb.router,
+        admin.router,
+        ops.router,
+    ):
         app.include_router(r)
 
     inline = start_inline_worker if start_inline_worker is not None else s.queue == "memory" and s.env == "local"

@@ -23,6 +23,7 @@ x-app: &app
     ADINTEL_OIDC_ISSUER: http://localhost:8180/realms/adintel        # the issuer browsers see
     ADINTEL_OIDC_JWKS_URL: http://keycloak:8180/realms/adintel/protocol/openid-connect/certs
     ADINTEL_SECRETS_DIR: /run/adintel-secrets
+    ADINTEL_ALERT_WEBHOOK_TOKEN: adintel-local-alerts   # Alertmanager → /internal/alerts/alertmanager
     ADINTEL_AUDIT_ARCHIVE_S3_BUCKET: adintel-audit
     ADINTEL_AUDIT_ARCHIVE_S3_ENDPOINT: http://minio:9000
     ADINTEL_AUDIT_ARCHIVE_LOCK_DAYS: "30"          # local GOVERNANCE lock; production: COMPLIANCE, 2557 days
@@ -129,6 +130,7 @@ services:
     image: prom/alertmanager:v0.27.0
     volumes: [./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro]
     ports: ["9093:9093"]
+    extra_hosts: ["host.docker.internal:host-gateway"]   # reach the API on the host (Linux)
 
   grafana:
     image: grafana/grafana:11.3.0

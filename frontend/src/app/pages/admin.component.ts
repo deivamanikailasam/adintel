@@ -44,6 +44,15 @@ import { AuthService } from '../core/auth.service';
           <td><span class="badge {{ m.health[$any(kv.key)]?.ok ? 'ok' : 'failed' }}">{{ m.health[$any(kv.key)]?.ok ? 'up' : 'down' }}</span></td>
           <td>{{ $any(kv.value).fallback || '— (fail closed)' }}</td><td class="muted">{{ $any(kv.value).production_equivalent }}</td></tr> }
       </table><p class="muted">Registry version {{ m.registry_version }}</p> }</div>
+    @if (auth.hasRole('admin')) {
+      <h2>Platform alerts</h2>
+      <div class="panel"><table><tr><th>Since</th><th>Severity</th><th>Alert</th><th>Status</th></tr>
+        @for (a of alerts(); track a.alert_id) { <tr><td class="muted">{{ a.starts_at || a.created_at }}</td><td>{{ a.severity }}</td>
+          <td>{{ a.title }}<div class="muted">{{ a.detail }}</div></td>
+          <td><span class="badge {{ a.status === 'firing' ? 'failed' : 'ok' }}">{{ a.status }}</span></td></tr>
+        } @empty { <tr><td colspan="4" class="muted">No platform alerts.</td></tr> }
+      </table></div>
+    }
     <h2>Notifications</h2>
     <div class="panel"><table><tr><th>When</th><th>Severity / kind</th><th>Title</th><th>Audience</th></tr>
       @for (n of notes(); track $index) { <tr><td class="muted">{{ n.created_at }}</td><td>{{ n.severity || n.kind }}</td><td>{{ n.title }}</td><td>{{ n.audience }}</td></tr> }
@@ -58,6 +67,7 @@ export class AdminComponent implements OnInit {
   models = signal<any>(null);
   switches = signal<any[]>([]);
   notes = signal<any[]>([]);
+  alerts = signal<any[]>([]);
   scope = 'brand'; key = ''; reason = ''; engaged = true;
 
   ngOnInit(): void {
@@ -65,7 +75,7 @@ export class AdminComponent implements OnInit {
     this.api.cost().subscribe(c => this.cost.set(c));
     this.api.models().subscribe(m => this.models.set(m));
     this.api.notifications().subscribe(n => this.notes.set(n));
-    if (this.auth.hasRole('admin')) this.verify();
+    if (this.auth.hasRole('admin')) { this.verify(); this.api.platformAlerts().subscribe(a => this.alerts.set(a)); }
   }
   verify(): void { this.api.verifyAudit().subscribe(a => this.audit.set(a)); }
   flip(): void {

@@ -177,6 +177,16 @@ def notifications(
     return TenantScopedRepo(database, "notifications", p.tenant_id).find({}, sort=[("created_at", -1)], limit=100)
 
 
+@router.get("/platform-alerts")
+def platform_alerts(
+    p: Principal = Depends(require(Role.ADMIN)), database: Database = Depends(db)
+) -> list[dict[str, Any]]:
+    """Infrastructure alerts from Alertmanager (no client data): what on-call is dealing with right now."""
+    return TenantScopedRepo(database, "notifications", "_system").find(
+        {"kind": "platform_alert"}, sort=[("created_at", -1)], limit=100
+    )
+
+
 @router.get("/queues")
 def queues(p: Principal = Depends(require(Role.ADMIN))) -> dict[str, Any]:
     return {q: {"depth": get_queue(q).depth(), "dlq": get_queue(q).dlq_depth()} for q in (AGENT_RUNS, EXECUTIONS)}

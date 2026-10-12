@@ -9,3 +9,5 @@
 | Monthly | Right-sizing, dependency updates, **chaos test against staging**, secret-rotation audit | Tech lead | `tests/chaos/` |
 | Quarterly | Model refresh assessment (re-run evals with newer models), fine-tune retrain, **DR test with a real restore**, external red team, architecture review (revisit ADR triggers) | ML lead / Tech lead / Security | `docs/02-decisions/` |
 | Annually | SOC 2 audit, full security review, roadmap reset | Sponsor | — |
+
+On-call rotation and weekly handover: [on-call.md](on-call.md).

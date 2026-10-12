@@ -10,11 +10,23 @@ route:
       receiver: page-business-hours
     - matchers: ['severity="P4"']
       receiver: dashboard-only
+# Local receivers post to AdIntel's alert webhook, which stores platform alerts for the Governance console
+# (GET /admin/platform-alerts). Token must equal ADINTEL_ALERT_WEBHOOK_TOKEN. Production: swap the
+# webhook_configs for pagerduty_configs (P1, P2) and slack_configs (P3) — docs/12-operations/on-call.md.
 receivers:
   - name: page-now
-    webhook_configs: [{ url: "http://host.docker.internal:8000/health", send_resolved: true }]  # replace with PagerDuty
+    webhook_configs:
+      - url: "http://host.docker.internal:8000/internal/alerts/alertmanager"
+        send_resolved: true
+        http_config: { authorization: { type: Bearer, credentials: adintel-local-alerts } }
   - name: page-business-hours
-    webhook_configs: [{ url: "http://host.docker.internal:8000/health" }]
+    webhook_configs:
+      - url: "http://host.docker.internal:8000/internal/alerts/alertmanager"
+        send_resolved: true
+        http_config: { authorization: { type: Bearer, credentials: adintel-local-alerts } }
   - name: slack-or-log
-    webhook_configs: [{ url: "http://host.docker.internal:8000/health" }]   # replace with a Slack webhook
+    webhook_configs:
+      - url: "http://host.docker.internal:8000/internal/alerts/alertmanager"
+        send_resolved: true
+        http_config: { authorization: { type: Bearer, credentials: adintel-local-alerts } }
   - name: dashboard-only

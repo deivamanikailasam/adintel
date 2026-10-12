@@ -11,3 +11,5 @@ Rules: `deploy/prometheus/alerts.yml`. Routing: `deploy/alertmanager/alertmanage
 (`observability/alerts.py`) also write to the `notifications` collection (visible in the Governance page).
 
 Every alert links to a runbook in `docs/12-operations/runbooks.md`.
+
+On-call rota, response times, escalation and the local Alertmanager → API webhook: [on-call.md](../12-operations/on-call.md).
