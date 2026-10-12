@@ -100,6 +100,9 @@ class PlatformFetch(Model):
     latency_ms: float = 0.0
     error: str | None = None
     unmapped_fields: list[str] = Field(default_factory=list)
+    raw_spend_total_usd: float = 0.0
+    duplicates: int = 0
+    currencies: list[str] = Field(default_factory=list)
 
 
 # --------------------------------------------------------------------------------------------------

@@ -19,3 +19,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0007 | LLM gateway: mlx-lm provider, model & prompt registries, validation wrapper | [0007](docs/changelog/0007-llm-gateway.md) |
 | 0008 | Harness controls: budgets, kill switches, idempotency, checkpoints, timeouts, degradation | [0008](docs/changelog/0008-harness-controls.md) |
 | 0009 | Ad-platform connectors (5 platforms, synthetic worlds), normaliser, scoped secrets | [0009](docs/changelog/0009-connectors-and-secrets.md) |
+| 0010 | Ingestion and Data Quality agents (seven deterministic checks) | [0010](docs/changelog/0010-ingestion-and-data-quality.md) |
