@@ -19,6 +19,9 @@ x-app: &app
     ADINTEL_MODEL_FRONTIER_BASE_URL: http://host.docker.internal:8081/v1
     ADINTEL_MODEL_REPORT_BASE_URL: http://host.docker.internal:8080/v1
     ADINTEL_OTEL_ENDPOINT: http://jaeger:4318
+    ADINTEL_AUTH_MODE: both
+    ADINTEL_OIDC_ISSUER: http://localhost:8180/realms/adintel        # the issuer browsers see
+    ADINTEL_OIDC_JWKS_URL: http://keycloak:8180/realms/adintel/protocol/openid-connect/certs
     ADINTEL_SECRETS_DIR: /run/adintel-secrets
   extra_hosts: ["host.docker.internal:host-gateway"]
   depends_on:
@@ -45,6 +48,17 @@ services:
     ports: ["6379:6379"]
     volumes: [redis-data:/data]
     healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, timeout: 3s, retries: 10 }
+
+  # Local identity provider (stand-in for Cognito / Entra ID / Okta). Users from the seed, password
+  # "adintel-local". Enable with ADINTEL_AUTH_MODE=oidc (or "both" to keep dev login during development).
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.6
+    command: ["start-dev", "--import-realm", "--http-port=8180"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: adintel-local
+    volumes: [./keycloak/adintel-realm.json:/opt/keycloak/data/import/adintel-realm.json:ro]
+    ports: ["8180:8180"]
 
   langfuse-db:
     image: postgres:16-alpine

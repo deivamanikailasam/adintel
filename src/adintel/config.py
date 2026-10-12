@@ -68,6 +68,15 @@ class Settings(BaseSettings):
     jwt_audience: str = "adintel"
     jwt_ttl_minutes: int = 480
     dev_login_enabled: bool = True
+    # OIDC (Keycloak locally, Cognito/Entra/Okta in production). "dev" = local HS256 issuer only;
+    # "oidc" = RS256 tokens verified against the provider's JWKS; "both" accepts either (local only).
+    auth_mode: Literal["dev", "oidc", "both"] = "dev"
+    oidc_issuer: str = "http://localhost:8180/realms/adintel"
+    oidc_audience: str = "adintel-api"
+    oidc_client_id: str = "adintel-frontend"  # public SPA client (authorization code + PKCE)
+    oidc_jwks_url: str | None = None  # default: <issuer>/protocol/openid-connect/certs
+    oidc_tenant_claim: str = "tenant_id"  # Cognito: "custom:tenant_id"
+    oidc_roles_claim: str = "realm_access.roles"  # Cognito: "cognito:groups"; Entra: "roles"
     approval_signing_key: str = _DEV_APPROVAL_KEY
     recommendation_ttl_hours: int = 72
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4200"])
@@ -102,6 +111,8 @@ class Settings(BaseSettings):
                 problems.append("ADINTEL_JWT_SECRET is the development default")
             if self.approval_signing_key == _DEV_APPROVAL_KEY:
                 problems.append("ADINTEL_APPROVAL_SIGNING_KEY is the development default")
+            if self.auth_mode != "oidc":
+                problems.append("ADINTEL_AUTH_MODE must be oidc")
             if self.dev_login_enabled:
                 problems.append("ADINTEL_DEV_LOGIN_ENABLED must be false")
             if self.storage == "memory":

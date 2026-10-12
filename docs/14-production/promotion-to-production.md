@@ -33,9 +33,11 @@ implementation through configuration (`docs/01-architecture/aws-to-local-mapping
    private-app / private-data subnets, NAT with **static Elastic IPs** (give these to ad platforms that
    require IP allow-listing — output `nat_egress_ips`), VPC endpoints for Bedrock, SageMaker, Secrets
    Manager, SQS, KMS, Logs, ECR, Scheduler and S3.
-5. **Cognito** user pool (MFA on, `tenant_id` immutable attribute). Replace `security/auth.decode_token`
-   with RS256/JWKS verification against the pool; set `ADINTEL_DEV_LOGIN_ENABLED=false` (startup refuses
-   otherwise in staging/production).
+5. **Cognito** user pool (MFA on, `custom:tenant_id` immutable attribute, one group per AdIntel role).
+   No code change: set `ADINTEL_AUTH_MODE=oidc`, `ADINTEL_OIDC_ISSUER` to the pool URL,
+   `ADINTEL_OIDC_AUDIENCE`/`ADINTEL_OIDC_CLIENT_ID` to the app client, `ADINTEL_OIDC_TENANT_CLAIM=custom:tenant_id`,
+   `ADINTEL_OIDC_ROLES_CLAIM=cognito:groups`, and `ADINTEL_DEV_LOGIN_ENABLED=false`. Startup refuses
+   staging/production unless the mode is `oidc`. The same flow was rehearsed locally against Keycloak.
 
 **Exit criterion:** `terraform plan` clean; no resource has a public endpoint except the ALB and CloudFront.
 

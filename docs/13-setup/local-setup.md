@@ -96,6 +96,7 @@ docker compose -f deploy/docker-compose.yml ps     # all services "healthy"/"run
 | Prometheus | http://localhost:9090 | — |
 | Alertmanager | http://localhost:9093 | — |
 | Grafana (4 dashboards in folder "AdIntel") | http://localhost:3001 | `admin` / `adintel-local` |
+| Keycloak (enterprise SSO stand-in for Cognito, realm `adintel`) | http://localhost:8180 | `admin` / `adintel-local` |
 
 Switch AdIntel to the real services in `.env`:
 
@@ -157,6 +158,20 @@ Log in as one of the seeded users (local dev login, no password):
 | `admin@brightwave.example` | Admin (kill switches, audit) | — |
 | `viewer@brightwave.example` | Viewer (read-only) | — |
 | `am@acme.example` | Account manager at a **different agency** (isolation demo) | $500/day |
+
+**Enterprise sign-in (SSO).** With Compose running, the login page also shows **Sign in with SSO**. It
+redirects to Keycloak (authorization code + PKCE), where the same users exist with password
+`adintel-local`. The API verifies the Keycloak-signed token against its JWKS. To rehearse production
+behaviour, set `ADINTEL_AUTH_MODE=oidc` — the password-less dev login then stops working, exactly as in
+staging and production.
+
+| Variable | Local value | Production value |
+|----------|-------------|------------------|
+| `ADINTEL_AUTH_MODE` | `both` (Compose) / `dev` (bare) | `oidc` (enforced) |
+| `ADINTEL_OIDC_ISSUER` | `http://localhost:8180/realms/adintel` | `https://cognito-idp.<region>.amazonaws.com/<pool-id>` |
+| `ADINTEL_OIDC_AUDIENCE` | `adintel-api` | the Cognito app client id |
+| `ADINTEL_OIDC_TENANT_CLAIM` | `tenant_id` | `custom:tenant_id` |
+| `ADINTEL_OIDC_ROLES_CLAIM` | `realm_access.roles` | `cognito:groups` |
 
 ## 7. Walk through the product
 

@@ -72,7 +72,7 @@ class RedisSemanticCache(SemanticCache):
         v = get_embedder().embed_one(self._norm(question))
         try:
             raw = get_redis().lrange(self._key(tenant_id, brand_id), 0, MAX_ENTRIES_PER_SCOPE)
-        except Exception:  # noqa: BLE001 - a cache outage is a miss, never an error
+        except Exception:
             CACHE.labels(cache="semantic", result="error").inc()
             return None
         now = time.time()
@@ -105,7 +105,7 @@ class RedisSemanticCache(SemanticCache):
             pipe.ltrim(k, 0, MAX_ENTRIES_PER_SCOPE - 1)
             pipe.expire(k, int(self.ttl))
             pipe.execute()
-        except Exception:  # noqa: BLE001
+        except Exception:
             CACHE.labels(cache="semantic", result="error").inc()
 
 

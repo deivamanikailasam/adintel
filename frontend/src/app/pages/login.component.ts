@@ -17,6 +17,7 @@ import { AuthService } from '../core/auth.service';
         </select>
         <button class="primary" type="submit" [disabled]="busy()">Sign in</button>
       </form>
+      <p><button (click)="sso()">Sign in with SSO (Keycloak / your identity provider)</button></p>
       @if (error()) { <p class="error">{{ error() }}</p> }
     </div>
   `,
@@ -38,6 +39,10 @@ export class LoginComponent {
   email = this.users[0].email;
   busy = signal(false);
   error = signal('');
+
+  async sso(): Promise<void> {
+    try { await this.auth.loginSso(); } catch (e: any) { this.error.set(e?.message ?? 'SSO unavailable'); }
+  }
 
   async submit(): Promise<void> {
     this.busy.set(true);

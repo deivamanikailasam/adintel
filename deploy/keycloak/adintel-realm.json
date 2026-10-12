@@ -1,0 +1,273 @@
+{
+ "realm": "adintel",
+ "enabled": true,
+ "sslRequired": "external",
+ "registrationAllowed": false,
+ "accessTokenLifespan": 900,
+ "bruteForceProtected": true,
+ "roles": {
+  "realm": [
+   {
+    "name": "viewer"
+   },
+   {
+    "name": "account_manager"
+   },
+   {
+    "name": "senior_account_manager"
+   },
+   {
+    "name": "head_of_performance"
+   },
+   {
+    "name": "admin"
+   }
+  ]
+ },
+ "clients": [
+  {
+   "clientId": "adintel-frontend",
+   "name": "AdIntel web app",
+   "publicClient": true,
+   "standardFlowEnabled": true,
+   "directAccessGrantsEnabled": true,
+   "implicitFlowEnabled": false,
+   "redirectUris": [
+    "http://localhost:4200/*"
+   ],
+   "webOrigins": [
+    "http://localhost:4200"
+   ],
+   "attributes": {
+    "pkce.code.challenge.method": "S256",
+    "post.logout.redirect.uris": "http://localhost:4200/*"
+   },
+   "protocolMappers": [
+    {
+     "name": "audience",
+     "protocol": "openid-connect",
+     "protocolMapper": "oidc-audience-mapper",
+     "config": {
+      "included.custom.audience": "adintel-api",
+      "access.token.claim": "true",
+      "id.token.claim": "false"
+     }
+    },
+    {
+     "name": "tenant_id",
+     "protocol": "openid-connect",
+     "protocolMapper": "oidc-usermodel-attribute-mapper",
+     "config": {
+      "user.attribute": "tenant_id",
+      "claim.name": "tenant_id",
+      "jsonType.label": "String",
+      "access.token.claim": "true",
+      "id.token.claim": "true",
+      "userinfo.token.claim": "true"
+     }
+    }
+   ]
+  }
+ ],
+ "users": [
+  {
+   "username": "jordan@brightwave.example",
+   "email": "jordan@brightwave.example",
+   "emailVerified": true,
+   "firstName": "Jordan",
+   "lastName": "Lee",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "brightwave"
+    ]
+   },
+   "realmRoles": [
+    "account_manager"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  },
+  {
+   "username": "priya@brightwave.example",
+   "email": "priya@brightwave.example",
+   "emailVerified": true,
+   "firstName": "Priya",
+   "lastName": "Shah",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "brightwave"
+    ]
+   },
+   "realmRoles": [
+    "account_manager"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  },
+  {
+   "username": "sam@brightwave.example",
+   "email": "sam@brightwave.example",
+   "emailVerified": true,
+   "firstName": "Sam",
+   "lastName": "Ortiz",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "brightwave"
+    ]
+   },
+   "realmRoles": [
+    "senior_account_manager"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  },
+  {
+   "username": "hana@brightwave.example",
+   "email": "hana@brightwave.example",
+   "emailVerified": true,
+   "firstName": "Hana",
+   "lastName": "Kim",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "brightwave"
+    ]
+   },
+   "realmRoles": [
+    "head_of_performance"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  },
+  {
+   "username": "alex@brightwave.example",
+   "email": "alex@brightwave.example",
+   "emailVerified": true,
+   "firstName": "Alex",
+   "lastName": "Rivera",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "brightwave"
+    ]
+   },
+   "realmRoles": [
+    "head_of_performance"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  },
+  {
+   "username": "admin@brightwave.example",
+   "email": "admin@brightwave.example",
+   "emailVerified": true,
+   "firstName": "Ali",
+   "lastName": "Admin",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "brightwave"
+    ]
+   },
+   "realmRoles": [
+    "admin"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  },
+  {
+   "username": "viewer@brightwave.example",
+   "email": "viewer@brightwave.example",
+   "emailVerified": true,
+   "firstName": "Vic",
+   "lastName": "Viewer",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "brightwave"
+    ]
+   },
+   "realmRoles": [
+    "viewer"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  },
+  {
+   "username": "am@acme.example",
+   "email": "am@acme.example",
+   "emailVerified": true,
+   "firstName": "Acme",
+   "lastName": "AM",
+   "enabled": true,
+   "attributes": {
+    "tenant_id": [
+     "acme"
+    ]
+   },
+   "realmRoles": [
+    "account_manager"
+   ],
+   "credentials": [
+    {
+     "type": "password",
+     "value": "adintel-local",
+     "temporary": false
+    }
+   ]
+  }
+ ],
+ "attributes": {
+  "userProfileEnabled": "true"
+ },
+ "components": {
+  "org.keycloak.userprofile.UserProfileProvider": [
+   {
+    "providerId": "declarative-user-profile",
+    "config": {
+     "kc.user.profile.config": [
+      "{\"unmanagedAttributePolicy\": \"ADMIN_EDIT\", \"attributes\": [{\"name\": \"username\"}, {\"name\": \"email\"}, {\"name\": \"firstName\"}, {\"name\": \"lastName\"}]}"
+     ]
+    }
+   }
+  ]
+ }
+}

@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
+  { path: 'auth/callback', loadComponent: () => import('./pages/callback.component').then(m => m.CallbackComponent) },
   { path: 'login', loadComponent: () => import('./pages/login.component').then(m => m.LoginComponent) },
   { path: '', canActivate: [authGuard], children: [
     { path: '', pathMatch: 'full', redirectTo: 'brands' },

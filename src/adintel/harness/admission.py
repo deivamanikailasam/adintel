@@ -70,7 +70,7 @@ class RedisRateLimiter:
             pipe.expire(k, int(self.window) + 1)
             pipe.execute()
             return True
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logging.getLogger(__name__).warning("rate_limiter_redis_unavailable", extra={"reason": str(exc)[:120]})
             return True
 

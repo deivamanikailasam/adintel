@@ -32,6 +32,17 @@ def dev_login(body: DevLogin, database: Database = Depends(db)) -> dict[str, Any
     return {"access_token": issue_token(user), "token_type": "bearer", "user": user.model_dump(mode="json")}
 
 
+@router.get("/auth/config")
+def auth_config() -> dict[str, Any]:
+    """What the frontend needs to start a login: which methods are on and where the OIDC provider is."""
+    s = get_settings()
+    return {
+        "mode": s.auth_mode,
+        "dev_login": s.dev_login_enabled and s.env in ("local", "test"),
+        "oidc": None if s.auth_mode == "dev" else {"issuer": s.oidc_issuer, "client_id": s.oidc_client_id},
+    }
+
+
 @router.get("/me")
 def me(p: Principal = Depends(principal)) -> dict[str, Any]:
     return {
