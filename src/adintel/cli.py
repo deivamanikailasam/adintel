@@ -1,6 +1,7 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
 privacy-export, privacy-erase, offboard,
-audit-archive, backup, restore, restore-drill, migrate."""
+audit-archive, backup, restore, restore-drill, migrate,
+csv-template, csv-sample."""
 
 from __future__ import annotations
 
@@ -272,6 +273,24 @@ def cmd_migrate(args: argparse.Namespace) -> None:
     _print(migrate(db, dry_run=args.dry_run, owner=args.owner, break_stale_lock=args.break_stale_lock))
 
 
+def cmd_csv_template(args: argparse.Namespace) -> None:
+    from adintel.connectors.csv_files import TEMPLATE_COLUMNS
+
+    print(",".join(TEMPLATE_COLUMNS))
+    print("2026-10-05,cmp_1,Prospecting,as_1,Lookalike 1%,ad_set,12000,340,410.50,21,1890.00,450,USD")
+
+
+def cmd_csv_sample(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from adintel.config import get_settings
+    from adintel.connectors.csv_files import export_sample
+
+    end = date.fromisoformat(args.period_end)
+    out = Path(args.out) if args.out else get_settings().csv_dir
+    _print([str(p) for p in export_sample(args.tenant, args.brand, end - timedelta(days=args.days - 1), end, out)])
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -357,6 +376,14 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--owner", default="cli")
     sp.add_argument("--break-stale-lock", action="store_true", help="take over a lock older than 30 minutes")
     sp.set_defaults(fn=cmd_migrate)
+    sub.add_parser("csv-template", help="print the bring-your-own-data CSV header").set_defaults(fn=cmd_csv_template)
+    sp = sub.add_parser("csv-sample", help="write a brand's synthetic data as template CSVs (a worked example)")
+    sp.add_argument("--tenant", default="brightwave")
+    sp.add_argument("--brand", required=True)
+    sp.add_argument("--period-end", required=True)
+    sp.add_argument("--days", type=int, default=120)
+    sp.add_argument("--out")
+    sp.set_defaults(fn=cmd_csv_sample)
     args = p.parse_args(argv)
     args.fn(args)
 

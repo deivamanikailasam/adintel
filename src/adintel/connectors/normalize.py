@@ -87,6 +87,43 @@ KNOWN_FIELDS: dict[Platform, set[str]] = {
 }
 
 
+CANONICAL_FORMAT = "adintel-csv/1"
+CANONICAL_FIELDS = {
+    "date",
+    "campaign_id",
+    "campaign_name",
+    "entity_id",
+    "entity_name",
+    "entity_type",
+    "impressions",
+    "clicks",
+    "spend",
+    "conversions",
+    "revenue",
+    "daily_budget",
+    "currency",
+}
+
+
+def _canonical_row(r: dict[str, Any]) -> dict[str, Any]:
+    """One row of the bring-your-own-data CSV template (amounts in the account currency, not micros)."""
+    budget = (r.get("daily_budget") or "").strip() if isinstance(r.get("daily_budget"), str) else r.get("daily_budget")
+    return dict(
+        date=date.fromisoformat(str(r["date"]).strip()),
+        campaign_id=str(r["campaign_id"]).strip(),
+        campaign_name=str(r["campaign_name"]).strip(),
+        entity_id=str(r["entity_id"]).strip(),
+        entity_name=str(r["entity_name"]).strip(),
+        entity_type=(str(r.get("entity_type") or "").strip() or "ad_set"),
+        impressions=int(float(r["impressions"])),
+        clicks=int(float(r["clicks"])),
+        spend=float(r["spend"]),
+        conversions=float(r["conversions"]),
+        revenue=float(r.get("revenue") or 0),
+        daily_budget=float(budget) if budget not in (None, "") else None,
+    )
+
+
 def _action(items: list[dict[str, Any]] | None, kind: str) -> float:
     for a in items or []:
         if a.get("action_type") == kind:
@@ -178,12 +215,13 @@ def normalise(fetch: RawFetch, *, tenant_id: str, brand_id: str) -> tuple[list[M
     fx = FX_TO_USD.get(fetch.account_currency)
     if fx is None:
         raise ValueError(f"no FX rate for {fetch.account_currency}")
-    known = KNOWN_FIELDS[fetch.platform]
+    canonical = fetch.api_version == CANONICAL_FORMAT
+    known = CANONICAL_FIELDS if canonical else KNOWN_FIELDS[fetch.platform]
     unmapped: set[str] = set()
     out: list[MetricRow] = []
     for raw in fetch.rows:
         unmapped |= set(raw) - known
-        r = _row(fetch.platform, raw)
+        r = _canonical_row(raw) if canonical else _row(fetch.platform, raw)
         out.append(
             MetricRow(
                 tenant_id=tenant_id,

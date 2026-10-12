@@ -51,3 +51,5 @@ frontend/.angular/
 # Operator output
 backups/
 offboarding/
+data/import/*
+!data/import/README.md

@@ -58,14 +58,15 @@ class Settings(BaseSettings):
 
     # --- tools ------------------------------------------------------------------------------------
     sandbox: Literal["subprocess", "docker"] = "subprocess"
-    connectors: Literal["synthetic", "live"] = "synthetic"
+    connectors: Literal["synthetic", "csv", "live"] = "synthetic"
+    csv_dir: Path = REPO_ROOT / "data" / "import"  # bring-your-own-data: <tenant>/<brand>/<platform>.csv
     secrets: Literal["file", "aws"] = "file"
     secrets_dir: Path = REPO_ROOT / "secrets"
 
     # --- audit archive (write-once copy of the hash chain) ----------------------------------------
     # Always written to a local directory (files made read-only); additionally uploaded to an
     # S3-compatible bucket with Object Lock when a bucket is set (MinIO locally, S3 in production).
-    audit_archive_dir: Path = REPO_ROOT / "var" / "audit-archive"
+    audit_archive_dir: Path | None = None  # default: <var_dir>/audit-archive
     audit_archive_s3_bucket: str | None = None
     audit_archive_s3_endpoint: str | None = None  # e.g. http://localhost:9000 for MinIO; None = AWS
     audit_archive_lock_mode: Literal["GOVERNANCE", "COMPLIANCE"] = "GOVERNANCE"

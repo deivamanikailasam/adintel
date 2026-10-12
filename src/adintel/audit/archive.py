@@ -46,7 +46,8 @@ class ArchiveCheck:
 
 
 def _root(archive_dir: Path | None) -> Path:
-    return Path(archive_dir or get_settings().audit_archive_dir)
+    s = get_settings()
+    return Path(archive_dir or s.audit_archive_dir or s.var_dir / "audit-archive")
 
 
 def _segments(tdir: Path) -> list[Path]:

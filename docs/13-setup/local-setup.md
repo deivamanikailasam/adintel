@@ -193,6 +193,34 @@ make gate           # promotion gate vs evals/baseline.json
 
 Use `--sample 3` for a quick pass. See `docs/07-evaluation/evaluation.md`.
 
+## 8a. Use your own ad data (no platform API access needed)
+
+AdIntel can run on CSV exports instead of live APIs:
+
+```bash
+.venv/bin/adintel csv-template                                   # the header row + an example line
+.venv/bin/adintel csv-sample --brand urban-roast --period-end 2026-10-11   # worked example → data/import/
+# put your exports at data/import/<tenant>/<brand>/<platform>.csv, then in .env:
+ADINTEL_CONNECTORS=csv
+```
+
+| Column | Meaning |
+|--------|---------|
+| `date` | `YYYY-MM-DD`, one row per entity per day |
+| `campaign_id`, `campaign_name` | Campaign |
+| `entity_id`, `entity_name`, `entity_type` | The level budgets are set at (ad set / ad group / campaign) |
+| `impressions`, `clicks`, `spend`, `conversions`, `revenue` | Daily totals; money in the account currency |
+| `daily_budget` | Budget on that day (the latest row is the "live" budget) |
+| `currency` | ISO code, one per file; converted to USD like every connector |
+
+Give at least 28 days of history (anomaly detection needs it; 180 is ideal). Unknown columns are reported
+as schema drift, a missing file as a platform outage — the same visible degradations as live APIs.
+
+**Approved changes are executed manually.** The executor still runs every check, then writes the exact
+instruction to `data/import/<tenant>/<brand>/outbox.jsonl` ("Set the daily budget of 'Retargeting' from 800
+to 600") and records the new budget in `budgets.json`. You make the change in the ad platform's UI.
+Nothing is ever sent to an ad platform from this mode.
+
 ## 8b. Back up, archive, and practise a restore
 
 ```bash

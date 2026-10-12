@@ -106,7 +106,9 @@ models; cost per run path within ±15% of the accepted baseline.
    network-isolated task (or Firecracker/Lambda without VPC egress) with cgroup CPU/memory limits.
 5. Connectors: implement `connectors/live.py` for each platform (OAuth app per agency, **read-only scopes for
    ingestion**, write scopes only in the executor's credentials); add nightly **contract tests** against
-   read-only sandbox accounts to catch API schema drift before it breaks a run.
+   read-only sandbox accounts to catch API schema drift before it breaks a run. Until a platform's API access
+   is approved, a brand can go live on `ADINTEL_CONNECTORS=csv` (scheduled exports into the CSV directory,
+   manual execution from the outbox) — same agents, gates and audit, no platform write access at all.
 6. Frontend: `ng build --configuration production` → S3 + CloudFront; WAF on the ALB; CSP headers at the CDN.
 
 **Exit criterion:** staging smoke (`/ready`), the 40-scenario E2E golden runs and the k6 Monday-peak test
