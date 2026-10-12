@@ -74,7 +74,7 @@ jobs:
       - run: uv venv -p 3.12 && uv pip install -e ".[dev]" pip-audit
       - run: .venv/bin/bandit -q -r src
       - run: .venv/bin/pip-audit --strict --progress-spinner off || true   # report-only until a waiver process exists
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: cd frontend && npm ci && npm audit --audit-level=high --omit=dev
       - name: build image
@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: cd frontend && npm ci && npx ng build --configuration production
       - run: cd frontend && npx ng test --watch=false --browsers=ChromeHeadless
