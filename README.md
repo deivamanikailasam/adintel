@@ -84,6 +84,10 @@ flowchart LR
   pinning, encrypted credentials with per-scope keys, SCIM provisioning, launchd/systemd services and an HTTPS edge
   (`llm/bulkhead.py`, `llm/shadow.py`, `security/egress.py`, `llm/weights.py`, `security/secret_crypto.py`,
   `api/routers/scim.py`, `deploy/services`, `deploy/caddy`).
+- **Trust and integration:** read-only MCP server for other AI agents, Ed25519-signed reports with AI disclosure,
+  break-glass emergency access, versioned `/v1` API with a contract test, host health alerts and status banner,
+  idle sign-out and an accessibility pass (`mcp/`, `audit/provenance.py`, `security/break_glass.py`,
+  `observability/host.py`, `contract/`).
 - **Production path:** Terraform for AWS, GitHub Actions CI/CD with blue/green and auto-rollback, migrations as a
   one-off task, SBOMs and secret scanning (`infra/`, `.github/`). Readiness:
   [production-readiness matrix](docs/14-production/production-readiness-matrix.md) and [owner decisions](docs/03-governance/owner-decisions.md).
@@ -94,7 +98,7 @@ flowchart LR
 make lint typecheck test-cov security evals gate
 ```
 
-ruff · mypy --strict · ~300 tests (89% coverage, 85% gate) · bandit · 10 eval suites · promotion gate.
+ruff · mypy --strict · ~320 tests (89% coverage, 85% gate) · bandit · 10 eval suites · promotion gate.
 
 ## Documentation
 

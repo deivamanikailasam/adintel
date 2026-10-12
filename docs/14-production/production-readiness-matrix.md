@@ -18,6 +18,7 @@ decided, why, where it is enforced, and the human actions still needed.
 | Bounded autonomy (L2) | Agents propose; signed human approval; executor has no model | — | Same | `test_approvals_executor.py`, architecture tests | ✅ |
 | Budgets, timeouts, kill switches | Per-run budget, nested timeouts, 4-level switches | — | Same | `test_harness.py`, chaos tests | ✅ |
 | Feature flags / staged rollout | Per tenant and brand, audited, visible degradation | — | Same | `test_feedback_loop.py` | ✅ |
+| Agent interoperability (MCP) | Read-only MCP server acting as the signed-in user, outputs fenced as data ([mcp.md](../17-api/mcp.md)) | direct `/v1` API | Same | `test_mcp.py` | ✅ |
 | Degradation, never silent failure | 21-row matrix → report caveats + metrics | — | Same | `test_harness.py::matrix covers every code` | ✅ |
 | Checkpoint & resume | State after every step | — | Atlas | chaos tests | ✅ |
 
@@ -50,6 +51,8 @@ decided, why, where it is enforced, and the human actions still needed.
 | Enterprise SSO | Keycloak OIDC, PKCE, JWKS verification | dev login (local only) | Cognito / Entra ID / Okta | `test_oidc.py` | ✅ |
 | Least privilege | IdP roles ∩ AdIntel roles; process-scoped secrets | — | + IAM task roles | `test_oidc.py`, secrets tests | ✅ |
 | User lifecycle (SCIM 2.0) | `/scim/v2/Users`, per-tenant hashed tokens, deactivation effective on next request | admin-managed users | Okta / Entra ID provisioning | `test_scim.py` | ✅ |
+| Emergency access (break-glass) | Two-person or paged emergency elevation, auto-expiry, no money authority ([break-glass.md](../04-security/break-glass.md)) | — | Same + IdP PIM | `test_break_glass.py` | ✅ |
+| Web sessions & accessibility | Idle sign-out, refresh, IdP logout; WCAG 2.1 AA target ([details](../16-frontend/accessibility-and-sessions.md)) | — | Same | `auth.service.spec.ts` | 🟡 formal accessibility audit pending |
 | Tenant isolation (3 layers) | Data access, retrieval pre-filter, output scan | — | Same | `test_storage.py`, cross-tenant evals (0 leakage gate) | ✅ |
 | Sandboxed code execution | Subprocess with AST allow-list | Docker, network-isolated | Separate task / Firecracker | `test_sandbox.py` | ✅ |
 | Secrets | File store with scope policy, AES-256-GCM at rest, one key per scope | plaintext (dev only) | Secrets Manager + KMS + IAM | `test_secret_crypto.py` | ✅ |
@@ -64,6 +67,7 @@ decided, why, where it is enforced, and the human actions still needed.
 | Approval matrix, four-eyes, signed approvals | 7 server-side checks, HMAC | — | Same + KMS key | `test_approvals_executor.py` | ✅ |
 | Tamper-evident audit | Hash chain, daily verify | — | Same | `test_audit.py` | ✅ |
 | Write-once audit archive | Read-only segments + MinIO Object Lock, compared with the DB nightly | files only (bare metal) | S3 Object Lock, compliance, 7 years | `test_archive_backup.py` | ✅ |
+| Report provenance | Ed25519-signed reports with AI disclosure; public key + validity endpoint | — | KMS-held key | `test_provenance.py` | ✅ |
 | Retention & legal hold | Catalogue-driven daily purge | — | Same + Mongo TTL | `test_privacy.py` | ✅ |
 | Data-subject rights | Export and erasure (pseudonymisation) | — | Same | `test_privacy.py`, API tests | ✅ |
 | Tenant offboarding | Kill switch → verifiable export → delete → revoke | — | + revoke platform OAuth grants | `test_privacy.py` | 🟡 OAuth revocation is a runbook step |
@@ -85,10 +89,12 @@ decided, why, where it is enforced, and the human actions still needed.
 | Capability | Local implementation | Alternatives | Production | Evidence | Status |
 |-----------|----------------------|--------------|-----------|----------|--------|
 | Observability | Langfuse, Jaeger, Prometheus, Grafana, Alertmanager | — | + CloudWatch, X-Ray, PagerDuty | `test_observability.py`, dashboards | ✅ |
+| Host health & status banner | Disk / memory / load alerts; `GET /status` banner | — | CloudWatch / ECS health | `test_host_status.py` | ✅ |
 | Backups & restore drills | `adintel backup` (auto-drill), `scripts/backup.sh` | — | Atlas PITR + quarterly DR test | `test_archive_backup.py` | ✅ |
 | Process supervision & TLS | launchd / hardened systemd units (separate executor user), Caddy HTTPS edge ([team access](../13-setup/team-access.md)) | terminals (dev) | ECS services + ALB/CloudFront | `scripts/install_services.sh --print` | ✅ |
 | Runbooks, cadence & on-call | P1 runbooks; [on-call policy](../12-operations/on-call.md); Alertmanager → API webhook → Governance console | — | PagerDuty / Slack receivers | API tests | 🟡 decided; staff the rotation (≥ 4) |
 | CI/CD | GitHub Actions: lint, types, tests, evals, security, SBOM | — | Blue/green with auto-rollback, migrations task | `.github/workflows` | 🟡 needs AWS accounts and secrets |
+| API versioning & contract | `/v1`, committed contract, breaking-change test, Deprecation/Sunset headers ([policy](../17-api/versioning.md)) | — | Same | `test_api_contract.py` | ✅ |
 | Capacity | k6 Monday-peak profile | — | Load test at real scale in staging | `tests/load` | 🟡 |
 
 ## Known limits of the local setup (by design)
