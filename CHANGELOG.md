@@ -24,3 +24,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0012 | RAG: semantic chunking, hybrid search with tenant pre-filter, reranking, numeric grounding | [0012](docs/changelog/0012-rag.md) |
 | 0013 | Analyst agent with mix-vs-rate decomposition and a code sandbox | [0013](docs/changelog/0013-analyst-and-sandbox.md) |
 | 0014 | Optimizer agent (proposes only) and pure-code brand constraints | [0014](docs/changelog/0014-optimizer-and-constraints.md) |
+| 0015 | Report agent with a grounding fallback ladder and code-enforced caveats | [0015](docs/changelog/0015-report-agent.md) |

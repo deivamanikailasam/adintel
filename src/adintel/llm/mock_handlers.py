@@ -97,3 +97,34 @@ def _optimizer(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -
                       f"{after[target]['entity_name']}, reversing the platform's reallocation, as in the cited "
                       "incident and playbook."),
         "citation_chunk_ids": ids[:2]}]})
+
+
+@register("ReportOutput")
+def _report(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
+    f = ctx.get("findings", {})
+    cur, ch = f.get("current", {}), f.get("changes", {})
+
+    def money(v: Any) -> str:
+        return "n/a" if v is None else f"${v:,.2f}"
+
+    an = f.get("anomalies", [])
+    anomaly_text = " ".join(
+        f"On {a['platform']}, {a['campaign']} saw {a['metric'].upper()} at {a['observed']} against an expected "
+        f"{a['expected']} for {a['days']} days." for a in an) or "Nothing unusual stood out this week."
+    rc = " ".join(r["summary"] for r in f.get("root_causes", []))
+    recs = " ".join(f"We propose moving {money(r['amount_usd_per_day'])} per day, pending your account team's "
+                    "approval." for r in f.get("recommendations", [])) or "No changes are proposed."
+    sc = ch.get("spend_change_pct")
+    spend_move = f" ({abs(sc):.1f}% {'up' if sc > 0 else 'down'} on the prior period)" if sc is not None else ""
+    sections = [
+        {"key": "summary", "title": "Summary", "body": f"A steady week for {f.get('brand')}." if not an else
+         f"One area needs attention this week for {f.get('brand')}."},
+        {"key": "performance", "title": "Performance", "body": (
+            f"You invested {money(cur.get('spend'))}{spend_move}, driving {cur.get('conversions')} conversions at a "
+            f"CPA of {money(cur.get('cpa'))}.")},
+        {"key": "anomalies", "title": "What changed", "body": f"{anomaly_text} {rc}".strip()},
+        {"key": "recommendations", "title": "Proposed actions", "body": recs},
+        {"key": "caveats", "title": "Caveats", "body": " ".join(f.get("caveats", [])) or "None."},
+        {"key": "next_steps", "title": "Next steps", "body": "We'll review progress together next week."},
+    ]
+    return json.dumps({"title": f"{f.get('brand')} weekly report", "sections": sections})
