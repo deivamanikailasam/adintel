@@ -21,3 +21,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0009 | Ad-platform connectors (5 platforms, synthetic worlds), normaliser, scoped secrets | [0009](docs/changelog/0009-connectors-and-secrets.md) |
 | 0010 | Ingestion and Data Quality agents (seven deterministic checks) | [0010](docs/changelog/0010-ingestion-and-data-quality.md) |
 | 0011 | Anomaly Detection agent: STL seasonal band + Isolation Forest, no LLM | [0011](docs/changelog/0011-anomaly-detection.md) |
+| 0012 | RAG: semantic chunking, hybrid search with tenant pre-filter, reranking, numeric grounding | [0012](docs/changelog/0012-rag.md) |
