@@ -50,3 +50,12 @@ def mock_llm():
     set_provider_override(m)
     yield m
     set_provider_override(None)
+
+
+@pytest.fixture(autouse=True)
+def _fresh_queues():
+    from adintel.queueing import reset_queues
+
+    reset_queues()
+    yield
+    reset_queues()

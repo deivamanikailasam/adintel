@@ -206,7 +206,7 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
         update["degradations"] = [degrade(DegradationCode.INSUFFICIENT_HISTORY, AgentName.ANOMALY, f"{days} days")]
         return update
     rules_doc = ctx.repo("brand_rules").find_one({"brand_id": ctx.brand_id})
-    rules = BrandRules.model_validate(rules_doc) if rules_doc else None
+    rules = BrandRules.from_doc(rules_doc) if rules_doc else None
     anomalies, evaluated, suppressed = detect(df, state.period_end, rules)
     log.info("anomaly_pass", extra={"series": evaluated, "found": len(anomalies), "suppressed": len(suppressed),
                                     "material": sum(1 for a in anomalies if a.severity.rank >= 1)})

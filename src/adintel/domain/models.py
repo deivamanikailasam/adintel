@@ -31,6 +31,11 @@ from adintel.domain.enums import (
 class Model(BaseModel):
     model_config = ConfigDict(use_enum_values=False, extra="forbid")
 
+    @classmethod
+    def from_doc(cls, doc: dict[str, Any]) -> Any:
+        """Build from a stored document, ignoring workflow fields added by other services."""
+        return cls.model_validate({k: v for k, v in doc.items() if k in cls.model_fields})
+
 
 # --------------------------------------------------------------------------------------------------
 # Tenancy and people

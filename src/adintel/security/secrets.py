@@ -26,7 +26,7 @@ from adintel.core.errors import AuthError
 log = logging.getLogger(__name__)
 
 POLICY: dict[str, set[str]] = {
-    "api": set(),
+    "api": {"read"},  # approval-time live-state re-check (check 7); never write
     "worker": {"read"},
     "executor": {"read", "write"},
     "scheduler": set(),

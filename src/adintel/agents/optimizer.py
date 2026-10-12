@@ -77,7 +77,7 @@ def run(state: RunState, ctx: AgentContext) -> dict[str, Any]:
     entity_ids = sorted(set(facts.get("entities_before", {})) | set(facts.get("entities_after", {})))
     live = _live_entities(ctx, anomaly.platform, entity_ids)
     rules_doc = ctx.repo("brand_rules").find_one({"brand_id": ctx.brand_id})
-    rules = BrandRules.model_validate(rules_doc) if rules_doc else BrandRules(tenant_id=ctx.tenant_id,
+    rules = BrandRules.from_doc(rules_doc) if rules_doc else BrandRules(tenant_id=ctx.tenant_id,
                                                                               brand_id=ctx.brand_id)
     brand = ctx.repo("brands").find_one({"brand_id": ctx.brand_id}) or {}
     try:
