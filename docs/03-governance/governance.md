@@ -89,7 +89,7 @@ with `agent.optimizer` off for two weekly cycles, then on for one pilot brand, t
 | Local guard rails | `.pre-commit-config.yaml` | ruff, mypy, gitleaks, no secrets / client data / model weights in git |
 | Dependency hygiene | `.github/dependabot.yml` | Weekly grouped updates for pip, npm, Actions, Docker, Terraform — each through the full CI and eval gate |
 | Supply chain | CI `supply-chain` job | Full-history secret scan; CycloneDX SBOM (Python) and SPDX SBOM (image) attached to every build |
-| Branch protection as code | `.github/rulesets/*.json`, `scripts/apply_repo_rules.sh` | Default branch: PR only, 1 approval + code owner, stale approvals dismissed, last push approved, threads resolved, all 9 CI jobs required and up to date, linear history, no force push or deletion; admins may bypass review only through a PR. Release tags `v*` immutable. Secret scanning + push protection on. A test keeps required checks equal to the CI job list |
+| Branch protection as code | `.github/rulesets/*.json`, `scripts/apply_repo_rules.sh` | Default branch: PR only, 1 approval + code owner, stale approvals dismissed, last push approved, threads resolved, all 10 CI jobs required and up to date, linear history, no force push or deletion; admins may bypass review only through a PR. Release tags `v*` immutable. Secret scanning + push protection on. A test keeps required checks equal to the CI job list |
 
 ## Governance artefacts
 

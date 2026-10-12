@@ -47,4 +47,11 @@ Without `ADINTEL_MCP_API_URL` the server runs the API in-process against the con
 - **Short-lived tokens.** Use the user's normal (OIDC) token; when they leave, SCIM deactivation stops the
   MCP access on the next call.
 
-Tests: `tests/unit/test_mcp.py`.
+## Compatibility
+
+Implements the MCP stdio transport (JSON-RPC 2.0, newline-delimited) and negotiates protocol versions
+`2025-06-18`, `2025-03-26` and `2024-11-05`: a client asking for a newer revision is answered with
+`2025-06-18`, which current SDKs accept. Verified with the **official MCP Python SDK clients, 1.x (1.30) and
+2.x (2.3)**, over a real subprocess (`tests/mcp/test_sdk_conformance.py`; CI jobs `tests` and `mcp-compat`).
+
+Tests: `tests/unit/test_mcp.py` (protocol, scope, errors) and `tests/mcp/test_sdk_conformance.py` (SDK clients).

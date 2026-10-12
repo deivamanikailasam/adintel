@@ -32,6 +32,8 @@ dependencies = [
 [project.optional-dependencies]
 # Real embeddings + cross-encoder reranking (BGE family, ONNX — runs on a laptop CPU).
 ml = ["fastembed>=0.4"]
+# The official MCP SDK — only for the MCP conformance tests (the server itself has no dependency on it).
+mcp = ["mcp>=1.9"]
 # Production adapters (Bedrock, SQS, Secrets Manager). Not needed locally.
 aws = ["boto3>=1.35"]
 dev = [
