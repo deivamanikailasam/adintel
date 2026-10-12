@@ -385,12 +385,8 @@ def cmd_verify_report(args: argparse.Namespace) -> None:
     sys.exit(0 if out["valid"] else 1)
 
 
-def main(argv: list[str] | None = None) -> None:
-    from adintel.config import get_settings
-    from adintel.observability.logging import configure_logging
-
-    s = get_settings()
-    configure_logging(s.log_level if os.environ.get("ADINTEL_LOG_LEVEL") else "WARNING", s.log_json)
+def build_parser() -> argparse.ArgumentParser:
+    """Every command; also used to generate docs/13-setup/cli-reference.md."""
     p = argparse.ArgumentParser(prog="adintel", description=__doc__)
     sub = p.add_subparsers(dest="cmd", required=True)
     sp = sub.add_parser("seed", help="load synthetic tenants, brands, users, rules and knowledge base")
@@ -506,6 +502,16 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("file")
     sp.add_argument("--public-key", help="PEM from /.well-known/adintel-report-key (default: this install's key)")
     sp.set_defaults(fn=cmd_verify_report)
+    return p
+
+
+def main(argv: list[str] | None = None) -> None:
+    from adintel.config import get_settings
+    from adintel.observability.logging import configure_logging
+
+    s = get_settings()
+    configure_logging(s.log_level if os.environ.get("ADINTEL_LOG_LEVEL") else "WARNING", s.log_json)
+    p = build_parser()
     args = p.parse_args(argv)
     args.fn(args)
 

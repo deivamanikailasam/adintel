@@ -1,5 +1,8 @@
 # Data map
 
+What personal data exists and who can read it. The complete list of collections, with retention and how each
+is purged, is the generated [data inventory](data-inventory.md).
+
 | Data | Source | Where (local / prod) | Contains PII? | Retention | Who can read |
 |------|--------|----------------------|---------------|-----------|--------------|
 | Daily metrics | Ad platforms (read API) | `metrics_daily` (Mongo) | No (aggregates) | 25 months | Tenant users in brand scope; agents via tenant repo |
@@ -15,6 +18,12 @@
 | Chat sessions | Account managers | `chat_sessions` | Possibly | 90 days | The user, tenant admins |
 | Feedback | Account managers | `feedback` | User IDs | 24 months | ML lead (flywheel) |
 | Users | Agency | `users` / Cognito | Name, email | Account lifetime | Tenant admins |
+| Break-glass grants | Staff requests | `access_grants` | User ids, reason, ticket | 7 years | Admins, security |
+| SCIM tokens | Admin (CLI) | `scim_tokens` | No (SHA-256 of token only) | Until revoked | System |
+| Feature flags | Admins | `feature_flags` | Actor user id | Indefinite | Admins, seniors |
+| Outcomes | AdIntel (14-day grading) | `outcomes` | No | 7 years | Admins, seniors |
+| Shadow results | Challenger model outputs | `shadow_results` | Redacted model output | 90 days | Admins, seniors, ML lead |
+| Signed reports | AdIntel | `reports.provenance` | No | With the report | Public: validity only |
 
 **Models:** locally, all inference runs on your machine (mlx-lm); nothing leaves it. In production, Bedrock
 is used with data retention disabled and no training on inputs; self-hosted models run inside the VPC.

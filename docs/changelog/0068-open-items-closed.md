@@ -11,3 +11,8 @@ accessibility conformance report, which turns five "pending manual verification"
 
 Checks: ruff, mypy --strict, ~325 backend tests (88 % coverage, gate 85 %), 24 frontend tests, MCP SDK 1.x and
 2.x conformance — all pass.
+
+## Why it matters (layman's terms)
+
+Three promises from the last review — "works with any sign-in provider", "speaks the agent standard
+properly", "usable by everyone" — are now each backed by a test that runs on every change, not by our word.

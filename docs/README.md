@@ -22,7 +22,7 @@ Plain-English notes for every change live in [changelog/](changelog/).
 | 01 | Architecture & system design | [Architecture](01-architecture/architecture.md) · [AWS ↔ local mapping](01-architecture/aws-to-local-mapping.md) · [Agent team](01-architecture/agent-team.md) · [Graph & harness](01-architecture/graph-and-harness.md) · [LLM gateway](01-architecture/llm-gateway.md) · [Model strategy](01-architecture/model-strategy.md) · [RAG & memory](01-architecture/rag-and-memory.md) · [Data model](01-architecture/data-model.md) |
 | 02 | Decisions | [27 ADRs](02-decisions/README.md) · [Open questions](02-decisions/open-questions.md) · [ADR template](02-decisions/template.md) · [Anti-patterns avoided](anti-patterns.md) |
 | 03 | Governance | [Governance & HITL](03-governance/governance.md) · [RACI](03-governance/raci.md) · [Client disclosure](03-governance/client-disclosure.md) |
-| 04 | Security | [Security](04-security/security.md) · [Threat model](04-security/threat-model.md) · [Tenant isolation](04-security/tenant-isolation.md) · [Data map](04-security/data-map.md) · [Privacy & data lifecycle](04-security/privacy-and-data-lifecycle.md) · [Red team](04-security/red-team.md) |
+| 04 | Security | [Security](04-security/security.md) · [Threat model](04-security/threat-model.md) · [Tenant isolation](04-security/tenant-isolation.md) · [Data map](04-security/data-map.md) · [Data inventory](04-security/data-inventory.md) · [Privacy & data lifecycle](04-security/privacy-and-data-lifecycle.md) · [Red team](04-security/red-team.md) |
 | 05 | Safety | [Safety principles → code → tests](05-safety/safety.md) |
 | 06 | Reliability | [Validation, timeouts & degradation](06-reliability/reliability.md) · [SLOs](06-reliability/slos.md) |
 | 07 | Evaluation | [Evaluation](07-evaluation/evaluation.md) · [Flywheel](07-evaluation/flywheel.md) · [Promotion gate](07-evaluation/promotion-gate.md) |
@@ -31,7 +31,7 @@ Plain-English notes for every change live in [changelog/](changelog/).
 | 10 | Audit | [Audit, determinism & reproducibility](10-audit/audit-and-reproducibility.md) |
 | 11 | Cost | [Cost, tokens & latency](11-cost/cost-model.md) |
 | 12 | Operations | [Runbooks](12-operations/runbooks.md) · [Cadence](12-operations/operational-cadence.md) · [Disaster recovery](12-operations/disaster-recovery.md) · [Incident template](12-operations/incidents/TEMPLATE.md) |
-| 13 | Setup | [Local setup](13-setup/local-setup.md) · [Model servers: mlx-lm, Ollama, LM Studio, llama.cpp, vLLM](13-setup/model-servers.md) · [Team access: services + HTTPS](13-setup/team-access.md) |
+| 13 | Setup | [Local setup](13-setup/local-setup.md) · [Model servers: mlx-lm, Ollama, LM Studio, llama.cpp, vLLM](13-setup/model-servers.md) · [Team access: services + HTTPS](13-setup/team-access.md) · [Configuration reference](13-setup/configuration-reference.md) · [CLI reference](13-setup/cli-reference.md) |
 | 14 | Production | [Promotion to production](14-production/promotion-to-production.md) · [Environments & CI/CD](14-production/environments-and-cicd.md) · [Production-readiness matrix](14-production/production-readiness-matrix.md) |
 | 15 | Fine-tuning | [Report model LoRA](15-finetuning/finetuning.md) |
 | 16 | Frontend | [Angular app](16-frontend/frontend.md) |

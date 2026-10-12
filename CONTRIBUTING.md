@@ -29,6 +29,14 @@ make lint typecheck test-cov security evals gate
 All six must be green. `make gate` is the same promotion gate CI runs — see
 `docs/07-evaluation/promotion-gate.md`.
 
+## Reference docs are generated
+
+`docs/13-setup/configuration-reference.md`, `docs/13-setup/cli-reference.md` and
+`docs/04-security/data-inventory.md` come from the code: after adding a setting (with its description in
+`scripts/gen_reference_docs.py`), a CLI command or a collection, run `.venv/bin/python scripts/gen_reference_docs.py`.
+`tests/unit/test_docs_in_sync.py` fails if they are stale, if an API route is missing from the API reference,
+if a changelog note lacks its plain-English section, or if any doc link is broken.
+
 ## Non-negotiables (from the safety principles)
 
 - Never add model access to the executor (`src/adintel/executor/`). A test enforces this.
