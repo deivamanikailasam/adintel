@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
         with: { role-to-assume: "${{ secrets.AWS_STAGING_DEPLOY_ROLE }}", aws-region: us-east-1 }
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
       - working-directory: infra/terraform/envs/staging
         run: terraform init && terraform apply -auto-approve -var "image=${{ needs.build.outputs.image }}"
       - name: data migrations (one-off ECS task; expand/contract keeps old and new code compatible)
@@ -60,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: aws-actions/configure-aws-credentials@v4
         with: { role-to-assume: "${{ secrets.AWS_PROD_DEPLOY_ROLE }}", aws-region: us-east-1 }
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
       - name: blue/green deploy (CodeDeploy shifts 10% → 50% → 100%, auto-rollback alarms attached)
         working-directory: infra/terraform/envs/prod
         run: terraform init && terraform apply -auto-approve -var "image=${{ needs.build.outputs.image }}"
