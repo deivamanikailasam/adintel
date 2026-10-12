@@ -36,6 +36,10 @@ jobs:
       - uses: hashicorp/setup-terraform@v3
       - working-directory: infra/terraform/envs/staging
         run: terraform init && terraform apply -auto-approve -var "image=${{ needs.build.outputs.image }}"
+      - name: data migrations (one-off ECS task; expand/contract keeps old and new code compatible)
+        run: >
+          scripts/ecs_migrate.sh ${{ vars.ECS_CLUSTER }} adintel-scheduler ${{ vars.PRIVATE_APP_SUBNETS }}
+          ${{ vars.APP_SECURITY_GROUP }} release-${{ github.sha }}
       - name: golden E2E + full evals against staging models (gate)
         run: |
           pip install -e ".[dev,aws]"
@@ -60,3 +64,7 @@ jobs:
       - name: blue/green deploy (CodeDeploy shifts 10% → 50% → 100%, auto-rollback alarms attached)
         working-directory: infra/terraform/envs/prod
         run: terraform init && terraform apply -auto-approve -var "image=${{ needs.build.outputs.image }}"
+      - name: data migrations (one-off ECS task; expand/contract keeps old and new code compatible)
+        run: >
+          scripts/ecs_migrate.sh ${{ vars.ECS_CLUSTER }} adintel-scheduler ${{ vars.PRIVATE_APP_SUBNETS }}
+          ${{ vars.APP_SECURITY_GROUP }} release-${{ github.sha }}

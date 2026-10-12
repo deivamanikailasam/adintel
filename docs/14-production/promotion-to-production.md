@@ -189,6 +189,7 @@ are canaried separately at 5% for 48 hours.**
 - [ ] Executor task role: write secrets allowed, **all model APIs explicitly denied**; worker/api: write secrets denied
 - [ ] Atlas PrivateLink only; KMS; PITR; audit role insert/find only; vector index at the production dimension
 - [ ] S3 Object Lock audit archive running nightly; `adintel verify-audit` and `adintel audit-archive --verify` green
+- [ ] `adintel migrate --check` green on production (release pipeline runs migrations as a one-off task; ADR L-13)
 - [ ] Retention purge running (`adintel purge --dry-run` reviewed by the privacy officer first)
 - [ ] Every tier pinned to an exact model ID; adapters signed and hash-pinned; eval report attached
 - [ ] All hard eval thresholds at 100% / 0 on production models; baseline accepted and committed

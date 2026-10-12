@@ -117,6 +117,7 @@ Then load the reference data (and create the vector index on first run):
 
 ```bash
 .venv/bin/adintel seed
+.venv/bin/adintel migrate          # apply data migrations (recorded in schema_migrations)
 ```
 
 **Check:** `pytest -m integration` passes (real Mongo `$vectorSearch` pre-filter and Redis queue

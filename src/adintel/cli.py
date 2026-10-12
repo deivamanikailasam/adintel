@@ -1,6 +1,6 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
 privacy-export, privacy-erase, offboard,
-audit-archive, backup, restore, restore-drill."""
+audit-archive, backup, restore, restore-drill, migrate."""
 
 from __future__ import annotations
 
@@ -251,6 +251,27 @@ def cmd_restore_drill(args: argparse.Namespace) -> None:
     sys.exit(0 if out["passed"] else 1)
 
 
+def cmd_migrate(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from adintel.storage import get_database
+    from adintel.storage.migrations import migrate, pending, status
+
+    db = get_database()
+    if args.status:
+        _print(status(db))
+        return
+    if args.check:
+        todo = [m.migration_id for m in pending(db)]
+        _print({"pending": todo})
+        sys.exit(1 if todo else 0)
+    if args.backup_dir and pending(db) and not args.dry_run:
+        from adintel.ops.backup import backup
+
+        _print({"pre_migration_backup": backup(db, Path(args.backup_dir))})
+    _print(migrate(db, dry_run=args.dry_run, owner=args.owner, break_stale_lock=args.break_stale_lock))
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -328,6 +349,14 @@ def main(argv: list[str] | None = None) -> None:
     sp = sub.add_parser("restore-drill", help="prove a backup restores cleanly, without touching live data")
     sp.add_argument("source")
     sp.set_defaults(fn=cmd_restore_drill)
+    sp = sub.add_parser("migrate", help="apply pending data migrations (forward-only, locked, recorded)")
+    sp.add_argument("--status", action="store_true", help="list migrations and whether each is applied")
+    sp.add_argument("--check", action="store_true", help="exit 1 if any migration is pending (CI/deploy gate)")
+    sp.add_argument("--dry-run", action="store_true")
+    sp.add_argument("--backup-dir", help="take a logical backup first (the rollback for a forward-only change)")
+    sp.add_argument("--owner", default="cli")
+    sp.add_argument("--break-stale-lock", action="store_true", help="take over a lock older than 30 minutes")
+    sp.set_defaults(fn=cmd_migrate)
     args = p.parse_args(argv)
     args.fn(args)
 

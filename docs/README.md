@@ -20,7 +20,7 @@ Plain-English notes for every change live in [changelog/](changelog/).
 |---|---------|-----------|
 | 00 | Overview | [What AdIntel is](00-overview/what-is-adintel.md) · [Glossary](00-overview/glossary.md) · [FAQ](00-overview/faq.md) |
 | 01 | Architecture & system design | [Architecture](01-architecture/architecture.md) · [AWS ↔ local mapping](01-architecture/aws-to-local-mapping.md) · [Agent team](01-architecture/agent-team.md) · [Graph & harness](01-architecture/graph-and-harness.md) · [LLM gateway](01-architecture/llm-gateway.md) · [Model strategy](01-architecture/model-strategy.md) · [RAG & memory](01-architecture/rag-and-memory.md) · [Data model](01-architecture/data-model.md) |
-| 02 | Decisions | [24 ADRs](02-decisions/README.md) · [Open questions](02-decisions/open-questions.md) · [ADR template](02-decisions/template.md) · [Anti-patterns avoided](anti-patterns.md) |
+| 02 | Decisions | [25 ADRs](02-decisions/README.md) · [Open questions](02-decisions/open-questions.md) · [ADR template](02-decisions/template.md) · [Anti-patterns avoided](anti-patterns.md) |
 | 03 | Governance | [Governance & HITL](03-governance/governance.md) · [RACI](03-governance/raci.md) · [Client disclosure](03-governance/client-disclosure.md) |
 | 04 | Security | [Security](04-security/security.md) · [Threat model](04-security/threat-model.md) · [Tenant isolation](04-security/tenant-isolation.md) · [Data map](04-security/data-map.md) · [Privacy & data lifecycle](04-security/privacy-and-data-lifecycle.md) · [Red team](04-security/red-team.md) |
 | 05 | Safety | [Safety principles → code → tests](05-safety/safety.md) |

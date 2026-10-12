@@ -196,6 +196,13 @@ CATALOGUE: tuple[CollectionSpec, ...] = (
         "7 years",
         (IndexSpec((T, ("recommendation_id", 1)), unique=True), IndexSpec((T, ("brand_id", 1), ("measured_at", -1)))),
     ),
+    CollectionSpec(
+        "schema_migrations",
+        False,
+        "Which data migrations ran, when, with what code checksum",
+        "indefinite",
+        (IndexSpec((("migration_id", 1),), unique=True),),
+    ),
     CollectionSpec("eval_datasets", False, "Golden scenarios", "versioned", ()),
     CollectionSpec("secret_access_log", False, "Who read which secret reference", "13 months", ()),
 )

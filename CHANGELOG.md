@@ -47,3 +47,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0035 | Feedback loop: 14-day outcome tracking (actual vs predicted), per-tenant/brand feature flags, weekly triage report | [0035](docs/changelog/0035-feedback-loop.md) |
 | 0036 | Privacy and data lifecycle: retention purge with legal hold, data-subject export and erasure, tenant offboarding with verifiable export bundles | [0036](docs/changelog/0036-privacy-lifecycle.md) |
 | 0037 | Write-once audit archive (local files + MinIO Object Lock, S3 in prod) with database comparison; backup, restore and restore-drill tooling | [0037](docs/changelog/0037-audit-archive-backup.md) |
+| 0038 | Schema/data migration runner: ordered, locked, recorded, forward-only with expand/contract (ADR L-13); release pipeline runs it as a one-off task | [0038](docs/changelog/0038-migrations.md) |
