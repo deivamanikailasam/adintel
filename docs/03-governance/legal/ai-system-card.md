@@ -50,8 +50,8 @@ Current results: `evals/baseline.json`.
 
 ## Transparency to end clients
 
-Agencies are given a [client disclosure](../client-disclosure.md) for their advertisers. Each report names
-the system version and the approving person.
+Agencies are given a [client disclosure](../client-disclosure.md) for their advertisers. Every released report
+carries a signed AI-assistance disclosure and an Ed25519 signature that anyone can verify (report provenance).
 
 ## Regulatory position (our assessment — confirm with counsel)
 

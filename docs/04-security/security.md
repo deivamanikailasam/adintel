@@ -103,7 +103,7 @@ training on inputs in production; locally, **all inference stays on your machine
 
 ## Related
 
-- [threat-model.md](threat-model.md) — 15 threats and mitigations
+- [threat-model.md](threat-model.md) — 16 threats and mitigations
 - [tenant-isolation.md](tenant-isolation.md)
 - [data-map.md](data-map.md)
 - [red-team.md](red-team.md)

@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from adintel.audit import AuditLog
+from adintel.audit import AuditLog, provenance
 from adintel.config import get_settings
 from adintel.core.clock import utcnow
 from adintel.domain.enums import AuditAction, DegradationCode, RecommendationStatus, RunStatus, Severity
@@ -106,11 +106,16 @@ def finalize(db: Database, state: RunState) -> dict[str, Any]:
                         f"Prepared by AdIntel {get_settings().system_version}. AI drafts and analyses; a named "
                         "account manager approves every recommendation."
                     ),
+                    "disclosure": provenance.disclosure(get_settings().system_version),
                     "created_at": now,
                 }
             },
             upsert=True,
         )
+        if not held:  # only released reports are signed: a held report is not something to vouch for
+            reports = TenantScopedRepo(db, "reports", t)
+            stored = reports.find_one({"report_id": report_id}) or {}
+            reports.update_one({"report_id": report_id}, {"$set": {"provenance": provenance.sign(stored)}})
         if not held:
             audit.append(
                 AuditAction.REPORT_RELEASED,

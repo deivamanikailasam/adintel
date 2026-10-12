@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from prometheus_client import generate_latest
 
 from adintel import __version__
-from adintel.api.routers import admin, approvals, auth, brands, chat, kb, ops, runs, scim
+from adintel.api.routers import admin, approvals, auth, brands, chat, kb, ops, runs, scim, verify
 from adintel.config import get_settings
 from adintel.observability import context
 from adintel.observability.alerts import install_security_hooks
@@ -119,6 +119,7 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
         admin.router,
         ops.router,
         scim.router,
+        verify.router,
     ):
         app.include_router(r)
 

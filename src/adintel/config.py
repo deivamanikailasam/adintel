@@ -96,6 +96,7 @@ class Settings(BaseSettings):
     oidc_tenant_claim: str = "tenant_id"  # Cognito: "custom:tenant_id"
     oidc_roles_claim: str = "realm_access.roles"  # Cognito: "cognito:groups"; Entra: "roles"
     approval_signing_key: str = _DEV_APPROVAL_KEY
+    report_signing_key: str | None = None  # base64 Ed25519 seed; generated in var/keys locally (audit/provenance.py)
     recommendation_ttl_hours: int = 72
     # Egress control (security/egress.py): offline = air-gapped, only internal destinations + allowlist.
     offline: bool = False
@@ -139,6 +140,8 @@ class Settings(BaseSettings):
                 self.alert_webhook_token == "adintel-local-alerts" or len(self.alert_webhook_token) < 32  # noqa: S105
             ):
                 problems.append("ADINTEL_ALERT_WEBHOOK_TOKEN must be a random secret of at least 32 characters")
+            if not self.report_signing_key:
+                problems.append("ADINTEL_REPORT_SIGNING_KEY must be set (report provenance)")
             if self.auth_mode != "oidc":
                 problems.append("ADINTEL_AUTH_MODE must be oidc")
             if self.dev_login_enabled:

@@ -1,4 +1,4 @@
-# Threat model (STRIDE-informed catalogue — the 15 threats to know)
+# Threat model (STRIDE-informed catalogue — the 16 threats to know)
 
 | # | Threat | Mitigation | Verified by |
 |---|--------|------------|-------------|
@@ -17,6 +17,7 @@
 | T13 | **Tampering with history** (covering tracks) | Append-only code path, hash chain verified daily, Object Lock copy in prod | `test_audit.py` |
 | T14 | **Data exfiltration through a configured endpoint** (rogue model URL, webhook, tracing backend) | Egress allowlist / offline mode checked at start-up and connect time | `test_egress_weights.py` |
 | T15 | **Swapped or corrupted base-model weights** | Weight-file SHA-256 lock, `adintel weights verify` | `test_egress_weights.py` |
+| T16 | **Forged or altered client report** (edited figures in a forwarded PDF, a fake report) | Ed25519-signed content hash, public key + verification endpoint, DB edits detected | `test_provenance.py` |
 
 **If you could keep only one control, keep the separation in T12.** An attacker inside the agent worker can
 call models (cost alerts catch that) but cannot spend money.

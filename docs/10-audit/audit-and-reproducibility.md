@@ -73,3 +73,14 @@ difference. Test: `tests/unit/test_archive_backup.py::test_archive_detects_a_con
 | Where | `var/audit-archive/` (0444 files) | + MinIO bucket `adintel-audit`, Object Lock GOVERNANCE 30 days | S3 bucket from `infra/terraform/modules/adintel/data.tf`, COMPLIANCE, 2,557 days |
 | Commands | `adintel audit-archive` · `adintel audit-archive --verify` | same | same (scheduler) |
 | Settings | `ADINTEL_AUDIT_ARCHIVE_DIR` | `ADINTEL_AUDIT_ARCHIVE_S3_BUCKET`, `_S3_ENDPOINT`, `_LOCK_MODE`, `_LOCK_DAYS` | endpoint unset (AWS), `LOCK_MODE=COMPLIANCE`, `LOCK_DAYS=2557`, task-role IAM instead of keys |
+
+## Report provenance (`src/adintel/audit/provenance.py`)
+
+Every **released** report is signed when it is finalised: SHA-256 of its canonical content (title, sections,
+facts, model tier, adapter hash, system version, AI-assistance disclosure) and an **Ed25519** signature of
+that hash. Because the signature is asymmetric, clients and auditors verify a report **offline** with the
+public key from `GET /.well-known/adintel-report-key` (`adintel verify-report report.json --public-key key.pem`),
+or online, without logging in, at `GET /verify/reports/{report_id}` — which recomputes the hash from the
+stored report and so also detects an edit made in the database. The endpoint returns validity only, never
+content. Held reports are not signed. Key: `ADINTEL_REPORT_SIGNING_KEY` (required in staging/production;
+generated in `var/keys` locally). Tests: `tests/unit/test_provenance.py`.

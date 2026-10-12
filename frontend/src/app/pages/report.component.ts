@@ -16,6 +16,11 @@ import { Report } from '../core/models';
           @for (p of paragraphs(s.body); track $index) { <p>{{ p }}</p> }</div>
       }
       <p class="muted">{{ rep.footer }}</p>
+      @if ($any(rep).disclosure) { <p class="muted" role="note">{{ $any(rep).disclosure }}</p> }
+      @if ($any(rep).provenance; as pv) {
+        <p class="muted">Signed {{ pv.signed_at }} · key {{ pv.key_id }} · fingerprint {{ pv.sha256.slice(0, 16) }}…
+          — anyone can check it at <code>/verify/reports/{{ rep.report_id }}</code></p>
+      }
       <div class="row">Rate this report:
         @for (n of [1, 2, 3, 4, 5]; track n) { <button (click)="rate(n)">{{ n }}</button> }
         @if (rated()) { <span class="muted">thanks — ratings feed the eval flywheel</span> }</div>

@@ -1,7 +1,7 @@
 """``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
 privacy-export, privacy-erase, offboard,
 audit-archive, backup, restore, restore-drill, migrate,
-csv-template, csv-sample, shadow-report, weights, egress-check, secrets, scim."""
+csv-template, csv-sample, shadow-report, weights, egress-check, secrets, scim, verify-report."""
 
 from __future__ import annotations
 
@@ -375,6 +375,16 @@ def cmd_scim(args: argparse.Namespace) -> None:
     _print({"tenant": args.tenant, "token": token, "note": "shown once; paste into the IdP's SCIM app (Bearer)"})
 
 
+def cmd_verify_report(args: argparse.Namespace) -> None:
+    from adintel.audit import provenance
+
+    report = json.loads(Path(args.file).read_text())
+    pem = Path(args.public_key).read_text() if args.public_key else None
+    out = provenance.verify(report, pem)
+    _print(out)
+    sys.exit(0 if out["valid"] else 1)
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -492,6 +502,10 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--tenant", default="brightwave")
     sp.add_argument("--actor", default="cli:admin")
     sp.set_defaults(fn=cmd_scim)
+    sp = sub.add_parser("verify-report", help="verify a report JSON's signature offline (provenance)")
+    sp.add_argument("file")
+    sp.add_argument("--public-key", help="PEM from /.well-known/adintel-report-key (default: this install's key)")
+    sp.set_defaults(fn=cmd_verify_report)
     args = p.parse_args(argv)
     args.fn(args)
 

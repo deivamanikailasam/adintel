@@ -25,6 +25,14 @@
 	@internal path /api/metrics /api/internal/* /api/docs* /api/redoc* /api/openapi.json
 	respond @internal 404
 
+	# Public report verification (validity only, no content) and the signing public key.
+	handle /verify/* {
+		reverse_proxy host.docker.internal:8000
+	}
+	handle /.well-known/adintel-report-key {
+		reverse_proxy host.docker.internal:8000
+	}
+
 	# SCIM for the identity provider (token-protected by the API).
 	handle /scim/* {
 		reverse_proxy host.docker.internal:8000
