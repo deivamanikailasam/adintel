@@ -22,3 +22,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0010 | Ingestion and Data Quality agents (seven deterministic checks) | [0010](docs/changelog/0010-ingestion-and-data-quality.md) |
 | 0011 | Anomaly Detection agent: STL seasonal band + Isolation Forest, no LLM | [0011](docs/changelog/0011-anomaly-detection.md) |
 | 0012 | RAG: semantic chunking, hybrid search with tenant pre-filter, reranking, numeric grounding | [0012](docs/changelog/0012-rag.md) |
+| 0013 | Analyst agent with mix-vs-rate decomposition and a code sandbox | [0013](docs/changelog/0013-analyst-and-sandbox.md) |
