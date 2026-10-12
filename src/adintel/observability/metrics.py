@@ -116,3 +116,10 @@ def serve_metrics(port: int) -> None:
     if not _server_started:
         start_http_server(port, registry=REGISTRY)
         _server_started = True
+
+
+HOST_DISK_FREE = Gauge(
+    "adintel_host_disk_free_ratio", "Free disk space on the data volume", ["path"], registry=REGISTRY
+)
+HOST_MEMORY_AVAILABLE = Gauge("adintel_host_memory_available_ratio", "Available memory", registry=REGISTRY)
+HOST_LOAD = Gauge("adintel_host_load_per_cpu", "1-minute load average per CPU", registry=REGISTRY)

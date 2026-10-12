@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from prometheus_client import generate_latest
 
 from adintel import __version__
-from adintel.api.routers import admin, approvals, auth, brands, chat, kb, ops, runs, scim, verify
+from adintel.api.routers import admin, approvals, auth, brands, chat, kb, ops, runs, scim, status, verify
 from adintel.config import get_settings
 from adintel.observability import context
 from adintel.observability.alerts import install_security_hooks
@@ -107,6 +107,9 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
 
     @app.get("/metrics", tags=["ops"], include_in_schema=False)
     def metrics() -> PlainTextResponse:
+        from adintel.observability.host import sample
+
+        sample()  # refresh host gauges on every scrape
         return PlainTextResponse(generate_latest(REGISTRY).decode(), media_type="text/plain; version=0.0.4")
 
     for r in (
@@ -120,6 +123,7 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
         ops.router,
         scim.router,
         verify.router,
+        status.router,
     ):
         app.include_router(r)
 

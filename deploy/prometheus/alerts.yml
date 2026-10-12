@@ -78,3 +78,18 @@ groups:
         expr: increase(adintel_llm_validation_failures_total[1h]) > 0
         labels: { severity: P4 }
         annotations: { summary: "Model output failed schema validation (repaired or fell back)" }
+      - alert: HostDiskAlmostFull
+        expr: min(adintel_host_disk_free_ratio) < 0.05
+        for: 5m
+        labels: { severity: P1 }
+        annotations: { summary: "Less than 5% disk free on the AdIntel data volume", description: "Runbook: free space (old backups, var/log) before MongoDB stops accepting writes." }
+      - alert: HostDiskFilling
+        expr: min(adintel_host_disk_free_ratio) < 0.15
+        for: 15m
+        labels: { severity: P2 }
+        annotations: { summary: "Less than 15% disk free on the AdIntel data volume" }
+      - alert: HostMemoryLow
+        expr: adintel_host_memory_available_ratio < 0.05
+        for: 5m
+        labels: { severity: P1 }
+        annotations: { summary: "Memory almost exhausted — a model server may be killed" }

@@ -1,5 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ApiService } from './core/api.service';
 import { AuthService } from './core/auth.service';
 
 @Component({
@@ -22,6 +23,11 @@ import { AuthService } from './core/auth.service';
         <button (click)="auth.logout()">Sign out</button>
       </header>
     }
+    @if (auth.loggedIn() && banner().length) {
+      <div class="banner {{ level() }}" role="status" aria-live="polite">
+        @for (m of banner(); track $index) { <div>{{ m.text }}</div> }
+      </div>
+    }
     <main><router-outlet /></main>
     <footer class="muted">AI drafts and analyses; a named human approves every change. Nothing spends money without approval.</footer>
   `,
@@ -32,9 +38,29 @@ import { AuthService } from './core/auth.service';
     .who { font-size: .85rem; color: #d0d5dd; }
     main { max-width: 1180px; margin: 1.5rem auto; padding: 0 1rem; }
     footer { text-align: center; padding: 2rem; }
+    .banner { padding: .6rem 1.5rem; font-size: .92rem; }
+    .banner.degraded { background: #fdf3e1; color: #7a4f0d; }
+    .banner.down { background: #fdecea; color: #8a1f14; }
   `],
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
-  ngOnInit(): void { void this.auth.loadMe(); }
+  private api = inject(ApiService);
+  banner = signal<{ level: string; text: string }[]>([]);
+  level = signal('ok');
+  private timer?: ReturnType<typeof setInterval>;
+
+  ngOnInit(): void {
+    void this.auth.loadMe();
+    this.poll();
+    this.timer = setInterval(() => this.poll(), 60_000);
+  }
+  ngOnDestroy(): void { if (this.timer) clearInterval(this.timer); }
+  private poll(): void {
+    if (!this.auth.loggedIn()) return;
+    this.api.status().subscribe({
+      next: s => { this.banner.set(s.messages); this.level.set(s.status); },
+      error: () => { /* the banner is best-effort; real errors surface where they happen */ },
+    });
+  }
 }

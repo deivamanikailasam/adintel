@@ -40,3 +40,13 @@ interval plotted, the root-cause analysis with the actual pandas code run, the r
 source documents, the exact prompt sent to the Optimizer and the raw model response
 (`GET /runs/{run_id}/trace`). This is what makes account managers willing to approve instead of
 second-guessing.
+
+## The machine itself (`observability/host.py`)
+
+On a single machine the host is part of the system. `adintel_host_disk_free_ratio{path}`,
+`adintel_host_memory_available_ratio` and `adintel_host_load_per_cpu` are refreshed on every `/metrics`
+scrape and every minute by the scheduler, which pages P2 at < 15 % disk / < 10 % memory / load > 2 per core
+and P1 at < 5 % disk / < 5 % memory (Prometheus rules `HostDiskAlmostFull`, `HostDiskFilling`,
+`HostMemoryLow` mirror them). Users see the effect, not the internals: `GET /status` drives a banner in the
+web app ("Deep analysis is running on a backup model", "Reports are held until the safety check recovers",
+"A kill switch is engaged", "Server: disk filling") — model health cached for 30 s.
