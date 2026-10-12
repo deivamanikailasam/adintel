@@ -94,7 +94,9 @@ def jwks_client() -> jwt.PyJWKClient:
     with _jwks_lock:
         if _jwks is None:
             s = get_settings()
-            url = s.oidc_jwks_url or f"{s.oidc_issuer.rstrip('/')}/protocol/openid-connect/certs"
+            from adintel.security.oidc_discovery import endpoints
+
+            url = endpoints(s)["jwks_uri"]
             _jwks = jwt.PyJWKClient(url, cache_keys=True, lifespan=600, timeout=5)
         return _jwks
 

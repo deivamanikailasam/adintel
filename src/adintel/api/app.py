@@ -124,7 +124,16 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
 
     # Versioned integrator contract (/v1/...) for the business API; the unversioned paths are the same routes
     # for the web app. Infrastructure routes (SCIM, webhooks, provenance) have their own stable paths.
-    versioned = (auth.router, brands.router, runs.router, approvals.router, chat.router, kb.router, admin.router, status.router)
+    versioned = (
+        auth.router,
+        brands.router,
+        runs.router,
+        approvals.router,
+        chat.router,
+        kb.router,
+        admin.router,
+        status.router,
+    )
     for r in versioned:
         app.include_router(r)
         app.include_router(r, prefix=f"/v{API_VERSION}")

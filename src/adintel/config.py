@@ -93,7 +93,13 @@ class Settings(BaseSettings):
     oidc_issuer: str = "http://localhost:8180/realms/adintel"
     oidc_audience: str = "adintel-api"
     oidc_client_id: str = "adintel-frontend"  # public SPA client (authorization code + PKCE)
-    oidc_jwks_url: str | None = None  # default: <issuer>/protocol/openid-connect/certs
+    # Endpoints are discovered from <issuer>/.well-known/openid-configuration (security/oidc_discovery.py);
+    # set these only to override discovery (e.g. Cognito has no end_session_endpoint in discovery).
+    oidc_jwks_url: str | None = None
+    oidc_authorization_url: str | None = None
+    oidc_token_url: str | None = None
+    oidc_end_session_url: str | None = None
+    oidc_logout_style: Literal["rp_initiated", "cognito"] = "rp_initiated"
     oidc_tenant_claim: str = "tenant_id"  # Cognito: "custom:tenant_id"
     oidc_roles_claim: str = "realm_access.roles"  # Cognito: "cognito:groups"; Entra: "roles"
     approval_signing_key: str = _DEV_APPROVAL_KEY

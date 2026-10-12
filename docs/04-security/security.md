@@ -88,6 +88,14 @@ An OIDC token is accepted only if all of these hold:
    the AdIntel record. Either side can remove a privilege; neither can add one alone. Approval limits and
    brand scope always come from AdIntel, never from the token.
 
+Endpoints are **discovered**, not assumed: authorization, token, JWKS and end-session URLs come from
+`<issuer>/.well-known/openid-configuration` (cached 1 h; a document whose `issuer` doesn't match is ignored),
+then explicit `ADINTEL_OIDC_*_URL` overrides, then the Keycloak layout as a last resort
+(`security/oidc_discovery.py`). Works unchanged with Keycloak, Okta, Microsoft Entra ID and Auth0. Amazon
+Cognito publishes no `end_session_endpoint`: set `ADINTEL_OIDC_END_SESSION_URL=https://<domain>/logout` and
+`ADINTEL_OIDC_LOGOUT_STYLE=cognito`. The browser calls the token endpoint directly (PKCE), so add the IdP's
+origin to `connect-src` in `frontend/src/index.html` (or the CDN's CSP header in production).
+
 Algorithm confusion is blocked: an `HS256` token is refused in `oidc` mode and an `RS256` token is only ever
 verified with the JWKS public key. Tests: `tests/unit/test_oidc.py`.
 

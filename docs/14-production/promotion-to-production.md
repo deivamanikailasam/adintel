@@ -39,7 +39,8 @@ implementation through configuration (`docs/01-architecture/aws-to-local-mapping
 5. **Cognito** user pool (MFA on, `custom:tenant_id` immutable attribute, one group per AdIntel role).
    No code change: set `ADINTEL_AUTH_MODE=oidc`, `ADINTEL_OIDC_ISSUER` to the pool URL,
    `ADINTEL_OIDC_AUDIENCE`/`ADINTEL_OIDC_CLIENT_ID` to the app client, `ADINTEL_OIDC_TENANT_CLAIM=custom:tenant_id`,
-   `ADINTEL_OIDC_ROLES_CLAIM=cognito:groups`, and `ADINTEL_DEV_LOGIN_ENABLED=false`. Startup refuses
+   `ADINTEL_OIDC_ROLES_CLAIM=cognito:groups`, `ADINTEL_OIDC_END_SESSION_URL=https://<cognito-domain>/logout`,
+   `ADINTEL_OIDC_LOGOUT_STYLE=cognito`, and `ADINTEL_DEV_LOGIN_ENABLED=false` (other endpoints are discovered). Startup refuses
    staging/production unless the mode is `oidc`. The same flow was rehearsed locally against Keycloak.
 
 **Exit criterion:** `terraform plan` clean; no resource has a public endpoint except the ALB and CloudFront.

@@ -55,7 +55,7 @@ export class AuthService {
   private async refresh(): Promise<void> {
     const saved = JSON.parse(sessionStorage.getItem('adintel.oidc') ?? '{}');
     try {
-      const res = await fetch(`${saved.issuer}/protocol/openid-connect/token`, { method: 'POST',
+      const res = await fetch(saved.token_endpoint, { method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: this.refreshToken ?? '', client_id: saved.client_id }) });
       if (!res.ok) throw new Error(String(res.status));
@@ -98,7 +98,7 @@ export class AuthService {
     const challenge = await sha256url(verifier);
     const params = new URLSearchParams({ client_id: cfg.oidc.client_id, response_type: 'code', scope: 'openid email profile',
       redirect_uri: `${location.origin}/auth/callback`, state, code_challenge: challenge, code_challenge_method: 'S256' });
-    location.assign(`${cfg.oidc.issuer}/protocol/openid-connect/auth?${params}`);
+    location.assign(`${cfg.oidc.authorization_endpoint}?${params}`);
   }
 
   async completeSso(code: string, state: string): Promise<void> {
@@ -107,11 +107,12 @@ export class AuthService {
     if (!saved.state || saved.state !== state) throw new Error('state mismatch');
     const body = new URLSearchParams({ grant_type: 'authorization_code', code, client_id: saved.client_id,
       redirect_uri: `${location.origin}/auth/callback`, code_verifier: saved.verifier });
-    const res = await fetch(`${saved.issuer}/protocol/openid-connect/token`, { method: 'POST', body,
+    const res = await fetch(saved.token_endpoint, { method: 'POST', body,
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
     if (!res.ok) throw new Error(`token exchange failed: ${res.status}`);
     const tok = await res.json();
-    sessionStorage.setItem('adintel.oidc', JSON.stringify({ issuer: saved.issuer, client_id: saved.client_id }));
+    sessionStorage.setItem('adintel.oidc', JSON.stringify({ issuer: saved.issuer, client_id: saved.client_id,
+      token_endpoint: saved.token_endpoint, end_session_endpoint: saved.end_session_endpoint, logout_style: saved.logout_style }));
     this.store(tok);
     await this.loadMe();
     void this.startSessionWatch();
@@ -135,10 +136,9 @@ export class AuthService {
     this.me.set(null);
     this.refreshToken = this.idToken = null;
     this.watching = false;
-    if (oidc?.issuer && idToken) {
-      const params = new URLSearchParams({ client_id: oidc.client_id, id_token_hint: idToken,
-        post_logout_redirect_uri: `${location.origin}/login` });
-      location.assign(`${oidc.issuer}/protocol/openid-connect/logout?${params}`);
+    const url = oidc?.end_session_endpoint ? logoutUrl(oidc, idToken, `${location.origin}/login`) : null;
+    if (url) {
+      location.assign(url);
       return;
     }
     this.router.navigateByUrl('/login');
@@ -169,4 +169,16 @@ export function tokenExpiry(token: string | null): number | null {
     const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
     return typeof payload.exp === 'number' ? payload.exp : null;
   } catch { return null; }
+}
+
+/** IdP logout URL: standard OIDC RP-initiated logout, or Cognito's /logout (no id_token_hint). */
+export function logoutUrl(
+  oidc: { end_session_endpoint: string; client_id: string; logout_style?: string },
+  idToken: string | null, returnTo: string,
+): string | null {
+  if (oidc.logout_style === 'cognito') {
+    return `${oidc.end_session_endpoint}?${new URLSearchParams({ client_id: oidc.client_id, logout_uri: returnTo })}`;
+  }
+  if (!idToken) return null;  // without an id_token the IdP can't identify the session; local sign-out only
+  return `${oidc.end_session_endpoint}?${new URLSearchParams({ client_id: oidc.client_id, id_token_hint: idToken, post_logout_redirect_uri: returnTo })}`;
 }

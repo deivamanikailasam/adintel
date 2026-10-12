@@ -9,6 +9,7 @@ from adintel.api.deps import db, principal
 from adintel.config import get_settings
 from adintel.domain.models import User
 from adintel.security.auth import Principal, issue_token
+from adintel.security.oidc_discovery import endpoints
 from adintel.storage.base import Database
 from adintel.storage.tenant_repo import SystemRepo
 
@@ -39,7 +40,13 @@ def auth_config() -> dict[str, Any]:
     return {
         "mode": s.auth_mode,
         "dev_login": s.dev_login_enabled and s.env in ("local", "test"),
-        "oidc": None if s.auth_mode == "dev" else {"issuer": s.oidc_issuer, "client_id": s.oidc_client_id},
+        "oidc": None
+        if s.auth_mode == "dev"
+        else {
+            "issuer": s.oidc_issuer,
+            "client_id": s.oidc_client_id,
+            **{k: v for k, v in endpoints(s).items() if k not in ("issuer", "jwks_uri")},
+        },
         "session": {"idle_timeout_minutes": s.session_idle_minutes},
     }
 

@@ -6,7 +6,7 @@ import { Component } from '@angular/core';
 
 @Component({ standalone: true, template: '' })
 class Blank {}
-import { AuthService, tokenExpiry } from './auth.service';
+import { AuthService, logoutUrl, tokenExpiry } from './auth.service';
 
 function jwt(exp: number): string {
   const b64 = (o: object) => btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
@@ -49,4 +49,21 @@ describe('AuthService session handling', () => {
     expect(auth.loggedIn()).toBeFalse();
     expect(auth.takeLogoutReason()).toContain('expired');
   }));
+});
+
+describe('logoutUrl', () => {
+  const back = 'https://adintel.example/login';
+  it('uses standard RP-initiated logout for Keycloak, Okta and Entra ID', () => {
+    const u = new URL(logoutUrl({ end_session_endpoint: 'https://idp.example/logout', client_id: 'spa' }, 'idtok', back)!);
+    expect(u.searchParams.get('id_token_hint')).toBe('idtok');
+    expect(u.searchParams.get('post_logout_redirect_uri')).toBe(back);
+  });
+  it('uses client_id + logout_uri for Cognito', () => {
+    const u = new URL(logoutUrl({ end_session_endpoint: 'https://auth.example/logout', client_id: 'spa', logout_style: 'cognito' }, null, back)!);
+    expect(u.searchParams.get('logout_uri')).toBe(back);
+    expect(u.searchParams.has('id_token_hint')).toBeFalse();
+  });
+  it('falls back to local sign-out without an id token', () => {
+    expect(logoutUrl({ end_session_endpoint: 'https://idp.example/logout', client_id: 'spa' }, null, back)).toBeNull();
+  });
 });
