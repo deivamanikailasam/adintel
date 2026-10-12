@@ -71,3 +71,29 @@ def _analyst(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> 
                                        "evidence": "per-ad-set CPA rose without a mix shift"}],
                        "queries": [], "confidence": 0.45,
                        "root_cause_summary": "Per-ad-set efficiency declined; cause not isolated."})
+
+
+@register("OptimizerOutput")
+def _optimizer(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
+    facts = ctx.get("facts", {})
+    before, after = facts.get("entities_before", {}), facts.get("entities_after", {})
+    live = ctx.get("live_entities", {})
+    cap = ctx.get("constraints", {}).get("max_single_change_pct", 25) / 100
+    ids = ctx.get("retrieved_chunk_ids", [])
+    if not after or not live or not ids:
+        return json.dumps({"proposals": []})
+    source = max(after, key=lambda e: after[e]["spend_share_pct"] - before.get(e, {}).get("spend_share_pct", 0))
+    target = min((e for e in after if e != source and after[e].get("cpa")), key=lambda e: after[e]["cpa"],
+                 default=None)
+    if target is None or source not in live:
+        return json.dumps({"proposals": []})
+    amount = round(float(live[source]["daily_budget"]) * cap, 2)
+    return json.dumps({"proposals": [{
+        "action_type": "budget_shift", "platform": ctx["anomaly"]["platform"], "source_entity_id": source,
+        "target_entity_id": target, "amount_usd_per_day": amount,
+        "expected_impact": "CPA expected to fall back towards its normal range within 5-7 days",
+        "expected_cpa_change_pct_low": -34.0, "expected_cpa_change_pct_high": -22.0,
+        "rationale": (f"Move ${amount:.0f}/day from {after[source]['entity_name']} back to "
+                      f"{after[target]['entity_name']}, reversing the platform's reallocation, as in the cited "
+                      "incident and playbook."),
+        "citation_chunk_ids": ids[:2]}]})

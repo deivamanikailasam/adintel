@@ -23,3 +23,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0011 | Anomaly Detection agent: STL seasonal band + Isolation Forest, no LLM | [0011](docs/changelog/0011-anomaly-detection.md) |
 | 0012 | RAG: semantic chunking, hybrid search with tenant pre-filter, reranking, numeric grounding | [0012](docs/changelog/0012-rag.md) |
 | 0013 | Analyst agent with mix-vs-rate decomposition and a code sandbox | [0013](docs/changelog/0013-analyst-and-sandbox.md) |
+| 0014 | Optimizer agent (proposes only) and pure-code brand constraints | [0014](docs/changelog/0014-optimizer-and-constraints.md) |
