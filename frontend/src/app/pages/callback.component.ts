@@ -5,7 +5,7 @@ import { AuthService } from '../core/auth.service';
 @Component({
   selector: 'app-callback',
   standalone: true,
-  template: `<div class="panel">@if (error()) { <p class="error">{{ error() }}</p> } @else { <p>Signing you in…</p> }</div>`,
+  template: `<div class="panel">@if (error()) { <p class="error" role="alert">{{ error() }}</p> } @else { <p>Signing you in…</p> }</div>`,
 })
 export class CallbackComponent implements OnInit {
   private auth = inject(AuthService);

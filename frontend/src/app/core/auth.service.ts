@@ -20,6 +20,9 @@ export class AuthService {
   private idleTimer?: ReturnType<typeof setTimeout>;
   private expiryTimer?: ReturnType<typeof setTimeout>;
   private idleMinutes = 30;
+  private warnTimer?: ReturnType<typeof setTimeout>;
+  /** True during the last minute before an idle sign-out (WCAG 2.2.1: warn and let the user extend). */
+  readonly idleWarning = signal(false);
   private watching = false;
 
   /** Idle sign-out and token-expiry handling; called once a session exists. */
@@ -31,13 +34,27 @@ export class AuthService {
       this.idleMinutes = cfg?.session?.idle_timeout_minutes ?? 30;
     } catch { /* keep the default */ }
     const reset = () => {
-      clearTimeout(this.idleTimer);
-      this.idleTimer = setTimeout(() => this.logout(`Signed out after ${this.idleMinutes} minutes of inactivity.`),
-        this.idleMinutes * 60_000);
+      if (this.idleWarning()) return;  // once warned, only the explicit "Stay signed in" extends the session
+      this.armIdle();
     };
+    this.resetIdle = () => { this.idleWarning.set(false); this.armIdle(); };
     for (const ev of ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']) addEventListener(ev, reset, { passive: true });
     reset();
     this.scheduleExpiry();
+  }
+
+  private resetIdle: () => void = () => undefined;
+
+  /** Called by the "Stay signed in" button in the idle warning. */
+  stayActive(): void { this.resetIdle(); }
+
+  private armIdle(): void {
+    clearTimeout(this.idleTimer);
+    clearTimeout(this.warnTimer);
+    const total = this.idleMinutes * 60_000;
+    const warnAt = Math.max(total - 60_000, 0);
+    this.warnTimer = setTimeout(() => this.idleWarning.set(true), warnAt);
+    this.idleTimer = setTimeout(() => this.logout(`Signed out after ${this.idleMinutes} minutes of inactivity.`), total);
   }
 
   private scheduleExpiry(): void {
@@ -126,6 +143,8 @@ export class AuthService {
   /** Signs out locally and, after SSO, at the identity provider too (RP-initiated logout). */
   logout(reason?: string): void {
     clearTimeout(this.idleTimer);
+    clearTimeout(this.warnTimer);
+    this.idleWarning.set(false);
     clearTimeout(this.expiryTimer);
     const oidc = JSON.parse(sessionStorage.getItem('adintel.oidc') ?? 'null');
     const idToken = this.idToken;

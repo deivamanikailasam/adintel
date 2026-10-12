@@ -19,7 +19,7 @@ import { AuthService } from '../core/auth.service';
         <button class="primary" type="submit" [disabled]="busy()">Sign in</button>
       </form>
       <p><button (click)="sso()">Sign in with SSO (Keycloak / your identity provider)</button></p>
-      @if (error()) { <p class="error">{{ error() }}</p> }
+      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
     </div>
   `,
   styles: [`.login { max-width: 520px; margin: 4rem auto; } form { display: flex; gap: .6rem; } select { flex: 1; }`],

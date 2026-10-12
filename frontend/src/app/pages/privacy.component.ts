@@ -31,7 +31,7 @@ import { ApiService } from '../core/api.service';
       </div>
       @if (erased(); as e) { <p class="badge ok">done</p> <table>@for (kv of e | keyvalue; track kv.key) { <tr><td>{{ kv.key }}</td><td>{{ kv.value }}</td></tr> }</table> }
     </div>
-    @if (error()) { <p class="error">{{ error() }}</p> }
+    @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
   `,
 })
 export class PrivacyComponent {

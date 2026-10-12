@@ -77,7 +77,7 @@ import { AuthService } from '../core/auth.service';
             <input [(ngModel)]="reason" name="reason" placeholder="reason (audited)" aria-label="Reason (audited)" required>
             <button class="primary" [disabled]="!reason || !flag">Apply</button>
           </form>
-          @if (error()) { <p class="error">{{ error() }}</p> }
+          @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
         }
       }
     </div>

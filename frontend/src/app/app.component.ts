@@ -24,6 +24,12 @@ import { AuthService } from './core/auth.service';
         <button (click)="auth.logout()">Sign out</button>
       </header>
     }
+    @if (auth.idleWarning()) {
+      <div class="banner degraded" role="alertdialog" aria-live="assertive" aria-label="Session about to end">
+        You'll be signed out in about a minute because of inactivity.
+        <button class="primary" (click)="auth.stayActive()">Stay signed in</button>
+      </div>
+    }
     @if (auth.loggedIn() && banner().length) {
       <div class="banner {{ level() }}" role="status" aria-live="polite">
         @for (m of banner(); track $index) { <div>{{ m.text }}</div> }

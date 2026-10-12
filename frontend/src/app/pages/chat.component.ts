@@ -18,7 +18,7 @@ interface Turn { role: 'user' | 'assistant'; text: string; meta?: string; blocke
       @for (t of turns(); track $index) {
         <div class="turn {{ t.role }}"><strong>{{ t.role === 'user' ? 'You' : 'AdIntel' }}</strong>
           @if (t.meta) { <span class="muted">({{ t.meta }})</span> }
-          <p [class.error]="t.blocked">{{ t.text }}</p></div>
+          <p [class.error]="t.blocked" [attr.role]="t.blocked ? 'alert' : null">{{ t.text }}</p></div>
       } @empty { <p class="muted">Try "What was spend last week?" (fast path) or "Why did retargeting costs rise after the budget increase?" (frontier + RAG).</p> }
     </div>
     <form class="row" (ngSubmit)="ask()"><input [(ngModel)]="q" name="q" aria-label="Your question" style="flex: 1" placeholder="Ask a question" maxlength="2000">

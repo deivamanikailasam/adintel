@@ -41,6 +41,21 @@ describe('AuthService session handling', () => {
     expect(auth.takeLogoutReason()).toBe('');  // shown once
   }));
 
+  it('warns a minute before idle sign-out and lets the user stay signed in (WCAG 2.2.1)', fakeAsync(() => {
+    auth.token.set(jwt(Math.floor(Date.now() / 1000) + 7200));
+    void auth.startSessionWatch();
+    http.expectOne('/api/auth/config').flush({ session: { idle_timeout_minutes: 2 } });
+    tick(60_500);
+    expect(auth.idleWarning()).toBeTrue();
+    auth.stayActive();
+    expect(auth.idleWarning()).toBeFalse();
+    tick(100_000);
+    expect(auth.loggedIn()).toBeTrue();  // extended
+    tick(30_000);
+    expect(auth.loggedIn()).toBeFalse();  // and still ends if they really leave
+    auth.takeLogoutReason();
+  }));
+
   it('signs out when the token expires (no refresh token for dev login)', fakeAsync(() => {
     auth.token.set(jwt(Math.floor(Date.now() / 1000) + 5));
     void auth.startSessionWatch();

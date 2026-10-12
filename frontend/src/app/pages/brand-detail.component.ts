@@ -14,7 +14,7 @@ import { AuthService } from '../core/auth.service';
         @if (auth.hasRole('account_manager', 'senior_account_manager', 'head_of_performance')) {
           <button class="primary" (click)="runNow()" [disabled]="busy()">Run now</button>
         }
-        @if (error()) { <span class="error">{{ error() }}</span> }
+        @if (error()) { <span class="error" role="alert">{{ error() }}</span> }
       </div>
       <p class="muted">{{ s.brand.platforms.join(' · ') }} · tone "{{ s.brand.profile.tone_cluster }}" ·
         max change {{ s.rules?.max_single_change_pct }}% · {{ s.rules?.suppressions?.length || 0 }} learned rule(s)</p>
