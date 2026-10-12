@@ -14,4 +14,4 @@ COPY evals ./evals
 USER adintel
 EXPOSE 8000 9464
 HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request,sys; urllib.request.urlopen('http://127.0.0.1:8000/health') if __import__('os').environ.get('ADINTEL_PROCESS_ROLE','api')=='api' else None"
-CMD ["uvicorn", "adintel.api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "adintel.api.app:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000", "--no-server-header", "--proxy-headers"]

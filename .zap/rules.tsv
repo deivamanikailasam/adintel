@@ -1,0 +1,3 @@
+10049	IGNORE	(Non-storable content: intended — every API response is Cache-Control: no-store)
+10027	IGNORE	(Information disclosure - suspicious comments: JSON API, no HTML comments)
+90004	IGNORE	(Insufficient Site Isolation against Spectre: COOP/CORP set; COEP not applicable to a JSON API)

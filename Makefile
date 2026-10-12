@@ -5,7 +5,7 @@ UV    ?= uv
 
 .PHONY: help venv install lint format typecheck test test-cov security evals gate \
         seed run-api run-worker run-executor run-scheduler up down mlx-small mlx-frontier \
-        frontend-install frontend-build load-test verify-audit reconcile pre-commit sbom clean
+        frontend-install frontend-build load-test verify-audit reconcile dast pre-commit sbom clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -48,7 +48,7 @@ seed: ## Load synthetic tenants, brands, users, brand rules and the knowledge ba
 	$(PY) -m adintel.cli seed
 
 run-api: ## Start the API service (FastAPI) on :8000
-	$(PY) -m uvicorn adintel.api.app:create_app --factory --host 127.0.0.1 --port 8000 --reload
+	$(PY) -m uvicorn adintel.api.app:create_app --factory --host 127.0.0.1 --port 8000 --reload --no-server-header
 
 run-worker: ## Start the agent worker (runs LangGraph jobs from the agent-runs queue)
 	$(PY) -m adintel.workers.agent_worker
@@ -85,6 +85,10 @@ verify-audit: ## Verify the audit log hash chain
 
 reconcile: ## Compare every executed change with what was approved
 	$(PY) -m adintel.cli reconcile
+
+dast: ## OWASP ZAP API scan against a running API on :8000 (needs Docker)
+	docker run --rm --network host -v $(CURDIR)/.zap:/zap/wrk:rw ghcr.io/zaproxy/zaproxy:stable \
+	  zap-api-scan.py -t http://localhost:8000/openapi.json -f openapi -c rules.tsv -a
 
 pre-commit: ## Install the git pre-commit hooks (ruff, mypy, gitleaks, no client data or weights)
 	$(UV) pip install pre-commit && .venv/bin/pre-commit install

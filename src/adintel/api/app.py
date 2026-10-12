@@ -32,6 +32,9 @@ SECURITY_HEADERS = {
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
     "Cache-Control": "no-store",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
 }
 
 
@@ -40,7 +43,12 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
     configure_logging(s.log_level, s.log_json)
     configure_tracing("adintel-api", s.otel_endpoint)
     install_security_hooks()
+    # Interactive docs are an attack-surface map: on locally, off in staging/production unless asked for.
+    docs = s.api_docs if s.api_docs is not None else s.env in ("local", "test")
     app = FastAPI(
+        docs_url="/docs" if docs else None,
+        redoc_url="/redoc" if docs else None,
+        openapi_url="/openapi.json" if docs else None,
         title="AdIntel API",
         version=__version__,
         description="Enterprise-governed multi-agent paid-ad intelligence. AI proposes; humans approve.",
@@ -68,7 +76,7 @@ def create_app(*, start_inline_worker: bool | None = None) -> FastAPI:
             if k == "Cache-Control" and response.headers.get("content-type", "").startswith("text/event-stream"):
                 continue
             response.headers.setdefault(k, v)
-        if s.env == "production":
+        if s.env in ("staging", "production"):
             response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
         return response
 

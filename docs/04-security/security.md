@@ -49,6 +49,12 @@ abuse is structurally impossible rather than prompt-prevented. Tests:
 | Web | Strict CSP, no `innerHTML` for model output (Angular interpolation only), security headers, CORS allow-list, WAF + rate limits in prod | `api/app.py`, `frontend/src/index.html` |
 | Abuse / cost | Per-tenant rate limits and daily cost caps, per-run budget, kill switches | `harness/admission.py`, `harness/budget.py` |
 
+## Assurance
+
+Automated (every PR): tests, adversarial evals, SAST, dependency/image scans, secret scan, licence gate and an
+OWASP ZAP API scan. Independent penetration test before go-live and annually — scope, objectives and rules of
+engagement in [penetration-testing.md](penetration-testing.md).
+
 ## Enterprise sign-in (OIDC)
 
 `ADINTEL_AUTH_MODE` chooses how tokens are accepted:

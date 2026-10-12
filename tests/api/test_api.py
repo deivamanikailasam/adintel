@@ -172,3 +172,21 @@ def test_admin_privacy_endpoints(client):
     r = client.post("/admin/privacy/users/u_viewer/erase", json={"reason": "left"}, headers=admin)
     assert r.status_code == 200 and r.json()["profile"] == 1
     assert client.post("/auth/dev-login", json={"email": "viewer@brightwave.example"}).status_code in (401, 403, 404)
+
+
+def test_hardened_headers_and_docs_hidden_in_production(monkeypatch, db, mock_llm):
+    from adintel.config import Settings, reset_settings_cache
+
+    # the production safety check is tested elsewhere; here only the HTTP hardening is under test
+    monkeypatch.setattr(Settings, "validate_for_environment", lambda self: None)
+    monkeypatch.setenv("ADINTEL_ENV", "production")
+    reset_settings_cache()
+    app = create_app(start_inline_worker=False)
+    paths = {getattr(r, "path", "") for r in app.routes}
+    assert "/docs" not in paths and "/openapi.json" not in paths
+    r = TestClient(app).get("/health")
+    assert r.headers["strict-transport-security"].startswith("max-age=")
+    assert "camera=()" in r.headers["permissions-policy"]
+    monkeypatch.setenv("ADINTEL_ENV", "local")
+    reset_settings_cache()
+    assert "/openapi.json" in {getattr(r, "path", "") for r in create_app(start_inline_worker=False).routes}
