@@ -1,0 +1,62 @@
+registry_version: 2026-10-12.1
+prompts:
+  orchestrator:
+    file: orchestrator.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: orchestrator
+    sha256: 81581ca3bd6c901b3cfcf0460e489dfe756b66266a00d30a728529956a136c20
+  analyst:
+    file: analyst.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: analyst
+    sha256: 6452674a0cdc470e31ae7a0e67280332ca8520f4f2985adb49ccae4f29b13bdc
+  optimizer:
+    file: optimizer.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: optimizer
+    sha256: 55d18b4f8f71d8b26ca04c98f1429df5ea3c17379dbd9633ce9086b928dcb79c
+  report:
+    file: report.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: report
+    sha256: a8de651465fcf9b00946c5c589e6c1ee2638a346b8b8afc155a72c35eba5fdd4
+  dq_summary:
+    file: dq_summary.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: data_quality
+    sha256: 83bc30663efcd0f4ad2461372e295b9c8ef5ebce69145baf59bc0c01410c65a5
+  ingestion_mapping:
+    file: ingestion_mapping.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: none
+    sha256: 8d3baf5b949fbd321569acab986b9acf96f65ac18c3abeb66ff3c350e6c01622
+  guardrail_classifier:
+    file: guardrail_classifier.md
+    version: 1.0.0
+    owner: Security
+    eval_suite: guardrail
+    sha256: f1fe07a175018e4439fefed2a6cd1515c48aa1cbb1c1de56c9e24c832dbfd27f
+  chat:
+    file: chat.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: chat
+    sha256: 4869980b3621d7717ffc4f60e9bf66971f5b033ebfd33f140c3cf0ed826c7212
+  chat_router:
+    file: chat_router.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: chat
+    sha256: 7d0ca5df55b667093659b3d5f0788dd913ba3c7f094f250148dfc544ab194961
+  judge:
+    file: judge.md
+    version: 1.0.0
+    owner: ML lead
+    eval_suite: none
+    sha256: d259432b28a8a2f0c9cffc8029027bf4fbdb2e6daf6752b6a1c7a73893590cd8
