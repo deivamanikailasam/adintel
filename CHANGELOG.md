@@ -11,3 +11,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | Step | Change | Plain-English note |
 |------|--------|--------------------|
 | 0001 | Project foundation: packaging, tooling, conventions | [0001](docs/changelog/0001-project-foundation.md) |
+| 0002 | Architecture, system design and decision records | [0002](docs/changelog/0002-architecture-and-decisions.md) |
