@@ -42,3 +42,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0030 | Operations: runbooks, operating cadence, disaster recovery, incident template, cost model | [0030](docs/changelog/0030-operations.md) |
 | 0031 | Evaluation harness (10 suites, ~1,100 golden cases, LLM-judge, promotion gate, baseline) — and the fixes it found in retrieval, anomaly detection and the memory backend | [0031](docs/changelog/0031-evaluation-harness.md) |
 | 0032 | Documentation front door: README, full docs index and repository map, glossary, FAQ | [0032](docs/changelog/0032-docs-front-door.md) |
+| 0033 | Shared state across processes: Redis-backed rate limiter and semantic cache | [0033](docs/changelog/0033-shared-state.md) |

@@ -6,12 +6,19 @@ from fastapi import Depends, HTTPException, Request
 
 from adintel.core.errors import AuthError
 from adintel.domain.enums import Role
-from adintel.harness.admission import RateLimiter
+from adintel.harness.admission import Limiter, make_limiter
 from adintel.security.auth import Principal, decode_token
 from adintel.storage import get_database
 from adintel.storage.base import Database
 
-_api_limiter = RateLimiter(600, 60.0)
+_api_limiter: Limiter | None = None
+
+
+def api_limiter() -> Limiter:
+    global _api_limiter
+    if _api_limiter is None:
+        _api_limiter = make_limiter("api", 600, 60.0)
+    return _api_limiter
 
 
 def db() -> Database:
@@ -27,7 +34,7 @@ def principal(request: Request) -> Principal:
         p = decode_token(token)
     except AuthError as exc:
         raise HTTPException(401, str(exc)) from exc
-    if not _api_limiter.allow(p.tenant_id):
+    if not api_limiter().allow(p.tenant_id):
         raise HTTPException(429, "tenant rate limit exceeded")
     return p
 

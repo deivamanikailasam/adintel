@@ -13,6 +13,7 @@ x-app: &app
     ADINTEL_STORAGE: mongo
     ADINTEL_MONGO_URI: mongodb://mongo:27017/?directConnection=true
     ADINTEL_QUEUE: redis
+    ADINTEL_SHARED_STATE: redis
     ADINTEL_REDIS_URL: redis://redis:6379/0
     ADINTEL_MODEL_SMALL_BASE_URL: http://host.docker.internal:8080/v1
     ADINTEL_MODEL_FRONTIER_BASE_URL: http://host.docker.internal:8081/v1

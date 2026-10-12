@@ -37,14 +37,66 @@ class RateLimiter:
             return True
 
 
-_run_limiter: RateLimiter | None = None
+class RedisRateLimiter:
+    """Sliding-window limiter shared by every process (sorted set of hit timestamps per key).
+
+    Fails *open* on a Redis outage with a logged warning: rate limiting protects capacity and cost (which
+    the per-run budget and daily cap also bound); it is not a safety control.
+    """
+
+    def __init__(self, name: str, limit: int, window_seconds: float = 60.0) -> None:
+        self.name = name
+        self.limit = limit
+        self.window = window_seconds
+
+    def allow(self, key: str) -> bool:
+        import logging
+        import uuid
+
+        from adintel.core.redis_client import get_redis
+
+        r = get_redis()
+        k = f"adintel:rl:{self.name}:{key}"
+        now = time.time()
+        try:
+            pipe = r.pipeline()
+            pipe.zremrangebyscore(k, 0, now - self.window)
+            pipe.zcard(k)
+            _, count = pipe.execute()
+            if int(count) >= self.limit:
+                return False
+            pipe = r.pipeline()
+            pipe.zadd(k, {f"{now}:{uuid.uuid4().hex[:6]}": now})
+            pipe.expire(k, int(self.window) + 1)
+            pipe.execute()
+            return True
+        except Exception as exc:  # noqa: BLE001
+            logging.getLogger(__name__).warning("rate_limiter_redis_unavailable", extra={"reason": str(exc)[:120]})
+            return True
 
 
-def run_limiter() -> RateLimiter:
+Limiter = RateLimiter | RedisRateLimiter
+
+
+def make_limiter(name: str, limit: int, window_seconds: float = 60.0) -> Limiter:
+    if get_settings().shared_state == "redis":
+        return RedisRateLimiter(name, limit, window_seconds)
+    return RateLimiter(limit, window_seconds)
+
+
+_run_limiter: Limiter | None = None
+
+
+def run_limiter() -> Limiter:
     global _run_limiter
     if _run_limiter is None:
-        _run_limiter = RateLimiter(get_settings().tenant_runs_per_minute)
+        _run_limiter = make_limiter("runs", get_settings().tenant_runs_per_minute)
     return _run_limiter
+
+
+def reset_limiters() -> None:
+    global _run_limiter
+    _run_limiter = None
 
 
 @dataclass

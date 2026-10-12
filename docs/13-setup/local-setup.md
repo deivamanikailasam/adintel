@@ -102,6 +102,7 @@ Switch AdIntel to the real services in `.env`:
 ```bash
 ADINTEL_STORAGE=mongo
 ADINTEL_QUEUE=redis
+ADINTEL_SHARED_STATE=redis          # rate limits + semantic cache shared by api/worker/scheduler
 ADINTEL_EMBEDDER=fastembed          # BGE embeddings (downloads ~100 MB once)
 ADINTEL_RERANKER=fastembed          # BGE cross-encoder
 ADINTEL_OTEL_ENDPOINT=http://localhost:4318

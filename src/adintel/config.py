@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     vector_search: Literal["auto", "atlas", "python"] = "auto"
     queue: Literal["memory", "redis", "sqs"] = "memory"
     redis_url: str = "redis://localhost:6379/0"
+    # where cross-process state lives (rate-limit windows, semantic cache): per-process memory or Redis
+    shared_state: Literal["memory", "redis"] = "memory"
 
     # --- models -----------------------------------------------------------------------------------
     llm_provider: Literal["openai_compat", "bedrock", "mock"] = "openai_compat"

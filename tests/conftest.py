@@ -62,3 +62,28 @@ def _fresh_queues():
     reset_queues()
     yield
     reset_queues()
+
+
+@pytest.fixture
+def fake_redis(monkeypatch):
+    """Shared-state mode backed by fakeredis (same client for every 'process')."""
+    import fakeredis
+
+    import adintel.api.deps as deps
+    import adintel.llm.semantic_cache as sc
+    from adintel.config import reset_settings_cache
+    from adintel.core.redis_client import set_redis
+    from adintel.harness.admission import reset_limiters
+
+    client = fakeredis.FakeRedis(decode_responses=True)
+    set_redis(client)
+    monkeypatch.setenv("ADINTEL_SHARED_STATE", "redis")
+    reset_settings_cache()
+    reset_limiters()
+    deps._api_limiter = None
+    sc._cache = None
+    yield client
+    set_redis(None)
+    reset_limiters()
+    deps._api_limiter = None
+    sc._cache = None
