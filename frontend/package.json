@@ -10,6 +10,7 @@
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless"
   },
   "private": true,
+  "license": "UNLICENSED",
   "dependencies": {
     "@angular/animations": "^18.2.0",
     "@angular/common": "^18.2.0",

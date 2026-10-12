@@ -5,6 +5,8 @@ description = "AdIntel — an enterprise-governed, multi-agent AI system that wa
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Deiva Mani Kailasam" }]
+license = { file = "LICENSE" }
+classifiers = ["License :: Other/Proprietary License", "Private :: Do Not Upload"]
 dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",

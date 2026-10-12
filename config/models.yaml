@@ -27,6 +27,7 @@ tiers:
     supports_json_mode: false
     fallback: small
     owner: "ML lead"
+    weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
     production_equivalent: "anthropic.claude-sonnet (Amazon Bedrock, pinned model ID)"
     pricing:                     # notional USD per 1M tokens (mirrors the production equivalent)
       input: 3.00
@@ -45,6 +46,7 @@ tiers:
     supports_json_mode: false
     fallback: frontier
     owner: "ML lead"
+    weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
     production_equivalent: "meta.llama3-3-8b-instruct (Bedrock / SageMaker)"
     pricing:
       input: 0.22
@@ -75,6 +77,7 @@ tiers:
     supports_json_mode: false
     fallback: frontier
     owner: "ML lead"
+    weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
     production_equivalent: "Llama 3.3 8B + QLoRA adapter (SageMaker ml.g5.2xlarge)"
     pricing:
       input: 0.22
@@ -93,6 +96,7 @@ tiers:
     supports_json_mode: false
     fallback: null
     owner: "Security"
+    weights_license: "Apache-2.0 (Qwen family; confirm on the exact model card before production use)"
     production_equivalent: "Llama Guard 3 8B (SageMaker ml.g5.xlarge) + Bedrock Guardrails"
     pricing:
       input: 0.20

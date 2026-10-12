@@ -1,0 +1,42 @@
+# Which open-source licences AdIntel may ship (ADR L-14). Checked in CI by scripts/check_licenses.py for
+# every installed Python distribution and every production npm package of the frontend.
+#
+# allowed:  permissive or weak/file-level copyleft that is safe for proprietary, hosted distribution
+# denied:   strong/network copyleft or non-commercial terms — never in a shipped build
+# review:   allowed only with a recorded exception below (legal sign-off)
+allowed:
+  - MIT
+  - MIT-CMU
+  - MIT-0
+  - BSD-2-Clause
+  - BSD-3-Clause
+  - Apache-2.0
+  - ISC
+  - PSF-2.0
+  - Python-2.0
+  - 0BSD
+  - Unlicense
+  - CC0-1.0
+  - Zlib
+  - BlueOak-1.0.0
+  - HPND
+  - MPL-2.0          # file-level copyleft: fine unmodified; modified MPL files must be published
+  - LGPL-2.1-or-later  # dynamic use from Python is fine; do not vendor-and-modify
+  - LGPL-3.0-or-later
+denied:
+  - GPL-2.0
+  - GPL-3.0
+  - AGPL-3.0
+  - SSPL-1.0
+  - BUSL-1.1
+  - CC-BY-NC-4.0
+  - Commons-Clause
+review:
+  - EPL-2.0
+  - CDDL-1.0
+  - CC-BY-4.0
+  - CC-BY-SA-4.0
+# Packages whose licence metadata is missing or non-standard, verified by hand. Keep the reason.
+exceptions:
+  adintel: "this project (proprietary, LICENSE)"
+  frontend: "this project (proprietary, LICENSE)"

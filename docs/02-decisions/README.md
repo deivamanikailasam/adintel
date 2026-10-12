@@ -31,6 +31,7 @@ Every significant decision is logged with its reason **and the condition that wo
 | [L-11](l-11-signed-approval-records-between-api-service-and-executor.md) | Signed approval records between api-service and executor | accepted | Moving to KMS asymmetric signing in production (recommended). |
 | [L-12](l-12-synchronous-agents-async-edges.md) | Synchronous agents, async edges | accepted | Interactive agent paths become latency-bound on I/O fan-out. |
 | [L-13](l-13-forward-only-data-migrations.md) | Forward-only data migrations with expand/contract | accepted | A single migration takes > 10 min on production data. |
+| [L-14](l-14-proprietary-licence-and-dependency-policy.md) | Proprietary licence, enforced dependency-licence policy | accepted | Strategy moves to open core, or a customer requires an OSS licence. |
 
 ## How to add a decision
 

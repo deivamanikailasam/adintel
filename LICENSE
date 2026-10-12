@@ -1,0 +1,24 @@
+AdIntel — Proprietary Software Licence
+
+Copyright (c) 2026 Deiva Mani Kailasam. All rights reserved.
+
+This software and its documentation (the "Software") are the confidential and proprietary property of the
+copyright holder. No licence, express or implied, is granted to any person except under a separate written
+agreement signed by the copyright holder (a "Customer Agreement").
+
+Without a Customer Agreement you may not use, copy, modify, merge, publish, distribute, sublicense, sell,
+host as a service, or create derivative works of the Software, in whole or in part. Viewing the source in a
+repository you have been given access to does not grant any of these rights.
+
+Under a Customer Agreement, use is limited to the scope, term, environments and number of tenants stated in
+that agreement. Third-party components are licensed under their own terms (see THIRD_PARTY_NOTICES.md); this
+licence does not restrict rights those terms grant. Model weights are not part of the Software and are
+governed by their publishers' licences.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT, EXCEPT
+AS EXPRESSLY STATED IN A CUSTOMER AGREEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE SOFTWARE, EXCEPT AS EXPRESSLY STATED IN A
+CUSTOMER AGREEMENT.
+
+Licensing enquiries: see the maintainer listed in .github/CODEOWNERS.

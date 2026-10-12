@@ -53,3 +53,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0041 | Repository governance: SECURITY.md, CODEOWNERS, PR and issue templates, pre-commit guard rails, Dependabot, secret scanning and SBOMs in CI | [0041](docs/changelog/0041-repo-governance.md) |
 | 0042 | Production-readiness matrix (capability → local implementation → alternatives → production → evidence → status) and README refresh | [0042](docs/changelog/0042-readiness-matrix.md) |
 | 0043 | Governance console screens for the learning loop (triage, outcomes, feature flags) and privacy requests; unused Angular scaffold removed | [0043](docs/changelog/0043-learning-privacy-screens.md) |
+| 0044 | Owner decision — licence: proprietary LICENSE, enforced dependency-licence policy in CI, third-party notices, model-weights licence recorded per tier (ADR L-14) | [0044](docs/changelog/0044-licence.md) |

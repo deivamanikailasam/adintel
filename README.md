@@ -100,7 +100,7 @@ Start at **[docs/README.md](docs/README.md)**. Highlights:
 |-|-|
 | [What AdIntel is](docs/00-overview/what-is-adintel.md) | Business case, success criteria, the one-night story |
 | [Architecture](docs/01-architecture/architecture.md) | Diagrams, harness, agents, models, RAG, data model, AWS↔local mapping |
-| [Decisions](docs/02-decisions/README.md) | 25 ADRs, each with a revisit trigger |
+| [Decisions](docs/02-decisions/README.md) | 26 ADRs, each with a revisit trigger |
 | [Governance](docs/03-governance/governance.md) · [Security](docs/04-security/security.md) · [Safety](docs/05-safety/safety.md) | L2 autonomy, approvals, threat model, principles → code → tests |
 | [Reliability](docs/06-reliability/reliability.md) · [Evaluation](docs/07-evaluation/evaluation.md) · [Testing](docs/08-testing/testing-strategy.md) · [Observability](docs/09-observability/observability.md) · [Audit](docs/10-audit/audit-and-reproducibility.md) · [Cost](docs/11-cost/cost-model.md) | How it stays correct, measured and explainable |
 | [Runbooks & operations](docs/12-operations/runbooks.md) | P1 runbooks, cadence, DR |
@@ -114,3 +114,8 @@ Start at **[docs/README.md](docs/README.md)**. Highlights:
 3. **Refuse rather than fabricate.** No analysis on untrustworthy data; every number traceable to the database.
 4. **Degrade visibly, never fail silently.** Every gap is disclosed in the client report.
 5. **Prove "reliably" with an eval, not intuition.**
+
+## Licence
+
+Proprietary — all rights reserved; see [LICENSE](LICENSE) and [ADR L-14](docs/02-decisions/l-14-proprietary-licence-and-dependency-policy.md).
+Third-party components: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) (regenerated in CI from the production install).

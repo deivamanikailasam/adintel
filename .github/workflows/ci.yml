@@ -93,6 +93,10 @@ jobs:
         env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
       - uses: astral-sh/setup-uv@v3
       - run: uv venv -p 3.12 && uv pip install -e ".[ml,aws]" cyclonedx-bom
+      - name: dependency licence gate (ADR L-14) — production install only
+        run: |
+          (cd frontend && npm ci --omit=dev --ignore-scripts)
+          .venv/bin/python scripts/check_licenses.py --npm frontend --notices THIRD_PARTY_NOTICES.md
       - name: SBOM — Python dependencies (CycloneDX)
         run: .venv/bin/cyclonedx-py environment .venv --of JSON -o sbom-python.cdx.json
       - name: build image
@@ -101,7 +105,7 @@ jobs:
         uses: anchore/sbom-action@v0
         with: { image: "adintel:${{ github.sha }}", format: spdx-json, output-file: sbom-image.spdx.json, upload-artifact: false }
       - uses: actions/upload-artifact@v4
-        with: { name: sbom, path: "sbom-*.json" }
+        with: { name: sbom, path: "sbom-*.json\nTHIRD_PARTY_NOTICES.md" }
 
   frontend:
     runs-on: ubuntu-latest
