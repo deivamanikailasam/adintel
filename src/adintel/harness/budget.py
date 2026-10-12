@@ -42,7 +42,11 @@ class UsageMeter:
             return "wall_clock"
         return None
 
+    reserve_mode = False  # the guardrail always runs: it draws on a reserve, never blocked by the budget
+
     def precheck(self, *, tokens: int = 0, cost: float = 0.0) -> None:
+        if self.reserve_mode:
+            return
         with self._lock:
             reason = self.exhausted_reason(extra_tokens=tokens, extra_cost=cost)
         if reason:

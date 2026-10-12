@@ -141,3 +141,13 @@ def _safety(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> s
     if "competitor's strategy" in text or "other client" in text:
         cats.append("S1")
     return json.dumps({"safe": not cats, "categories": cats, "reason": "mock classifier"})
+
+
+@register("OrchestratorOutput")
+def _orchestrator(ctx: dict[str, Any], messages: list[Message], tier: TierConfig) -> str:
+    high = [a for a in ctx.get("anomalies", []) if a.get("severity") in ("high", "critical")]
+    if high and not ctx.get("root_cause_exists"):
+        return json.dumps({"next_action": "analyst", "reasoning": (
+            f"High severity {high[0]['metric']} anomaly with ${high[0]['spend_at_risk_weekly']:,.0f}/week at risk, "
+            "trustworthy data and no root cause yet: investigate.")})
+    return json.dumps({"next_action": "report", "reasoning": "Remaining anomalies are immaterial."})

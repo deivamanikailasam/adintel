@@ -26,3 +26,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0014 | Optimizer agent (proposes only) and pure-code brand constraints | [0014](docs/changelog/0014-optimizer-and-constraints.md) |
 | 0015 | Report agent with a grounding fallback ladder and code-enforced caveats | [0015](docs/changelog/0015-report-agent.md) |
 | 0016 | Guardrail agent: deterministic checks + fail-closed safety classifier | [0016](docs/changelog/0016-guardrail.md) |
+| 0017 | Orchestrator, LangGraph supervisor graph, run engine, finalize, seed data; e2e + chaos tests | [0017](docs/changelog/0017-orchestrator-graph-engine.md) |

@@ -43,6 +43,8 @@ CATALOGUE: tuple[CollectionSpec, ...] = (
     CollectionSpec("run_checkpoints", True, "RunState after every step", "30 days",
                    (IndexSpec((T, ("run_id", 1), ("step", 1)), unique=True),
                     IndexSpec((("expire_at", 1),), ttl_seconds=0))),
+    CollectionSpec("run_events", True, "Progress events streamed to the UI (SSE)", "30 days",
+                   (IndexSpec((T, ("run_id", 1), ("seq", 1))),)),
     CollectionSpec("run_history", True, "Episodic memory: anomalies, actions, outcomes", "24 months",
                    (IndexSpec((T, ("brand_id", 1), ("created_at", -1))),)),
     CollectionSpec("anomalies", True, "Detected anomalies and lifecycle", "24 months",
