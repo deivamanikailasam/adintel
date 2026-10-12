@@ -12,6 +12,7 @@
 | Cost anomaly | daily 23:30 UTC | P3 on > 2× day-over-day |
 | Outcome tracking | daily 05:00 UTC | Actual vs predicted impact, 14 days after execution |
 | Weekly triage | Mon 09:00 UTC | What humans should look at next week |
+| Retention purge | daily 02:30 UTC | Delete what the catalogue says we no longer need (legal hold respected) |
 """
 
 from __future__ import annotations
@@ -27,6 +28,7 @@ from adintel.config import get_settings
 from adintel.feedback.outcomes import outcomes_job
 from adintel.feedback.triage import triage_job
 from adintel.observability.logging import configure_logging
+from adintel.privacy.retention import retention_job
 from adintel.scheduler import jobs
 from adintel.storage import get_database
 
@@ -64,6 +66,7 @@ def build(scheduler: BlockingScheduler) -> None:
     scheduler.add_job(jobs.expire_recommendations_job, CronTrigger(minute=5), args=[db], id="expire")
     scheduler.add_job(jobs.dlq_check_job, CronTrigger(minute="*/5"), id="dlq")
     scheduler.add_job(jobs.cost_anomaly_job, CronTrigger(hour=23, minute=30, timezone="UTC"), args=[db], id="cost")
+    scheduler.add_job(retention_job, CronTrigger(hour=2, minute=30, timezone="UTC"), args=[db], id="retention")
     scheduler.add_job(outcomes_job, CronTrigger(hour=5, minute=0, timezone="UTC"), args=[db], id="outcomes")
     scheduler.add_job(
         triage_job, CronTrigger(day_of_week="mon", hour=9, minute=0, timezone="UTC"), args=[db], id="triage"

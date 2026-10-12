@@ -1,4 +1,5 @@
-"""``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags."""
+"""``adintel`` command line: seed, demo, run, verify-audit, reconcile, expire, models, token, outcomes, triage, flags, purge,
+privacy-export, privacy-erase, offboard."""
 
 from __future__ import annotations
 
@@ -158,6 +159,47 @@ def cmd_flags(args: argparse.Namespace) -> None:
     _print(flags.effective(brand_id=args.brand))
 
 
+def cmd_purge(args: argparse.Namespace) -> None:
+    from adintel.privacy.retention import plan, purge
+    from adintel.storage import get_database
+
+    _print(
+        {"plan": plan(), "deleted" if not args.dry_run else "would_delete": purge(get_database(), dry_run=args.dry_run)}
+    )
+
+
+def cmd_privacy_export(args: argparse.Namespace) -> None:
+    from adintel.privacy.subjects import export_user
+    from adintel.storage import get_database
+
+    _print(export_user(get_database(), args.tenant, args.user, actor_id=args.actor))
+
+
+def cmd_privacy_erase(args: argparse.Namespace) -> None:
+    from adintel.privacy.subjects import erase_user
+    from adintel.storage import get_database
+
+    _print(erase_user(get_database(), args.tenant, args.user, actor_id=args.actor, reason=args.reason))
+
+
+def cmd_offboard(args: argparse.Namespace) -> None:
+    from pathlib import Path
+
+    from adintel.privacy.offboarding import offboard_tenant
+    from adintel.storage import get_database
+
+    _print(
+        offboard_tenant(
+            get_database(),
+            args.tenant,
+            confirm=args.confirm,
+            actor_id=args.actor,
+            out_dir=Path(args.out),
+            keep_legal_records=not args.delete_legal_records,
+        )
+    )
+
+
 def main(argv: list[str] | None = None) -> None:
     from adintel.config import get_settings
     from adintel.observability.logging import configure_logging
@@ -201,6 +243,26 @@ def main(argv: list[str] | None = None) -> None:
     sp.add_argument("--actor", default="cli:operator")
     sp.add_argument("--reason", default="set from CLI")
     sp.set_defaults(fn=cmd_flags)
+    sp = sub.add_parser("purge", help="enforce retention periods from the collection catalogue")
+    sp.add_argument("--dry-run", action="store_true")
+    sp.set_defaults(fn=cmd_purge)
+    for name, fn, helptext in (
+        ("privacy-export", cmd_privacy_export, "export everything held about one user (access request)"),
+        ("privacy-erase", cmd_privacy_erase, "pseudonymise one user and delete their chats and notes"),
+    ):
+        sp = sub.add_parser(name, help=helptext)
+        sp.add_argument("--tenant", default="brightwave")
+        sp.add_argument("--user", required=True)
+        sp.add_argument("--actor", default="cli:privacy-officer")
+        sp.add_argument("--reason", default="data subject request")
+        sp.set_defaults(fn=fn)
+    sp = sub.add_parser("offboard", help="export then delete one tenant's data (agency leaves)")
+    sp.add_argument("--tenant", required=True)
+    sp.add_argument("--confirm", required=True, help="type the tenant id again")
+    sp.add_argument("--out", default="offboarding")
+    sp.add_argument("--actor", default="cli:operator")
+    sp.add_argument("--delete-legal-records", action="store_true", help="also delete approvals/executions/audit")
+    sp.set_defaults(fn=cmd_offboard)
     args = p.parse_args(argv)
     args.fn(args)
 

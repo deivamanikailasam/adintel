@@ -19,5 +19,8 @@
 **Models:** locally, all inference runs on your machine (mlx-lm); nothing leaves it. In production, Bedrock
 is used with data retention disabled and no training on inputs; self-hosted models run inside the VPC.
 
-**Deletion requests (GDPR/CCPA):** user data in `users`, `chat_sessions`, `feedback` is deleted; audit
-entries keep the user ID as a pseudonymous reference (legal basis: legitimate interest / legal obligation).
+**Deletion requests (GDPR/CCPA):** the user's profile in `users` is pseudonymised, their `chat_sessions`
+are deleted and free-text notes in `feedback`/`recommendations` are blanked; approvals and audit entries
+keep the user ID as a pseudonymous reference (legal basis: legitimate interest / legal obligation).
+Retention periods above are enforced daily by `adintel purge`. Details, commands and offboarding:
+[privacy-and-data-lifecycle.md](privacy-and-data-lifecycle.md).

@@ -14,6 +14,7 @@ from adintel.feedback.triage import weekly_triage
 from adintel.harness.flags import DEFAULTS, FeatureFlags
 from adintel.harness.killswitch import KillSwitches
 from adintel.llm.registry import get_registry
+from adintel.privacy.subjects import erase_user, export_user
 from adintel.queueing import AGENT_RUNS, EXECUTIONS, get_queue
 from adintel.security.auth import Principal
 from adintel.storage.base import Database
@@ -90,6 +91,32 @@ def outcomes(
     p: Principal = Depends(require(Role.ADMIN, *SENIORS)), database: Database = Depends(db)
 ) -> list[dict[str, Any]]:
     return TenantScopedRepo(database, "outcomes", p.tenant_id).find({}, sort=[("measured_at", -1)], limit=200)
+
+
+class Erasure(BaseModel):
+    reason: str
+
+
+@router.get("/privacy/users/{user_id}/export")
+def privacy_export(
+    user_id: str, p: Principal = Depends(require(Role.ADMIN)), database: Database = Depends(db)
+) -> dict[str, Any]:
+    try:
+        return export_user(database, p.tenant_id, user_id, actor_id=p.user_id)
+    except LookupError as exc:
+        raise HTTPException(404, "user not found") from exc
+
+
+@router.post("/privacy/users/{user_id}/erase")
+def privacy_erase(
+    user_id: str, body: Erasure, p: Principal = Depends(require(Role.ADMIN)), database: Database = Depends(db)
+) -> dict[str, int]:
+    if user_id == p.user_id:
+        raise HTTPException(409, "ask another admin to erase your own account")
+    try:
+        return erase_user(database, p.tenant_id, user_id, actor_id=p.user_id, reason=body.reason)
+    except LookupError as exc:
+        raise HTTPException(404, "user not found") from exc
 
 
 @router.get("/audit/verify")

@@ -22,7 +22,7 @@ Plain-English notes for every change live in [changelog/](changelog/).
 | 01 | Architecture & system design | [Architecture](01-architecture/architecture.md) · [AWS ↔ local mapping](01-architecture/aws-to-local-mapping.md) · [Agent team](01-architecture/agent-team.md) · [Graph & harness](01-architecture/graph-and-harness.md) · [LLM gateway](01-architecture/llm-gateway.md) · [Model strategy](01-architecture/model-strategy.md) · [RAG & memory](01-architecture/rag-and-memory.md) · [Data model](01-architecture/data-model.md) |
 | 02 | Decisions | [24 ADRs](02-decisions/README.md) · [Open questions](02-decisions/open-questions.md) · [ADR template](02-decisions/template.md) · [Anti-patterns avoided](anti-patterns.md) |
 | 03 | Governance | [Governance & HITL](03-governance/governance.md) · [RACI](03-governance/raci.md) · [Client disclosure](03-governance/client-disclosure.md) |
-| 04 | Security | [Security](04-security/security.md) · [Threat model](04-security/threat-model.md) · [Tenant isolation](04-security/tenant-isolation.md) · [Data map](04-security/data-map.md) · [Red team](04-security/red-team.md) |
+| 04 | Security | [Security](04-security/security.md) · [Threat model](04-security/threat-model.md) · [Tenant isolation](04-security/tenant-isolation.md) · [Data map](04-security/data-map.md) · [Privacy & data lifecycle](04-security/privacy-and-data-lifecycle.md) · [Red team](04-security/red-team.md) |
 | 05 | Safety | [Safety principles → code → tests](05-safety/safety.md) |
 | 06 | Reliability | [Validation, timeouts & degradation](06-reliability/reliability.md) · [SLOs](06-reliability/slos.md) |
 | 07 | Evaluation | [Evaluation](07-evaluation/evaluation.md) · [Flywheel](07-evaluation/flywheel.md) · [Promotion gate](07-evaluation/promotion-gate.md) |

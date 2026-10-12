@@ -68,6 +68,18 @@ throughput fallback. No manual action is needed for safety.
 2. Compare against the S3 Object Lock export (production) to find what changed.
 3. Treat as a security incident; preserve evidence; rotate credentials of anyone with DB write access.
 
+## Privacy request or agency offboarding
+
+1. Verify the requester's identity and authority (privacy officer signs off in the ticket).
+2. Access request: `adintel privacy-export --tenant <t> --user <u> > export.json`; send through the agreed
+   secure channel.
+3. Erasure: `adintel privacy-erase --tenant <t> --user <u> --reason "<ticket>"`, then disable the user in
+   the identity provider.
+4. Offboarding: confirm the contract's legal-record clause; run `adintel offboard --tenant <t> --confirm <t>
+   --out offboarding/`; check `manifest.json`; deliver the bundle; revoke each ad platform's OAuth grant and
+   delete the tenant's secrets (production: Secrets Manager); close the ticket with the `_system` audit
+   entry's `seq`.
+
 ## Handover is proven, not asserted
 
 The client's team must be able to: handle every P1 runbook, run the eval suite, add a new brand end to end,

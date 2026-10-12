@@ -159,3 +159,16 @@ def test_admin_flags_triage_and_outcomes_endpoints(client):
     assert client.get("/admin/flags", headers=viewer).status_code == 403
     assert client.get("/admin/triage", headers=admin).json()["tenant_id"] == "brightwave"
     assert client.get("/admin/outcomes", headers=admin).json() == []
+
+
+def test_admin_privacy_endpoints(client):
+    admin = login(client, "admin@brightwave.example")
+    r = client.get("/admin/privacy/users/u_viewer/export", headers=admin)
+    assert r.status_code == 200 and r.json()["profile"]["email"] == "viewer@brightwave.example"
+    assert client.get("/admin/privacy/users/u_nobody/export", headers=admin).status_code == 404
+    jordan = login(client, "jordan@brightwave.example")
+    assert client.get("/admin/privacy/users/u_viewer/export", headers=jordan).status_code == 403
+    assert client.post("/admin/privacy/users/u_admin/erase", json={"reason": "x"}, headers=admin).status_code == 409
+    r = client.post("/admin/privacy/users/u_viewer/erase", json={"reason": "left"}, headers=admin)
+    assert r.status_code == 200 and r.json()["profile"] == 1
+    assert client.post("/auth/dev-login", json={"email": "viewer@brightwave.example"}).status_code in (401, 403, 404)
