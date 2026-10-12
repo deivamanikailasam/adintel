@@ -17,3 +17,4 @@ The two always move together: a commit that changes behaviour adds a line here a
 | 0005 | Immutable hash-chained audit log with tamper detection | [0005](docs/changelog/0005-audit-log.md) |
 | 0006 | Observability foundation: JSON logs, metrics, traces, Langfuse, alert routing | [0006](docs/changelog/0006-observability-foundation.md) |
 | 0007 | LLM gateway: mlx-lm provider, model & prompt registries, validation wrapper | [0007](docs/changelog/0007-llm-gateway.md) |
+| 0008 | Harness controls: budgets, kill switches, idempotency, checkpoints, timeouts, degradation | [0008](docs/changelog/0008-harness-controls.md) |
