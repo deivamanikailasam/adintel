@@ -63,4 +63,17 @@ export class ApiService {
   cost(): Observable<any> { return this.http.get('/api/admin/cost'); }
   models(): Observable<any> { return this.http.get('/api/admin/models'); }
   notifications(): Observable<any[]> { return this.http.get<any[]>('/api/admin/notifications'); }
+  flags(brand_id?: string): Observable<any> {
+    const params = brand_id ? new HttpParams().set('brand_id', brand_id) : undefined;
+    return this.http.get('/api/admin/flags', { params });
+  }
+  setFlag(flag: string, enabled: boolean, reason: string, brand_id?: string | null): Observable<any> {
+    return this.http.post('/api/admin/flags', { flag, enabled, reason, brand_id: brand_id || null });
+  }
+  triage(days = 7): Observable<any> { return this.http.get('/api/admin/triage', { params: new HttpParams().set('days', days) }); }
+  outcomes(): Observable<any[]> { return this.http.get<any[]>('/api/admin/outcomes'); }
+  privacyExport(user_id: string): Observable<any> { return this.http.get(`/api/admin/privacy/users/${encodeURIComponent(user_id)}/export`); }
+  privacyErase(user_id: string, reason: string): Observable<any> {
+    return this.http.post(`/api/admin/privacy/users/${encodeURIComponent(user_id)}/erase`, { reason });
+  }
 }

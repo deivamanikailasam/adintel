@@ -13,6 +13,8 @@ Standalone components, signals and the new control flow (`@if`, `@for`), lazy-lo
 | Report | `/reports/:id` | Sections (rendered as escaped text), grounding badge, footer, 1–5 rating |
 | Chat | `/chat` | Streaming chat per brand; shows route/tier/cached; blocked output replaced by a refusal |
 | Governance | `/admin` | Audit-chain verification, notional cost by agent, kill switches, model registry health, notifications |
+| Learning & rollout | `/admin/learning` | Weekly triage with suggested actions, 14-day outcomes of executed changes (graded), feature flags with brand/tenant overrides (changes: admin only, reason audited) |
+| Privacy requests | `/admin/privacy` | Admin only: export everything held about a user (download JSON) or erase them; erasure needs the user id typed twice and is refused on your own account |
 
 ## Security choices
 

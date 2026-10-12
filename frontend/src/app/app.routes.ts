@@ -14,6 +14,8 @@ export const routes: Routes = [
     { path: 'reports/:reportId', loadComponent: () => import('./pages/report.component').then(m => m.ReportComponent) },
     { path: 'chat', loadComponent: () => import('./pages/chat.component').then(m => m.ChatComponent) },
     { path: 'admin', loadComponent: () => import('./pages/admin.component').then(m => m.AdminComponent) },
+    { path: 'admin/learning', loadComponent: () => import('./pages/learning.component').then(m => m.LearningComponent) },
+    { path: 'admin/privacy', loadComponent: () => import('./pages/privacy.component').then(m => m.PrivacyComponent) },
   ]},
   { path: '**', redirectTo: '' },
 ];

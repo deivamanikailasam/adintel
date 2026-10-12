@@ -85,8 +85,9 @@ Legend: ✅ implemented and tested · 🟡 implemented, production step is confi
 
 ## Known limits of the local setup (by design)
 
-- **Admin UI coverage:** feature flags, triage, outcomes and privacy requests are available through the API
-  and CLI; the Angular governance console shows kill switches, audit and cost but not yet these screens.
+- **Admin UI coverage:** feature flags, triage, outcomes and privacy requests have screens
+  (`/admin/learning`, `/admin/privacy`); tenant offboarding, retention purge, backups and migrations stay
+  CLI-only on purpose — they are rare, destructive operator actions that belong in a ticketed runbook.
 - **Single machine:** availability targets in the [DR plan](../12-operations/disaster-recovery.md) assume
   multi-AZ production; locally a reboot means a restart (runs resume from checkpoints).
 - **Model quality:** local models are evaluated with the same suites, but production promotion requires the

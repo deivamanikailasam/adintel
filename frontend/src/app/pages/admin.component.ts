@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DecimalPipe, JsonPipe, KeyValuePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 
@@ -8,9 +9,12 @@ import { AuthService } from '../core/auth.service';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [FormsModule, DecimalPipe, JsonPipe, KeyValuePipe],
+  imports: [FormsModule, DecimalPipe, JsonPipe, KeyValuePipe, RouterLink],
+  styles: [`.sub { margin-bottom: 1rem; }`],
   template: `
     <h1>Governance</h1>
+    <nav class="row sub"><a routerLink="/admin/learning">Learning &amp; rollout →</a>
+      @if (auth.hasRole('admin')) { <a routerLink="/admin/privacy">Privacy requests →</a> }</nav>
     <div class="grid">
       <div class="panel"><h2>Audit chain</h2>
         @if (audit(); as a) { <p><span class="badge {{ a.ok ? 'ok' : 'failed' }}">{{ a.ok ? 'verified' : 'BROKEN at #' + a.broken_at_seq }}</span> {{ a.entries }} entries</p> }
