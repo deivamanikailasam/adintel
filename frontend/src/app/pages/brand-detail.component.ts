@@ -27,7 +27,7 @@ import { AuthService } from '../core/auth.service';
             <td>{{ a.observed | number:'1.2-2' }} vs {{ a.expected | number:'1.2-2' }} ({{ a.deviation_pct }}%, {{ a.days }}d)</td>
             <td>{{ a.lower | number:'1.2-2' }} – {{ a.upper | number:'1.2-2' }}</td>
             <td><span class="badge">{{ a.severity }}</span></td>
-            <td><select #r><option value="planned_promo">planned promo</option><option value="seasonal">seasonal</option>
+            <td><select #r aria-label="Dismissal reason"><option value="planned_promo">planned promo</option><option value="seasonal">seasonal</option>
                 <option value="noise">noise</option><option value="known_tracking_change">tracking change</option></select>
                 <button (click)="dismiss(a.anomaly_id, r.value)">Dismiss</button></td></tr>
         } @empty { <tr><td colspan="6" class="muted">None</td></tr> }

@@ -14,7 +14,7 @@ import { ApiService } from '../core/api.service';
       chats and free-text notes; approvals keep the opaque user id because the agency must keep a record of who
       authorised spending client money. Also disable the person in the identity provider.</p>
     <div class="panel">
-      <div class="row"><input [(ngModel)]="userId" name="userId" placeholder="user id, e.g. u_jordan">
+      <div class="row"><input [(ngModel)]="userId" name="userId" aria-label="User id" placeholder="user id, e.g. u_jordan">
         <button (click)="export()" [disabled]="!userId">Export their data</button></div>
       @if (exported(); as x) {
         <p>Export for <strong>{{ x.profile.email }}</strong>:</p>
@@ -25,8 +25,8 @@ import { ApiService } from '../core/api.service';
     <div class="panel">
       <h2>Erase a user</h2>
       <div class="row">
-        <input [(ngModel)]="reason" name="reason" placeholder="reason / ticket (audited)">
-        <input [(ngModel)]="confirm" name="confirm" placeholder="type the user id again to confirm">
+        <input [(ngModel)]="reason" name="reason" aria-label="Reason or ticket" placeholder="reason / ticket (audited)">
+        <input [(ngModel)]="confirm" name="confirm" aria-label="Confirm user id" placeholder="type the user id again to confirm">
         <button class="danger" (click)="erase()" [disabled]="!userId || !reason || confirm !== userId">Erase</button>
       </div>
       @if (erased(); as e) { <p class="badge ok">done</p> <table>@for (kv of e | keyvalue; track kv.key) { <tr><td>{{ kv.key }}</td><td>{{ kv.value }}</td></tr> }</table> }

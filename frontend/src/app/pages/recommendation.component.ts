@@ -41,8 +41,8 @@ import { AuthService } from '../core/auth.service';
             <button class="primary" (click)="approve(r.recommendation_id)" [disabled]="typed === null">Approve</button>
           </div>
           <div class="row" style="margin-top: .8rem">
-            <select [(ngModel)]="category" name="category">@for (c of categories(); track c) { <option [value]="c">{{ c }}</option> }</select>
-            <input [(ngModel)]="note" name="note" placeholder="What would you have done instead?" style="flex: 1">
+            <select [(ngModel)]="category" name="category" aria-label="Rejection reason">@for (c of categories(); track c) { <option [value]="c">{{ c }}</option> }</select>
+            <input [(ngModel)]="note" name="note" aria-label="Rejection note" placeholder="What would you have done instead?" style="flex: 1">
             <button class="danger" (click)="reject(r.recommendation_id)">Reject</button>
           </div>
           @if (msg()) { <p [class.error]="msgError()">{{ msg() }}</p> }

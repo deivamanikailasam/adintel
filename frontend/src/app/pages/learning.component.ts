@@ -71,10 +71,10 @@ import { AuthService } from '../core/auth.service';
         }
         @if (auth.hasRole('admin')) {
           <form class="row change" (ngSubmit)="save()">
-            <select [(ngModel)]="flag" name="flag">@for (kv of f.defaults | keyvalue; track kv.key) { <option [value]="kv.key">{{ kv.key }}</option> }</select>
-            <input [(ngModel)]="flagBrand" name="flagBrand" placeholder="brand id (blank = tenant-wide)">
+            <select [(ngModel)]="flag" name="flag" aria-label="Feature flag">@for (kv of f.defaults | keyvalue; track kv.key) { <option [value]="kv.key">{{ kv.key }}</option> }</select>
+            <input [(ngModel)]="flagBrand" name="flagBrand" aria-label="Brand id (blank for tenant-wide)" placeholder="brand id (blank = tenant-wide)">
             <label><input type="checkbox" [(ngModel)]="enabled" name="enabled"> enabled</label>
-            <input [(ngModel)]="reason" name="reason" placeholder="reason (audited)" required>
+            <input [(ngModel)]="reason" name="reason" placeholder="reason (audited)" aria-label="Reason (audited)" required>
             <button class="primary" [disabled]="!reason || !flag">Apply</button>
           </form>
           @if (error()) { <p class="error">{{ error() }}</p> }

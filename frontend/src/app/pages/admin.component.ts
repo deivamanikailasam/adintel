@@ -27,9 +27,9 @@ import { AuthService } from '../core/auth.service';
     <div class="panel">
       @if (auth.hasRole('admin')) {
         <form class="row" (ngSubmit)="flip()">
-          <select [(ngModel)]="scope" name="scope"><option>global</option><option>tenant</option><option>brand</option><option>agent</option></select>
-          <input [(ngModel)]="key" name="key" placeholder="brand id / agent name / *">
-          <input [(ngModel)]="reason" name="reason" placeholder="reason (audited)" required>
+          <select [(ngModel)]="scope" name="scope" aria-label="Kill switch scope"><option>global</option><option>tenant</option><option>brand</option><option>agent</option></select>
+          <input [(ngModel)]="key" name="key" aria-label="Kill switch key" placeholder="brand id / agent name / *">
+          <input [(ngModel)]="reason" name="reason" placeholder="reason (audited)" aria-label="Reason (audited)" required>
           <label><input type="checkbox" [(ngModel)]="engaged" name="engaged"> engaged</label>
           <button class="danger" [disabled]="!reason">Apply</button></form>
       }

@@ -10,9 +10,10 @@ import { AuthService } from '../core/auth.service';
   template: `
     <div class="panel login">
       <h1>Sign in to AdIntel</h1>
+      @if (notice) { <p class="muted" role="status">{{ notice }}</p> }
       <p class="muted">Local development login (seeded users, no password). Production uses Cognito SSO.</p>
       <form (ngSubmit)="submit()">
-        <select [(ngModel)]="email" name="email">
+        <select [(ngModel)]="email" name="email" aria-label="Seeded user">
           @for (u of users; track u.email) { <option [value]="u.email">{{ u.label }}</option> }
         </select>
         <button class="primary" type="submit" [disabled]="busy()">Sign in</button>
@@ -39,6 +40,7 @@ export class LoginComponent {
   email = this.users[0].email;
   busy = signal(false);
   error = signal('');
+  notice = this.auth.takeLogoutReason();
 
   async sso(): Promise<void> {
     try { await this.auth.loginSso(); } catch (e: any) { this.error.set(e?.message ?? 'SSO unavailable'); }

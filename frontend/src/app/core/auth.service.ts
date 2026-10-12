@@ -14,12 +14,72 @@ export class AuthService {
   readonly token = signal<string | null>(sessionStorage.getItem(KEY));
   readonly me = signal<Me | null>(null);
   readonly loggedIn = computed(() => !!this.token());
+  /** Refresh token is kept in memory only: a reload signs in again silently through the IdP session. */
+  private refreshToken: string | null = null;
+  private idToken: string | null = null;
+  private idleTimer?: ReturnType<typeof setTimeout>;
+  private expiryTimer?: ReturnType<typeof setTimeout>;
+  private idleMinutes = 30;
+  private watching = false;
+
+  /** Idle sign-out and token-expiry handling; called once a session exists. */
+  async startSessionWatch(): Promise<void> {
+    if (this.watching || !this.token()) return;
+    this.watching = true;
+    try {
+      const cfg = await firstValueFrom(this.http.get<any>('/api/auth/config'));
+      this.idleMinutes = cfg?.session?.idle_timeout_minutes ?? 30;
+    } catch { /* keep the default */ }
+    const reset = () => {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = setTimeout(() => this.logout(`Signed out after ${this.idleMinutes} minutes of inactivity.`),
+        this.idleMinutes * 60_000);
+    };
+    for (const ev of ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']) addEventListener(ev, reset, { passive: true });
+    reset();
+    this.scheduleExpiry();
+  }
+
+  private scheduleExpiry(): void {
+    clearTimeout(this.expiryTimer);
+    const exp = tokenExpiry(this.token());
+    if (!exp) return;
+    const ms = exp * 1000 - Date.now();
+    if (this.refreshToken && ms > 90_000) {
+      this.expiryTimer = setTimeout(() => void this.refresh(), ms - 60_000);  // refresh a minute early
+    } else {
+      this.expiryTimer = setTimeout(() => this.logout('Your session expired. Please sign in again.'), Math.max(ms, 0));
+    }
+  }
+
+  private async refresh(): Promise<void> {
+    const saved = JSON.parse(sessionStorage.getItem('adintel.oidc') ?? '{}');
+    try {
+      const res = await fetch(`${saved.issuer}/protocol/openid-connect/token`, { method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: this.refreshToken ?? '', client_id: saved.client_id }) });
+      if (!res.ok) throw new Error(String(res.status));
+      const tok = await res.json();
+      this.store(tok);
+      this.scheduleExpiry();
+    } catch {
+      this.logout('Your session could not be renewed. Please sign in again.');
+    }
+  }
+
+  private store(tok: { access_token: string; refresh_token?: string; id_token?: string }): void {
+    sessionStorage.setItem(KEY, tok.access_token);
+    this.token.set(tok.access_token);
+    this.refreshToken = tok.refresh_token ?? this.refreshToken;
+    this.idToken = tok.id_token ?? this.idToken;
+  }
 
   async login(email: string): Promise<void> {
     const r = await firstValueFrom(this.http.post<{ access_token: string }>('/api/auth/dev-login', { email }));
     sessionStorage.setItem(KEY, r.access_token);
     this.token.set(r.access_token);
     await this.loadMe();
+    void this.startSessionWatch();
   }
 
   async loadMe(): Promise<void> {
@@ -51,9 +111,10 @@ export class AuthService {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
     if (!res.ok) throw new Error(`token exchange failed: ${res.status}`);
     const tok = await res.json();
-    sessionStorage.setItem(KEY, tok.access_token);
-    this.token.set(tok.access_token);
+    sessionStorage.setItem('adintel.oidc', JSON.stringify({ issuer: saved.issuer, client_id: saved.client_id }));
+    this.store(tok);
     await this.loadMe();
+    void this.startSessionWatch();
   }
 
   hasRole(...roles: string[]): boolean {
@@ -61,11 +122,33 @@ export class AuthService {
     return !!me && (me.roles.some(r => roles.includes(r)) || me.roles.includes('admin'));
   }
 
-  logout(): void {
+  /** Signs out locally and, after SSO, at the identity provider too (RP-initiated logout). */
+  logout(reason?: string): void {
+    clearTimeout(this.idleTimer);
+    clearTimeout(this.expiryTimer);
+    const oidc = JSON.parse(sessionStorage.getItem('adintel.oidc') ?? 'null');
+    const idToken = this.idToken;
     sessionStorage.removeItem(KEY);
+    sessionStorage.removeItem('adintel.oidc');
+    if (reason) sessionStorage.setItem('adintel.logout_reason', reason);
     this.token.set(null);
     this.me.set(null);
+    this.refreshToken = this.idToken = null;
+    this.watching = false;
+    if (oidc?.issuer && idToken) {
+      const params = new URLSearchParams({ client_id: oidc.client_id, id_token_hint: idToken,
+        post_logout_redirect_uri: `${location.origin}/login` });
+      location.assign(`${oidc.issuer}/protocol/openid-connect/logout?${params}`);
+      return;
+    }
     this.router.navigateByUrl('/login');
+  }
+
+  /** Why the last session ended (shown once on the sign-in page). */
+  takeLogoutReason(): string {
+    const r = sessionStorage.getItem('adintel.logout_reason') ?? '';
+    sessionStorage.removeItem('adintel.logout_reason');
+    return r;
   }
 }
 
@@ -77,4 +160,13 @@ function randomString(n: number): string {
 async function sha256url(input: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
   return btoa(String.fromCharCode(...new Uint8Array(digest))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+/** The `exp` claim (seconds) of a JWT, without verifying it — the server verifies; this only schedules. */
+export function tokenExpiry(token: string | null): number | null {
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch { return null; }
 }

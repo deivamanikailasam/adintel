@@ -85,6 +85,7 @@ class Settings(BaseSettings):
     jwt_issuer: str = "adintel-local"
     jwt_audience: str = "adintel"
     jwt_ttl_minutes: int = 480
+    session_idle_minutes: int = 30  # the web app signs out after this much inactivity
     dev_login_enabled: bool = True
     # OIDC (Keycloak locally, Cognito/Entra/Okta in production). "dev" = local HS256 issuer only;
     # "oidc" = RS256 tokens verified against the provider's JWKS; "both" accepts either (local only).

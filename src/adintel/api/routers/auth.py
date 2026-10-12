@@ -40,6 +40,7 @@ def auth_config() -> dict[str, Any]:
         "mode": s.auth_mode,
         "dev_login": s.dev_login_enabled and s.env in ("local", "test"),
         "oidc": None if s.auth_mode == "dev" else {"issuer": s.oidc_issuer, "client_id": s.oidc_client_id},
+        "session": {"idle_timeout_minutes": s.session_idle_minutes},
     }
 
 

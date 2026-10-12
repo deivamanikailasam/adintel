@@ -22,7 +22,7 @@ import { Run, StepEvent } from '../core/models';
         @if (r.report_id) { · <a [routerLink]="['/reports', r.report_id]">report</a> }</p>
     }
     <h2>Live progress</h2>
-    <div class="panel"><ol class="timeline">
+    <div class="panel"><ol class="timeline" aria-live="polite" aria-label="Run progress">
       @for (e of events(); track $index) {
         <li><strong>{{ e.agent || e.kind }}</strong> <span class="muted">{{ e.summary }}</span>
           @if (e.cost_usd !== undefined) { <span class="muted">· {{ e.steps }} steps · \${{ e.cost_usd | number:'1.4-4' }}</span> }</li>

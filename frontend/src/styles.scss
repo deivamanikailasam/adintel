@@ -28,3 +28,8 @@ pre { white-space: pre-wrap; word-break: break-word; background: #f2f4f7; paddin
 .error { color: var(--bad); }
 .timeline li { margin: .3rem 0; }
 .prose p { margin: .4rem 0; line-height: 1.5; }
+/* accessibility: visible keyboard focus everywhere, respect reduced-motion preferences */
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

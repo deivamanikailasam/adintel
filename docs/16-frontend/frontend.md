@@ -32,3 +32,6 @@ npm start                      # http://localhost:4200, proxies /api → http://
 npx ng build --configuration production
 npx ng test --watch=false --browsers=ChromeHeadless
 ```
+
+Accessibility (WCAG 2.1 AA target) and session security (idle timeout, refresh, IdP logout):
+[accessibility-and-sessions.md](accessibility-and-sessions.md).

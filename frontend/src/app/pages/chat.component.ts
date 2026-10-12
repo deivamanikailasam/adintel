@@ -12,16 +12,16 @@ interface Turn { role: 'user' | 'assistant'; text: string; meta?: string; blocke
   imports: [FormsModule],
   template: `
     <h1>Ask about a brand</h1>
-    <div class="row"><select [(ngModel)]="brand" name="brand">@for (b of brands(); track b.brand_id) { <option [value]="b.brand_id">{{ b.name }}</option> }</select>
+    <div class="row"><select [(ngModel)]="brand" name="brand" aria-label="Brand">@for (b of brands(); track b.brand_id) { <option [value]="b.brand_id">{{ b.name }}</option> }</select>
       <span class="muted">Session {{ session }}</span></div>
-    <div class="panel log">
+    <div class="panel log" role="log" aria-live="polite" [attr.aria-busy]="busy()">
       @for (t of turns(); track $index) {
         <div class="turn {{ t.role }}"><strong>{{ t.role === 'user' ? 'You' : 'AdIntel' }}</strong>
           @if (t.meta) { <span class="muted">({{ t.meta }})</span> }
           <p [class.error]="t.blocked">{{ t.text }}</p></div>
       } @empty { <p class="muted">Try "What was spend last week?" (fast path) or "Why did retargeting costs rise after the budget increase?" (frontier + RAG).</p> }
     </div>
-    <form class="row" (ngSubmit)="ask()"><input [(ngModel)]="q" name="q" style="flex: 1" placeholder="Ask a question" maxlength="2000">
+    <form class="row" (ngSubmit)="ask()"><input [(ngModel)]="q" name="q" aria-label="Your question" style="flex: 1" placeholder="Ask a question" maxlength="2000">
       <button class="primary" [disabled]="busy() || !q">Send</button></form>
   `,
   styles: [`.log { min-height: 300px; } .turn { margin: .6rem 0; } .turn p { margin: .2rem 0; white-space: pre-wrap; }`],
