@@ -79,6 +79,17 @@ it was planned). Changes are admin-only (`POST /admin/flags`, `adintel flags --s
 and every change is written to the audit log (`feature_flag.changed`). Typical rollout: new agency starts
 with `agent.optimizer` off for two weekly cycles, then on for one pilot brand, then tenant-wide.
 
+## Repository governance (who may change what)
+
+| Control | File | Effect |
+|---------|------|--------|
+| Code owners | `.github/CODEOWNERS` | Security, model-governance and infrastructure paths need their owner's review (with branch protection) |
+| PR checklist | `.github/pull_request_template.md` | Tests, changelog + plain-English note, evals for prompt/model changes, migrations, the five safety checks |
+| Vulnerability reporting | `SECURITY.md` | Private reporting, response times, what matters most (isolation, approval bypass, executor integrity) |
+| Local guard rails | `.pre-commit-config.yaml` | ruff, mypy, gitleaks, no secrets / client data / model weights in git |
+| Dependency hygiene | `.github/dependabot.yml` | Weekly grouped updates for pip, npm, Actions, Docker, Terraform — each through the full CI and eval gate |
+| Supply chain | CI `supply-chain` job | Full-history secret scan; CycloneDX SBOM (Python) and SPDX SBOM (image) attached to every build |
+
 ## Governance artefacts
 
 | Artefact | Purpose | Owner | Where |

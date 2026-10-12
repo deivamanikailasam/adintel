@@ -83,6 +83,26 @@ jobs:
         uses: aquasecurity/trivy-action@0.28.0
         with: { image-ref: "adintel:${{ github.sha }}", severity: "CRITICAL,HIGH", exit-code: "1", ignore-unfixed: true }
 
+  supply-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: secret scan (full history)
+        uses: gitleaks/gitleaks-action@v2
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: astral-sh/setup-uv@v3
+      - run: uv venv -p 3.12 && uv pip install -e ".[ml,aws]" cyclonedx-bom
+      - name: SBOM — Python dependencies (CycloneDX)
+        run: .venv/bin/cyclonedx-py environment .venv --of JSON -o sbom-python.cdx.json
+      - name: build image
+        run: docker build -t adintel:${{ github.sha }} .
+      - name: SBOM — container image (Syft, SPDX)
+        uses: anchore/sbom-action@v0
+        with: { image: "adintel:${{ github.sha }}", format: spdx-json, output-file: sbom-image.spdx.json, upload-artifact: false }
+      - uses: actions/upload-artifact@v4
+        with: { name: sbom, path: "sbom-*.json" }
+
   frontend:
     runs-on: ubuntu-latest
     steps:

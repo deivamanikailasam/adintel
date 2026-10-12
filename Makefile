@@ -5,7 +5,7 @@ UV    ?= uv
 
 .PHONY: help venv install lint format typecheck test test-cov security evals gate \
         seed run-api run-worker run-executor run-scheduler up down mlx-small mlx-frontier \
-        frontend-install frontend-build load-test verify-audit reconcile clean
+        frontend-install frontend-build load-test verify-audit reconcile pre-commit sbom clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
@@ -85,6 +85,12 @@ verify-audit: ## Verify the audit log hash chain
 
 reconcile: ## Compare every executed change with what was approved
 	$(PY) -m adintel.cli reconcile
+
+pre-commit: ## Install the git pre-commit hooks (ruff, mypy, gitleaks, no client data or weights)
+	$(UV) pip install pre-commit && .venv/bin/pre-commit install
+
+sbom: ## Software bill of materials for the Python environment (CycloneDX JSON)
+	$(UV) pip install cyclonedx-bom && .venv/bin/cyclonedx-py environment .venv --of JSON -o sbom-python.cdx.json
 
 clean: ## Remove caches and local artifacts
 	rm -rf .pytest_cache .mypy_cache .ruff_cache htmlcov .coverage var/

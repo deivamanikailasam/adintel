@@ -1,0 +1,39 @@
+# Local guard rails that run on every `git commit` (install once: `make pre-commit`).
+# CI runs the same checks, so skipping them locally only delays the failure.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+        exclude: ^frontend/tsconfig
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]          # model weights and adapters never go in git
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.1
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy --strict
+        entry: .venv/bin/mypy src
+        language: system
+        pass_filenames: false
+        types: [python]
+      - id: no-client-data
+        name: refuse secrets, client data and model weights
+        entry: "files under secrets/, data/import/, backups/, offboarding/ or *.safetensors/*.gguf must not be committed"
+        language: fail
+        files: ^(secrets/(?!README\.md$)|data/import/(?!README\.md$)|backups/|offboarding/)|\.(safetensors|gguf)$

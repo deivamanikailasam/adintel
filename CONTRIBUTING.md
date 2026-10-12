@@ -11,6 +11,15 @@
    note in `docs/changelog/NNNN-short-name.md`. If the change alters a design decision, add or
    update an ADR in `docs/02-decisions/`.
 
+## Once, after cloning
+
+```bash
+make pre-commit     # ruff, mypy, gitleaks and a hook that refuses secrets, client data and model weights
+```
+
+Pull requests use `.github/pull_request_template.md`; paths in `.github/CODEOWNERS` need their owner's
+approval. Security issues go through [SECURITY.md](SECURITY.md), never a public issue.
+
 ## Before you push
 
 ```bash

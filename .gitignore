@@ -53,3 +53,4 @@ backups/
 offboarding/
 data/import/*
 !data/import/README.md
+sbom-*.json

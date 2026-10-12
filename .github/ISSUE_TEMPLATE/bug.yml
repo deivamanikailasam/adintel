@@ -1,0 +1,26 @@
+name: Bug
+description: Something behaves differently from the documentation
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: "Include the run_id / recommendation_id if relevant (never client data)." }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: What you expected }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: How to reproduce, description: "Commands, settings (ADINTEL_* values without secrets), model profile." }
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [agents / graph, approvals / executor, data / connectors, models / gateway, API / frontend, evals, infrastructure, docs]
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: This could cause money to move without approval, or data to cross tenants (if so, use SECURITY.md instead)

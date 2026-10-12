@@ -1,0 +1,26 @@
+# Code owners: reviews are required from these owners for changes to their paths (branch protection).
+# In a team setting replace the handle with the role's team, e.g. @agency/security, @agency/ml-lead.
+# Roles follow docs/03-governance/raci.md.
+
+*                                   @deivamanikailasam
+
+# Security-critical paths — security owner must approve
+/src/adintel/security/              @deivamanikailasam
+/src/adintel/storage/tenant_repo.py @deivamanikailasam
+/src/adintel/executor/              @deivamanikailasam
+/src/adintel/approvals/             @deivamanikailasam
+/src/adintel/audit/                 @deivamanikailasam
+/src/adintel/privacy/               @deivamanikailasam
+/SECURITY.md                        @deivamanikailasam
+
+# Model governance — ML lead must approve
+/config/models.yaml                 @deivamanikailasam
+/config/model-profiles.yaml         @deivamanikailasam
+/prompts/                           @deivamanikailasam
+/evals/baseline.json                @deivamanikailasam
+/finetune/                          @deivamanikailasam
+
+# Infrastructure and delivery — platform owner must approve
+/infra/                             @deivamanikailasam
+/.github/workflows/                 @deivamanikailasam
+/deploy/                            @deivamanikailasam

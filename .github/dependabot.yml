@@ -1,0 +1,27 @@
+# Weekly dependency updates, grouped so reviewers get a few PRs instead of dozens. Every update runs the
+# full CI (tests, evals + promotion gate, security scans), so a dependency that changes model behaviour or
+# introduces a vulnerability is caught before merge.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule: { interval: weekly, day: monday }
+    groups:
+      python-minor-patch: { update-types: [minor, patch] }
+    open-pull-requests-limit: 5
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule: { interval: weekly, day: monday }
+    groups:
+      angular: { patterns: ["@angular/*", "@angular-devkit/*"] }
+      npm-minor-patch: { update-types: [minor, patch] }
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly, day: monday }
+  - package-ecosystem: docker
+    directory: /
+    schedule: { interval: weekly, day: monday }
+  - package-ecosystem: terraform
+    directory: /infra/terraform/envs/staging
+    schedule: { interval: weekly, day: monday }
